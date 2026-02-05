@@ -28,6 +28,7 @@ export interface Lineup {
   throwAngles: { pitch: number; yaw: number };
   landingPosition: { x: number; y: number; z: number };
   releasePosition?: { x: number; y: number; z: number };
+  movementPath?: { x: number; y: number; z: number; pitch: number; yaw: number }[];
   throwType: string;
   throwStrength?: string;
   instructions: string[];
