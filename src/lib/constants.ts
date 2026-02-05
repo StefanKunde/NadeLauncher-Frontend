@@ -21,6 +21,7 @@ export const THROW_TYPES = {
   walkthrow: 'Walk Throw',
   runthrow: 'Run Throw',
   jumpthrow: 'Jump Throw',
+  duckjumpthrow: 'Duck Jump Throw',
   stepjumpthrow: 'Step Jump Throw',
   walkjumpthrow: 'Walk Jump Throw',
   runjumpthrow: 'Run Jump Throw',
