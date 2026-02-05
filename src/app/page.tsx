@@ -202,7 +202,7 @@ const FLOATING_GRENADES: {
 // ---------------------------------------------------------------------------
 
 export default function HomePage() {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://nadelauncher-backend-a99d397c.apps.deploypilot.stefankunde.dev';
   const steamLoginUrl = `${apiUrl}/auth/steam`;
 
   const [scrolled, setScrolled] = useState(false);
