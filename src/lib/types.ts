@@ -66,3 +66,31 @@ export interface UsageStats {
   limitSeconds: number;
   isPremium: boolean;
 }
+
+export interface LineupCollection {
+  id: string;
+  name: string;
+  description?: string;
+  mapName: string;
+  coverImage?: string;
+  isDefault: boolean;
+  sortOrder: number;
+  lineupCount: number;
+  isSubscribed?: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UserSubscription {
+  id: string;
+  collectionId: string;
+  collection: LineupCollection;
+  subscribedAt: string;
+  hiddenLineupIds: string[];
+}
+
+export interface CollectionWithLineups {
+  collection: LineupCollection;
+  lineups: Lineup[];
+  hiddenLineupIds: string[];
+}

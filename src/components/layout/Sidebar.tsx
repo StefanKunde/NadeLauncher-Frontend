@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   Map,
   ListChecks,
+  FolderOpen,
   Crown,
   Settings,
   LogOut,
@@ -20,6 +21,7 @@ const NAV_ITEMS = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { href: '/dashboard/maps', icon: Map, label: 'Maps' },
   { href: '/dashboard/lineups', icon: ListChecks, label: 'My Lineups' },
+  { href: '/dashboard/collections', icon: FolderOpen, label: 'Collections' },
   { href: '/dashboard/premium', icon: Crown, label: 'Premium', badge: 'PRO' },
   { href: '/dashboard/settings', icon: Settings, label: 'Settings' },
 ];

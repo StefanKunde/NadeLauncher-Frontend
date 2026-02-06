@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { useAuthStore } from '@/store/auth-store';
-import type { AuthResponse, Lineup, MapInfo, Session, UsageStats } from './types';
+import type { AuthResponse, Lineup, MapInfo, Session, UsageStats, LineupCollection, UserSubscription, CollectionWithLineups } from './types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://nadelauncher-backend-a99d397c.apps.deploypilot.stefankunde.dev';
 
@@ -78,6 +78,28 @@ export const sessionsApi = {
   getUsage: () =>
     api.get<{ data: UsageStats }>('/api/sessions/usage').then((r) => r.data.data),
   end: (id: string) => api.delete(`/api/sessions/${id}`),
+};
+
+// Collections
+export const collectionsApi = {
+  getAll: (map?: string) =>
+    api.get<{ data: LineupCollection[] }>('/api/collections', { params: { map } }).then((r) => r.data.data),
+  getAllWithStatus: (map?: string) =>
+    api.get<{ data: LineupCollection[] }>('/api/collections/user/all', { params: { map } }).then((r) => r.data.data),
+  getById: (id: string) =>
+    api.get<{ data: CollectionWithLineups }>(`/api/collections/${id}`).then((r) => r.data.data),
+  getByIdWithUserState: (id: string) =>
+    api.get<{ data: CollectionWithLineups }>(`/api/collections/${id}/details`).then((r) => r.data.data),
+  getSubscriptions: () =>
+    api.get<{ data: UserSubscription[] }>('/api/collections/user/subscriptions').then((r) => r.data.data),
+  subscribe: (id: string) =>
+    api.post<{ data: UserSubscription }>(`/api/collections/${id}/subscribe`).then((r) => r.data.data),
+  unsubscribe: (id: string) =>
+    api.delete(`/api/collections/${id}/unsubscribe`),
+  hideLineup: (collectionId: string, lineupId: string) =>
+    api.post(`/api/collections/${collectionId}/lineups/${lineupId}/hide`),
+  unhideLineup: (collectionId: string, lineupId: string) =>
+    api.delete(`/api/collections/${collectionId}/lineups/${lineupId}/hide`),
 };
 
 export default api;
