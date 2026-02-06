@@ -43,7 +43,7 @@ export interface MapInfo {
   displayName: string;
 }
 
-export type SessionStatus = 'pending' | 'provisioning' | 'ready' | 'active' | 'ending' | 'ended' | 'failed';
+export type SessionStatus = 'queued' | 'pending' | 'provisioning' | 'ready' | 'active' | 'ending' | 'ended' | 'failed';
 
 export interface Session {
   id: string;
@@ -58,10 +58,12 @@ export interface Session {
   provisioningError?: string;
   startedAt?: string;
   endedAt?: string;
-  endReason?: 'connection_timeout' | 'afk_timeout' | 'user_ended' | 'time_expired' | 'disconnected' | 'provisioning_failed' | 'expired';
+  endReason?: 'connection_timeout' | 'afk_timeout' | 'user_ended' | 'time_expired' | 'disconnected' | 'provisioning_failed' | 'expired' | 'queue_stale';
   expiresAt: string;
   connectionTimeoutAt?: string;
   createdAt: string;
+  queuePosition?: number;
+  queuedAt?: string;
 }
 
 export interface UsageStats {

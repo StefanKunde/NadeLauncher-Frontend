@@ -15,11 +15,13 @@ import {
   Loader2,
   AlertTriangle,
   UserX,
+  Users,
 } from 'lucide-react';
 import Link from 'next/link';
 import { sessionsApi } from '@/lib/api';
 import { MAPS } from '@/lib/constants';
 import { useAuthStore } from '@/store/auth-store';
+import { useSessionSocket } from '@/hooks/useSessionSocket';
 import type { Session, UsageStats } from '@/lib/types';
 
 function formatTime(totalSeconds: number): string {
@@ -52,6 +54,30 @@ export default function PracticeSessionCard() {
   const [connectionCountdown, setConnectionCountdown] = useState<number | null>(null);
   const connectionCountdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [lastEndReason, setLastEndReason] = useState<Session['endReason'] | null>(null);
+  const [queuePosition, setQueuePosition] = useState<number | null>(null);
+
+  // WebSocket connection for real-time updates
+  const { sendHeartbeat } = useSessionSocket({
+    enabled: !!user,
+    onStatusUpdate: (updatedSession) => {
+      console.log('[PracticeCard] WebSocket session update:', updatedSession.status);
+      setSession(updatedSession);
+      if (updatedSession.queuePosition !== undefined) {
+        setQueuePosition(updatedSession.queuePosition);
+      }
+    },
+    onQueuePosition: (position) => {
+      console.log('[PracticeCard] WebSocket queue position:', position);
+      setQueuePosition(position);
+    },
+    onSessionEnded: (reason) => {
+      console.log('[PracticeCard] WebSocket session ended:', reason);
+      setLastEndReason(reason as Session['endReason']);
+      setSession(null);
+      // Refresh usage stats
+      sessionsApi.getUsage().then(setUsage).catch(() => {});
+    },
+  });
 
   const fetchState = useCallback(async () => {
     try {
@@ -152,6 +178,24 @@ export default function PracticeSessionCard() {
       if (connectionCountdownRef.current) clearInterval(connectionCountdownRef.current);
     };
   }, [session?.isActive, session?.startedAt, session?.connectionTimeoutAt, fetchState]);
+
+  // Send heartbeat when in queue to keep position alive
+  useEffect(() => {
+    if (session?.isActive && session.status === 'queued') {
+      // Send heartbeat immediately
+      sendHeartbeat();
+      // Then every 30 seconds
+      const heartbeatInterval = setInterval(sendHeartbeat, 30000);
+      return () => clearInterval(heartbeatInterval);
+    }
+  }, [session?.isActive, session?.status, sendHeartbeat]);
+
+  // Update queue position from session when it changes
+  useEffect(() => {
+    if (session?.queuePosition !== undefined) {
+      setQueuePosition(session.queuePosition);
+    }
+  }, [session?.queuePosition]);
 
   const handleCreate = async () => {
     setCreating(true);
@@ -276,6 +320,50 @@ export default function PracticeSessionCard() {
           >
             {ending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Square className="h-4 w-4" />}
             End Session
+          </button>
+        </div>
+      </motion.div>
+    );
+  }
+
+  // State: Queued (waiting for server slot)
+  if (session?.isActive && session.status === 'queued') {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="glass rounded-xl overflow-hidden"
+        style={{ borderTop: '2px solid #6366f1' }}
+      >
+        <div className="p-6 text-center">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#6366f115]">
+            <Users className="h-8 w-8 text-[#6366f1]" />
+          </div>
+          <h3 className="text-lg font-semibold text-[#e8e8e8] mb-2">
+            Waiting in Queue
+          </h3>
+          <p className="text-sm text-[#6b6b8a] mb-4">
+            All servers are currently busy. You are in position:
+          </p>
+          <div className="text-5xl font-bold text-[#6366f1] mb-4 tabular-nums">
+            #{queuePosition ?? session.queuePosition ?? '...'}
+          </div>
+          <p className="text-xs text-[#6b6b8a] mb-4">
+            Your server will start automatically when a slot opens.
+          </p>
+          <div className="rounded-lg bg-[#0a0a12] p-3 mb-4">
+            <p className="text-xs text-[#6b6b8a]">
+              Map: {MAPS.find((m) => m.name === session.mapName)?.displayName ?? session.mapName}
+            </p>
+          </div>
+
+          <button
+            onClick={handleEnd}
+            disabled={ending}
+            className="w-full flex items-center justify-center gap-2 rounded-lg border border-[#2a2a3e] bg-transparent px-4 py-2.5 text-sm font-medium text-[#6b6b8a] transition-all hover:border-[#ff4444] hover:text-[#ff4444] disabled:opacity-50"
+          >
+            {ending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Square className="h-4 w-4" />}
+            Leave Queue
           </button>
         </div>
       </motion.div>
@@ -535,6 +623,39 @@ export default function PracticeSessionCard() {
           >
             {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
             Try Again
+          </button>
+        </div>
+      </motion.div>
+    );
+  }
+
+  // State: Removed from queue due to inactivity
+  if (!session && lastEndReason === 'queue_stale') {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="glass rounded-xl overflow-hidden"
+        style={{ borderTop: '2px solid #6366f1' }}
+      >
+        <div className="p-6 text-center">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#6366f115]">
+            <Users className="h-6 w-6 text-[#6366f1]" />
+          </div>
+          <p className="text-sm text-[#e8e8e8] mb-1 font-medium">Removed from Queue</p>
+          <p className="text-xs text-[#6b6b8a] mb-4">
+            You were removed from the queue due to inactivity. Please try again.
+          </p>
+          <button
+            onClick={() => {
+              setLastEndReason(null);
+              handleCreate();
+            }}
+            disabled={creating}
+            className="w-full flex items-center justify-center gap-2 rounded-lg bg-[#4a9fd4] px-4 py-3 text-sm font-semibold text-white transition-all hover:bg-[#3a8fc4] disabled:opacity-50"
+          >
+            {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+            Join Queue Again
           </button>
         </div>
       </motion.div>
