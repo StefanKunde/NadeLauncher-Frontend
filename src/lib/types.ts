@@ -54,7 +54,9 @@ export interface Session {
   isActive: boolean;
   startedAt?: string;
   endedAt?: string;
+  endReason?: 'connection_timeout' | 'afk_timeout' | 'user_ended' | 'time_expired' | 'disconnected';
   expiresAt: string;
+  connectionTimeoutAt?: string;
   createdAt: string;
 }
 

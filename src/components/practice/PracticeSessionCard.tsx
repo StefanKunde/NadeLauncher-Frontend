@@ -13,6 +13,8 @@ import {
   ExternalLink,
   Crown,
   Loader2,
+  AlertTriangle,
+  UserX,
 } from 'lucide-react';
 import Link from 'next/link';
 import { sessionsApi } from '@/lib/api';
@@ -47,6 +49,9 @@ export default function PracticeSessionCard() {
   const elapsedRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [localRemaining, setLocalRemaining] = useState<number | null>(null);
   const localRemainingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [connectionCountdown, setConnectionCountdown] = useState<number | null>(null);
+  const connectionCountdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [lastEndReason, setLastEndReason] = useState<Session['endReason'] | null>(null);
 
   const fetchState = useCallback(async () => {
     try {
@@ -54,6 +59,17 @@ export default function PracticeSessionCard() {
         sessionsApi.getActive(),
         sessionsApi.getUsage(),
       ]);
+
+      // Track if session just ended and capture the reason
+      if (session?.isActive && !activeSession?.isActive) {
+        // Session ended - get the end reason from the old session if available
+        // or from the new inactive session data
+        const reason = activeSession?.endReason || session?.endReason;
+        if (reason) {
+          setLastEndReason(reason);
+        }
+      }
+
       setSession(activeSession ?? null);
       setUsage(usageData);
       // Sync local countdown with polled remaining seconds
@@ -65,7 +81,7 @@ export default function PracticeSessionCard() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [session?.isActive, session?.endReason]);
 
   // Initial load
   useEffect(() => {
@@ -109,9 +125,36 @@ export default function PracticeSessionCard() {
     };
   }, [session?.isActive, session?.startedAt, localRemaining !== null]);
 
+  // Connection timeout countdown (when waiting for connection)
+  useEffect(() => {
+    if (session?.isActive && !session.startedAt && session.connectionTimeoutAt) {
+      const updateCountdown = () => {
+        const remaining = Math.max(
+          0,
+          Math.floor((new Date(session.connectionTimeoutAt!).getTime() - Date.now()) / 1000)
+        );
+        setConnectionCountdown(remaining);
+
+        // If countdown reaches zero, refetch to get updated session state
+        if (remaining <= 0) {
+          fetchState();
+        }
+      };
+
+      updateCountdown();
+      connectionCountdownRef.current = setInterval(updateCountdown, 1000);
+    } else {
+      setConnectionCountdown(null);
+    }
+    return () => {
+      if (connectionCountdownRef.current) clearInterval(connectionCountdownRef.current);
+    };
+  }, [session?.isActive, session?.startedAt, session?.connectionTimeoutAt, fetchState]);
+
   const handleCreate = async () => {
     setCreating(true);
     setError(null);
+    setLastEndReason(null); // Clear any previous end reason
     try {
       const created = await sessionsApi.create(selectedMap);
       setSession(created);
@@ -260,6 +303,21 @@ export default function PracticeSessionCard() {
             </div>
           </div>
 
+          {/* Connection Timeout Warning */}
+          {connectionCountdown !== null && (
+            <div className="rounded-lg bg-[#f0a50015] border border-[#f0a50030] p-3 mb-4">
+              <div className="flex items-center gap-2 text-[#f0a500]">
+                <Clock className="h-4 w-4" />
+                <span className="text-sm font-medium">
+                  Connect within {formatTime(connectionCountdown)}
+                </span>
+              </div>
+              <p className="text-xs text-[#6b6b8a] mt-1">
+                Session will expire if you don&apos;t connect in time
+              </p>
+            </div>
+          )}
+
           {/* Connection Details */}
           <div className="rounded-lg bg-[#0a0a12] p-4 mb-4 space-y-3">
             <div className="flex items-center justify-between">
@@ -304,6 +362,66 @@ export default function PracticeSessionCard() {
           >
             {ending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Square className="h-4 w-4" />}
             Cancel Session
+          </button>
+        </div>
+      </motion.div>
+    );
+  }
+
+  // State: Session ended due to connection timeout
+  if (!session && lastEndReason === 'connection_timeout') {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="glass rounded-xl overflow-hidden"
+        style={{ borderTop: '2px solid #ff4444' }}
+      >
+        <div className="p-6 text-center">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#ff444415]">
+            <AlertTriangle className="h-6 w-6 text-[#ff4444]" />
+          </div>
+          <p className="text-sm text-[#e8e8e8] mb-1 font-medium">Session Expired</p>
+          <p className="text-xs text-[#6b6b8a] mb-4">
+            Your session timed out because you didn&apos;t connect within 5 minutes.
+          </p>
+          <button
+            onClick={handleCreate}
+            disabled={creating}
+            className="w-full flex items-center justify-center gap-2 rounded-lg bg-[#4a9fd4] px-4 py-3 text-sm font-semibold text-white transition-all hover:bg-[#3a8fc4] disabled:opacity-50"
+          >
+            {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+            Start New Session
+          </button>
+        </div>
+      </motion.div>
+    );
+  }
+
+  // State: Session ended due to AFK
+  if (!session && lastEndReason === 'afk_timeout') {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="glass rounded-xl overflow-hidden"
+        style={{ borderTop: '2px solid #ff4444' }}
+      >
+        <div className="p-6 text-center">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#ff444415]">
+            <UserX className="h-6 w-6 text-[#ff4444]" />
+          </div>
+          <p className="text-sm text-[#e8e8e8] mb-1 font-medium">Kicked for AFK</p>
+          <p className="text-xs text-[#6b6b8a] mb-4">
+            Your session ended because you were inactive for too long.
+          </p>
+          <button
+            onClick={handleCreate}
+            disabled={creating}
+            className="w-full flex items-center justify-center gap-2 rounded-lg bg-[#4a9fd4] px-4 py-3 text-sm font-semibold text-white transition-all hover:bg-[#3a8fc4] disabled:opacity-50"
+          >
+            {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+            Start New Session
           </button>
         </div>
       </motion.div>
