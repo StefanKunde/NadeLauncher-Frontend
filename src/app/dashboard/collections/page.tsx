@@ -133,8 +133,26 @@ export default function CollectionsPage() {
           </div>
         </div>
         <p className="text-[#6b6b8a] text-lg ml-[52px]">
-          Subscribe to curated lineup collections
+          Subscribe to curated lineup collections to see them in-game
         </p>
+      </div>
+
+      {/* Info Box */}
+      <div className="mb-8 p-4 rounded-xl bg-[#12121a] border border-[#2a2a3e]">
+        <div className="flex items-start gap-3">
+          <div className="p-1.5 rounded-lg bg-[#f0a500]/10 shrink-0">
+            <FolderOpen className="w-4 h-4 text-[#f0a500]" />
+          </div>
+          <div className="text-sm">
+            <p className="text-[#e8e8e8] font-medium mb-1">How Collections Work</p>
+            <ul className="text-[#6b6b8a] space-y-1">
+              <li>• <span className="text-[#f0a500]">Default</span> collections are auto-subscribed when you sign up</li>
+              <li>• Subscribe to any collection to add its lineups to your in-game menu</li>
+              <li>• Use the <code className="text-[#f0a500] bg-[#1a1a2e] px-1 rounded">!nades</code> command in practice mode to browse your subscribed lineups</li>
+              <li>• Hide individual lineups you don&apos;t need without unsubscribing</li>
+            </ul>
+          </div>
+        </div>
       </div>
 
       {/* Stats Row */}
@@ -221,7 +239,7 @@ export default function CollectionsPage() {
           {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="space-y-3">
               <div className="h-6 w-32 bg-[#1a1a2e] rounded animate-pulse" />
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {Array.from({ length: 3 }).map((_, j) => (
                   <div key={j} className="glass rounded-xl p-4 h-32 animate-pulse" />
                 ))}
@@ -251,7 +269,7 @@ export default function CollectionsPage() {
         </motion.div>
       ) : (
         <motion.div
-          className="space-y-8"
+          className="space-y-10"
           variants={container}
           initial="hidden"
           animate="show"
@@ -278,7 +296,7 @@ export default function CollectionsPage() {
                 </div>
 
                 {/* Collection Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {mapCollections.map((collection) => (
                     <motion.div
                       key={collection.id}

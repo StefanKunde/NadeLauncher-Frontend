@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Map, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { MAPS, MAP_COLORS } from '@/lib/constants';
@@ -26,6 +27,7 @@ const item = {
 export default function MapsPage() {
   const [presetsByMap, setPresetsByMap] = useState<Record<string, Lineup[]>>({});
   const [loading, setLoading] = useState(true);
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     Promise.all(
@@ -83,6 +85,7 @@ export default function MapsPage() {
             const color = MAP_COLORS[map.name] || '#f0a500';
             const presets = presetsByMap[map.name] ?? [];
             const count = presets.length;
+            const showRadar = failedImages.has(map.name);
 
             return (
               <motion.div key={map.name} variants={item}>
@@ -90,11 +93,21 @@ export default function MapsPage() {
                   href={`/dashboard/maps/${map.name}`}
                   className="block glass rounded-2xl overflow-hidden card-hover group"
                 >
-                  {/* Mini Radar */}
+                  {/* Map Screenshot or Radar Fallback */}
                   <div className="relative h-48 overflow-hidden bg-[#0a0a0f]">
-                    <div className="absolute inset-0 p-2">
-                      <MapRadar mapName={map.name} lineups={presets} mini />
-                    </div>
+                    {showRadar ? (
+                      <div className="absolute inset-0 p-2">
+                        <MapRadar mapName={map.name} lineups={presets} mini />
+                      </div>
+                    ) : (
+                      <Image
+                        src={map.screenshot}
+                        alt={map.displayName}
+                        fill
+                        className="object-cover transition-transform duration-300 group-hover:scale-105"
+                        onError={() => setFailedImages((prev) => new Set(prev).add(map.name))}
+                      />
+                    )}
                     {/* Map name overlay */}
                     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#0a0a12] to-transparent p-4 pt-10">
                       <h3 className="text-xl font-bold text-white tracking-tight">

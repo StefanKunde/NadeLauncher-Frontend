@@ -1,11 +1,11 @@
 export const MAPS = [
-  { name: 'de_dust2', displayName: 'Dust II', image: '/maps/de_dust2.jpg' },
-  { name: 'de_mirage', displayName: 'Mirage', image: '/maps/de_mirage.jpg' },
-  { name: 'de_inferno', displayName: 'Inferno', image: '/maps/de_inferno.jpg' },
-  { name: 'de_nuke', displayName: 'Nuke', image: '/maps/de_nuke.jpg' },
-  { name: 'de_overpass', displayName: 'Overpass', image: '/maps/de_overpass.jpg' },
-  { name: 'de_ancient', displayName: 'Ancient', image: '/maps/de_ancient.jpg' },
-  { name: 'de_anubis', displayName: 'Anubis', image: '/maps/de_anubis.jpg' },
+  { name: 'de_dust2', displayName: 'Dust II', screenshot: '/maps/screenshots/de_dust2.jpg', radar: '/maps/radar/de_dust2.png' },
+  { name: 'de_mirage', displayName: 'Mirage', screenshot: '/maps/screenshots/de_mirage.jpg', radar: '/maps/radar/de_mirage.png' },
+  { name: 'de_inferno', displayName: 'Inferno', screenshot: '/maps/screenshots/de_inferno.jpg', radar: '/maps/radar/de_inferno.png' },
+  { name: 'de_nuke', displayName: 'Nuke', screenshot: '/maps/screenshots/de_nuke.jpg', radar: '/maps/radar/de_nuke.png' },
+  { name: 'de_overpass', displayName: 'Overpass', screenshot: '/maps/screenshots/de_overpass.jpg', radar: '/maps/radar/de_overpass.png' },
+  { name: 'de_ancient', displayName: 'Ancient', screenshot: '/maps/screenshots/de_ancient.jpg', radar: '/maps/radar/de_ancient.png' },
+  { name: 'de_anubis', displayName: 'Anubis', screenshot: '/maps/screenshots/de_anubis.jpg', radar: '/maps/radar/de_anubis.png' },
 ] as const;
 
 export const GRENADE_TYPES = {
