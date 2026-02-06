@@ -88,15 +88,17 @@ export default function PracticeSessionCard() {
     fetchState();
   }, [fetchState]);
 
-  // Poll while session is active
+  // Poll while session is active (faster during provisioning)
   useEffect(() => {
     if (session?.isActive) {
-      pollRef.current = setInterval(fetchState, 5000);
+      const isProvisioning = session.status === 'pending' || session.status === 'provisioning';
+      const interval = isProvisioning ? 2000 : 5000; // Poll every 2s during provisioning
+      pollRef.current = setInterval(fetchState, interval);
     }
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
     };
-  }, [session?.isActive, fetchState]);
+  }, [session?.isActive, session?.status, fetchState]);
 
   // Elapsed timer when connected
   useEffect(() => {
@@ -280,8 +282,86 @@ export default function PracticeSessionCard() {
     );
   }
 
-  // State 2: Created but not connected (waiting for player)
-  if (session?.isActive && !session.startedAt) {
+  // State: Provisioning (pending or provisioning status)
+  if (session?.isActive && (session.status === 'pending' || session.status === 'provisioning')) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="glass rounded-xl overflow-hidden"
+        style={{ borderTop: '2px solid #4a9fd4' }}
+      >
+        <div className="p-6 text-center">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center">
+            <Loader2 className="h-10 w-10 animate-spin text-[#4a9fd4]" />
+          </div>
+          <h3 className="text-lg font-semibold text-[#e8e8e8] mb-2">
+            Starting Your Server
+          </h3>
+          <p className="text-sm text-[#6b6b8a] mb-4">
+            {session.status === 'pending'
+              ? 'Preparing resources...'
+              : 'Provisioning server (30-90 seconds)...'}
+          </p>
+          <div className="rounded-lg bg-[#0a0a12] p-3">
+            <p className="text-xs text-[#6b6b8a]">
+              Map: {MAPS.find((m) => m.name === session.mapName)?.displayName ?? session.mapName}
+            </p>
+          </div>
+
+          <button
+            onClick={handleEnd}
+            disabled={ending}
+            className="mt-4 w-full flex items-center justify-center gap-2 rounded-lg border border-[#2a2a3e] bg-transparent px-4 py-2.5 text-sm font-medium text-[#6b6b8a] transition-all hover:border-[#ff4444] hover:text-[#ff4444] disabled:opacity-50"
+          >
+            {ending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Square className="h-4 w-4" />}
+            Cancel
+          </button>
+        </div>
+      </motion.div>
+    );
+  }
+
+  // State: Provisioning failed
+  if (session?.isActive && session.status === 'failed') {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="glass rounded-xl overflow-hidden"
+        style={{ borderTop: '2px solid #ff4444' }}
+      >
+        <div className="p-6 text-center">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#ff444415]">
+            <AlertTriangle className="h-6 w-6 text-[#ff4444]" />
+          </div>
+          <h3 className="text-lg font-semibold text-[#e8e8e8] mb-2">
+            Server Failed to Start
+          </h3>
+          <p className="text-sm text-[#6b6b8a] mb-4">
+            {session.provisioningError || 'An error occurred while starting the server.'}
+          </p>
+          <button
+            onClick={async () => {
+              await handleEnd();
+              setLastEndReason(null);
+            }}
+            disabled={ending}
+            className="w-full flex items-center justify-center gap-2 rounded-lg bg-[#4a9fd4] px-4 py-3 text-sm font-semibold text-white transition-all hover:bg-[#3a8fc4] disabled:opacity-50 mb-3"
+          >
+            {ending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+            Try Again
+          </button>
+          <p className="text-xs text-[#6b6b8a]">
+            If this persists, please contact support.
+          </p>
+        </div>
+      </motion.div>
+    );
+  }
+
+  // State 2: Created but not connected (waiting for player - status is 'ready')
+  if (session?.isActive && !session.startedAt && session.status === 'ready' && session.serverIp) {
     return (
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -422,6 +502,39 @@ export default function PracticeSessionCard() {
           >
             {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
             Start New Session
+          </button>
+        </div>
+      </motion.div>
+    );
+  }
+
+  // State: Session ended due to provisioning failure
+  if (!session && lastEndReason === 'provisioning_failed') {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="glass rounded-xl overflow-hidden"
+        style={{ borderTop: '2px solid #ff4444' }}
+      >
+        <div className="p-6 text-center">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#ff444415]">
+            <AlertTriangle className="h-6 w-6 text-[#ff4444]" />
+          </div>
+          <p className="text-sm text-[#e8e8e8] mb-1 font-medium">Server Failed to Start</p>
+          <p className="text-xs text-[#6b6b8a] mb-4">
+            There was an error starting your practice server. Please try again.
+          </p>
+          <button
+            onClick={() => {
+              setLastEndReason(null);
+              handleCreate();
+            }}
+            disabled={creating}
+            className="w-full flex items-center justify-center gap-2 rounded-lg bg-[#4a9fd4] px-4 py-3 text-sm font-semibold text-white transition-all hover:bg-[#3a8fc4] disabled:opacity-50"
+          >
+            {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+            Try Again
           </button>
         </div>
       </motion.div>
