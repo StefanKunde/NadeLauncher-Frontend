@@ -156,20 +156,40 @@ export default function MapRadar({
         );
       })}
 
-      {/* Selected lineup label */}
-      {!mini && selectedMarker && (
-        <div
-          className="absolute z-30 -translate-x-1/2 pointer-events-none"
-          style={{
-            left: `${selectedMarker.throwPos.x}%`,
-            top: `${selectedMarker.throwPos.y - 2.5}%`,
-          }}
-        >
-          <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-[#0a0a0f]/90 text-white whitespace-nowrap border border-[#2a2a3e]">
-            {selectedMarker.lineup.name}
-          </span>
-        </div>
-      )}
+      {/* Selected lineup label - positioned opposite to landing direction */}
+      {!mini && selectedMarker && (() => {
+        const dx = selectedMarker.landingPos.x - selectedMarker.throwPos.x;
+        const dy = selectedMarker.landingPos.y - selectedMarker.throwPos.y;
+
+        // Position label on opposite side of the throw→landing direction
+        // with offset to avoid blocking both startpoint and line
+        const offsetDistance = 4; // percentage
+        const length = Math.sqrt(dx * dx + dy * dy) || 1;
+        const offsetX = -(dx / length) * offsetDistance;
+        const offsetY = -(dy / length) * offsetDistance;
+
+        // Calculate label position
+        let labelX = selectedMarker.throwPos.x + offsetX;
+        let labelY = selectedMarker.throwPos.y + offsetY;
+
+        // Clamp to keep label visible (with padding for label width)
+        labelX = Math.max(8, Math.min(92, labelX));
+        labelY = Math.max(3, Math.min(97, labelY));
+
+        return (
+          <div
+            className="absolute z-30 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+            style={{
+              left: `${labelX}%`,
+              top: `${labelY}%`,
+            }}
+          >
+            <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-[#0a0a0f]/90 text-white whitespace-nowrap border border-[#2a2a3e]">
+              {selectedMarker.lineup.name}
+            </span>
+          </div>
+        );
+      })()}
 
       {/* Nuke layer toggle */}
       {hasLayers && !mini && (
