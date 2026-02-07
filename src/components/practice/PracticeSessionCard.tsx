@@ -16,9 +16,7 @@ import {
   AlertTriangle,
   UserX,
   Users,
-  ChevronDown,
   Terminal,
-  Info,
 } from 'lucide-react';
 import Link from 'next/link';
 import { sessionsApi } from '@/lib/api';
@@ -58,7 +56,6 @@ export default function PracticeSessionCard() {
   const connectionCountdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [lastEndReason, setLastEndReason] = useState<Session['endReason'] | null>(null);
   const [queuePosition, setQueuePosition] = useState<number | null>(null);
-  const [showHowItWorks, setShowHowItWorks] = useState(false);
 
   // WebSocket connection for real-time updates
   const { sendHeartbeat } = useSessionSocket({
@@ -269,154 +266,159 @@ export default function PracticeSessionCard() {
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="glass rounded-xl overflow-hidden"
-        style={{ borderTop: '2px solid #00c850' }}
+        className="grid grid-cols-1 lg:grid-cols-2 gap-4"
       >
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#00c85015]">
-                <Server className="h-5 w-5 text-[#00c850]" />
+        {/* Session Card */}
+        <div
+          className="glass rounded-xl overflow-hidden"
+          style={{ borderTop: '2px solid #00c850' }}
+        >
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#00c85015]">
+                  <Server className="h-5 w-5 text-[#00c850]" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-[#e8e8e8]">Practice Session Active</h3>
+                  <p className="text-xs text-[#6b6b8a]">
+                    {MAPS.find((m) => m.name === session.mapName)?.displayName ?? session.mapName}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-lg font-semibold text-[#e8e8e8]">Practice Session Active</h3>
-                <p className="text-xs text-[#6b6b8a]">
-                  {MAPS.find((m) => m.name === session.mapName)?.displayName ?? session.mapName}
+              <span className="relative flex h-3 w-3">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#00c850] opacity-75" />
+                <span className="relative inline-flex h-3 w-3 rounded-full bg-[#00c850]" />
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="rounded-lg bg-[#0a0a12] p-4 text-center">
+                <Clock className="h-4 w-4 text-[#6b6b8a] mx-auto mb-1" />
+                <p className="text-xs text-[#6b6b8a] mb-1">Elapsed</p>
+                <p className="text-xl font-mono font-bold text-[#e8e8e8]">{formatTime(elapsed)}</p>
+              </div>
+              <div className="rounded-lg bg-[#0a0a12] p-4 text-center">
+                <Shield className="h-4 w-4 text-[#6b6b8a] mx-auto mb-1" />
+                <p className="text-xs text-[#6b6b8a] mb-1">Remaining</p>
+                <p
+                  className="text-xl font-mono font-bold"
+                  style={{
+                    color:
+                      usage?.isPremium
+                        ? '#f0a500'
+                        : remaining < 300
+                          ? '#ff4444'
+                          : remaining < 900
+                            ? '#f0a500'
+                            : '#e8e8e8',
+                  }}
+                >
+                  {usage?.isPremium ? 'Unlimited' : formatTime(remaining)}
                 </p>
               </div>
             </div>
-            <span className="relative flex h-3 w-3">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#00c850] opacity-75" />
-              <span className="relative inline-flex h-3 w-3 rounded-full bg-[#00c850]" />
-            </span>
-          </div>
 
-          <div className="grid grid-cols-2 gap-4 mb-5">
-            <div className="rounded-lg bg-[#0a0a12] p-4 text-center">
-              <Clock className="h-4 w-4 text-[#6b6b8a] mx-auto mb-1" />
-              <p className="text-xs text-[#6b6b8a] mb-1">Elapsed</p>
-              <p className="text-xl font-mono font-bold text-[#e8e8e8]">{formatTime(elapsed)}</p>
-            </div>
-            <div className="rounded-lg bg-[#0a0a12] p-4 text-center">
-              <Shield className="h-4 w-4 text-[#6b6b8a] mx-auto mb-1" />
-              <p className="text-xs text-[#6b6b8a] mb-1">Remaining</p>
-              <p
-                className="text-xl font-mono font-bold"
-                style={{
-                  color:
-                    usage?.isPremium
-                      ? '#f0a500'
-                      : remaining < 300
-                        ? '#ff4444'
-                        : remaining < 900
-                          ? '#f0a500'
-                          : '#e8e8e8',
-                }}
-              >
-                {usage?.isPremium ? 'Unlimited' : formatTime(remaining)}
+            {/* Connection Details */}
+            {session.serverIp && session.serverPort && session.serverPassword && (
+              <div className="rounded-lg bg-[#0a0a12] p-4 mb-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs text-[#6b6b8a]">Console Command</span>
+                  <button
+                    onClick={copyConnectCommand}
+                    className="flex items-center gap-1.5 px-2 py-1 rounded hover:bg-[#1a1a2e] transition-colors text-xs"
+                  >
+                    {copied ? (
+                      <>
+                        <Check className="h-3.5 w-3.5 text-[#00c850]" />
+                        <span className="text-[#00c850]">Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-3.5 w-3.5 text-[#6b6b8a]" />
+                        <span className="text-[#6b6b8a]">Copy</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+                <code className="block text-sm font-mono text-[#e8e8e8] bg-[#12121a] rounded px-3 py-2 break-all">
+                  connect {session.serverIp}:{session.serverPort}; password {session.serverPassword}
+                </code>
+              </div>
+            )}
+
+            <button
+              onClick={handleEnd}
+              disabled={ending}
+              className="w-full flex items-center justify-center gap-2 rounded-lg bg-[#ff4444] px-4 py-3 text-sm font-semibold text-white transition-all hover:bg-[#cc3333] disabled:opacity-50"
+            >
+              {ending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Square className="h-4 w-4" />}
+              End Session
+            </button>
+          </div>
+        </div>
+
+        {/* How It Works Card */}
+        <div className="glass rounded-xl overflow-hidden" style={{ borderTop: '2px solid #f0a500' }}>
+          <div className="p-6 space-y-4">
+            {/* Commands */}
+            <div className="rounded-lg bg-[#0a0a12] p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Terminal className="h-4 w-4 text-[#f0a500]" />
+                <span className="text-xs font-semibold text-[#e8e8e8] uppercase tracking-wider">
+                  Available Commands
+                </span>
+              </div>
+              <div className="space-y-2 text-xs">
+                <div className="flex items-start gap-2">
+                  <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!save &lt;name&gt;</code>
+                  <span className="text-[#6b6b8a]">Save your current position as a lineup</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!rethrow</code>
+                  <span className="text-[#6b6b8a]">Rethrow your last grenade</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!maps</code>
+                  <span className="text-[#6b6b8a]">Change to a different map</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!pos</code>
+                  <span className="text-[#6b6b8a]">Show your current position and angles</span>
+                </div>
+              </div>
+              <p className="mt-3 text-xs text-[#6b6b8a] italic">
+                Tip: You can also use <code className="text-[#88bbee]">.command</code> instead of <code className="text-[#88bbee]">!command</code>
               </p>
             </div>
-          </div>
 
-          <button
-            onClick={handleEnd}
-            disabled={ending}
-            className="w-full flex items-center justify-center gap-2 rounded-lg bg-[#ff4444] px-4 py-3 text-sm font-semibold text-white transition-all hover:bg-[#cc3333] disabled:opacity-50"
-          >
-            {ending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Square className="h-4 w-4" />}
-            End Session
-          </button>
+            {/* AFK Warning */}
+            <div className="rounded-lg bg-[#ff444410] border border-[#ff444430] p-3">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="h-4 w-4 text-[#ff4444] shrink-0 mt-0.5" />
+                <div className="text-xs">
+                  <p className="text-[#ff4444] font-medium mb-1">AFK Warning</p>
+                  <p className="text-[#6b6b8a]">
+                    You will be kicked after 5 minutes of inactivity and your session will end.
+                    Move around or throw grenades to stay active.
+                  </p>
+                </div>
+              </div>
+            </div>
 
-          {/* How It Works Section */}
-          <div className="mt-4 border-t border-[#2a2a3e] pt-4">
-            <button
-              onClick={() => setShowHowItWorks(!showHowItWorks)}
-              className="w-full flex items-center justify-between text-sm text-[#6b6b8a] hover:text-[#e8e8e8] transition-colors"
-            >
-              <span className="flex items-center gap-2">
-                <Info className="h-4 w-4" />
-                How It Works
-              </span>
-              <ChevronDown
-                className={`h-4 w-4 transition-transform ${showHowItWorks ? 'rotate-180' : ''}`}
-              />
-            </button>
-
-            <AnimatePresence>
-              {showHowItWorks && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="overflow-hidden"
-                >
-                  <div className="pt-4 space-y-4">
-                    {/* Commands */}
-                    <div className="rounded-lg bg-[#0a0a12] p-4">
-                      <div className="flex items-center gap-2 mb-3">
-                        <Terminal className="h-4 w-4 text-[#f0a500]" />
-                        <span className="text-xs font-semibold text-[#e8e8e8] uppercase tracking-wider">
-                          Available Commands
-                        </span>
-                      </div>
-                      <div className="space-y-2 text-xs">
-                        <div className="flex items-start gap-2">
-                          <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!nades</code>
-                          <span className="text-[#6b6b8a]">Browse and teleport to saved lineups</span>
-                        </div>
-                        <div className="flex items-start gap-2">
-                          <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!save &lt;name&gt;</code>
-                          <span className="text-[#6b6b8a]">Save your current position as a lineup</span>
-                        </div>
-                        <div className="flex items-start gap-2">
-                          <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!rethrow</code>
-                          <span className="text-[#6b6b8a]">Rethrow your last grenade</span>
-                        </div>
-                        <div className="flex items-start gap-2">
-                          <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!maps</code>
-                          <span className="text-[#6b6b8a]">Change to a different map</span>
-                        </div>
-                        <div className="flex items-start gap-2">
-                          <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!pos</code>
-                          <span className="text-[#6b6b8a]">Show your current position and angles</span>
-                        </div>
-                      </div>
-                      <p className="mt-3 text-xs text-[#6b6b8a] italic">
-                        Tip: You can also use <code className="text-[#88bbee]">.command</code> instead of <code className="text-[#88bbee]">!command</code>
-                      </p>
-                    </div>
-
-                    {/* AFK Warning */}
-                    <div className="rounded-lg bg-[#ff444410] border border-[#ff444430] p-3">
-                      <div className="flex items-start gap-2">
-                        <AlertTriangle className="h-4 w-4 text-[#ff4444] shrink-0 mt-0.5" />
-                        <div className="text-xs">
-                          <p className="text-[#ff4444] font-medium mb-1">AFK Warning</p>
-                          <p className="text-[#6b6b8a]">
-                            You will be kicked after 5 minutes of inactivity and your session will end.
-                            Move around or throw grenades to stay active.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Practice Mode Info */}
-                    <div className="rounded-lg bg-[#00c85010] border border-[#00c85030] p-3">
-                      <div className="flex items-start gap-2">
-                        <Shield className="h-4 w-4 text-[#00c850] shrink-0 mt-0.5" />
-                        <div className="text-xs">
-                          <p className="text-[#00c850] font-medium mb-1">Practice Mode Active</p>
-                          <p className="text-[#6b6b8a]">
-                            Godmode, infinite ammo, and grenade trajectories are enabled.
-                            Your lineups are automatically synced with your collections.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {/* Practice Mode Info */}
+            <div className="rounded-lg bg-[#00c85010] border border-[#00c85030] p-3">
+              <div className="flex items-start gap-2">
+                <Shield className="h-4 w-4 text-[#00c850] shrink-0 mt-0.5" />
+                <div className="text-xs">
+                  <p className="text-[#00c850] font-medium mb-1">Practice Mode Active</p>
+                  <p className="text-[#6b6b8a]">
+                    Godmode, infinite ammo, and grenade trajectories are enabled.
+                    Your lineups are automatically synced with your collections.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </motion.div>
