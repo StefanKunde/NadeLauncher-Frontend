@@ -622,83 +622,152 @@ export default function PracticeSessionCard() {
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="glass rounded-xl overflow-hidden"
-        style={{ borderTop: '2px solid #f0a500' }}
+        className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-6"
       >
-        <div className="p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#f0a50015]">
-              <Server className="h-5 w-5 text-[#f0a500]" />
+        {/* Server Ready Card */}
+        <div
+          className="glass rounded-xl overflow-hidden"
+          style={{ borderTop: '2px solid #f0a500' }}
+        >
+          <div className="p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#f0a50015]">
+                <Server className="h-5 w-5 text-[#f0a500]" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-[#e8e8e8]">Server Ready</h3>
+                <p className="text-xs text-[#6b6b8a]">
+                  {MAPS.find((m) => m.name === session.mapName)?.displayName ?? session.mapName}
+                  {' — '}Waiting for you to connect
+                </p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-lg font-semibold text-[#e8e8e8]">Server Ready</h3>
-              <p className="text-xs text-[#6b6b8a]">
-                {MAPS.find((m) => m.name === session.mapName)?.displayName ?? session.mapName}
-                {' — '}Waiting for you to connect
-              </p>
-            </div>
-          </div>
 
-          {/* Connection Timeout Warning */}
-          {connectionCountdown !== null && (
-            <div className="rounded-lg bg-[#f0a50015] border border-[#f0a50030] p-3 mb-4">
-              <div className="flex items-center gap-2 text-[#f0a500]">
-                <Clock className="h-4 w-4" />
-                <span className="text-sm font-medium">
-                  Connect within {formatTime(connectionCountdown)}
+            {/* Connection Timeout Warning */}
+            {connectionCountdown !== null && (
+              <div className="rounded-lg bg-[#f0a50015] border border-[#f0a50030] p-3 mb-4">
+                <div className="flex items-center gap-2 text-[#f0a500]">
+                  <Clock className="h-4 w-4" />
+                  <span className="text-sm font-medium">
+                    Connect within {formatTime(connectionCountdown)}
+                  </span>
+                </div>
+                <p className="text-xs text-[#6b6b8a] mt-1">
+                  Session will expire if you don&apos;t connect in time
+                </p>
+              </div>
+            )}
+
+            {/* Connection Details */}
+            <div className="rounded-lg bg-[#0a0a12] p-4 mb-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs text-[#6b6b8a]">Console Command</span>
+                <button
+                  onClick={copyConnectCommand}
+                  className="flex items-center gap-1.5 px-2 py-1 rounded hover:bg-[#1a1a2e] transition-colors text-xs"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="h-3.5 w-3.5 text-[#00c850]" />
+                      <span className="text-[#00c850]">Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-3.5 w-3.5 text-[#6b6b8a]" />
+                      <span className="text-[#6b6b8a]">Copy</span>
+                    </>
+                  )}
+                </button>
+              </div>
+              <code className="block text-sm font-mono text-[#e8e8e8] bg-[#12121a] rounded px-3 py-2 break-all">
+                connect {session.serverIp}:{session.serverPort}; password {session.serverPassword}
+              </code>
+            </div>
+
+            {/* Connect Button */}
+            {connectUrl && (
+              <a
+                href={connectUrl}
+                className="w-full flex items-center justify-center gap-2 rounded-lg bg-[#f0a500] px-4 py-3 text-sm font-bold text-[#0a0a12] transition-all hover:bg-[#d4900a] mb-3"
+              >
+                <ExternalLink className="h-4 w-4" />
+                Connect via Steam
+              </a>
+            )}
+
+            <button
+              onClick={handleEnd}
+              disabled={ending}
+              className="w-full flex items-center justify-center gap-2 rounded-lg border border-[#2a2a3e] bg-transparent px-4 py-2.5 text-sm font-medium text-[#6b6b8a] transition-all hover:border-[#ff4444] hover:text-[#ff4444] disabled:opacity-50"
+            >
+              {ending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Square className="h-4 w-4" />}
+              Cancel Session
+            </button>
+          </div>
+        </div>
+
+        {/* How It Works Card */}
+        <div className="glass rounded-xl overflow-hidden" style={{ borderTop: '2px solid #f0a500' }}>
+          <div className="p-6 space-y-4">
+            {/* Commands */}
+            <div className="rounded-lg bg-[#0a0a12] p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Terminal className="h-4 w-4 text-[#f0a500]" />
+                <span className="text-xs font-semibold text-[#e8e8e8] uppercase tracking-wider">
+                  Available Commands
                 </span>
               </div>
-              <p className="text-xs text-[#6b6b8a] mt-1">
-                Session will expire if you don&apos;t connect in time
+              <div className="space-y-2 text-xs">
+                <div className="flex items-start gap-2">
+                  <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!save &lt;name&gt;</code>
+                  <span className="text-[#6b6b8a]">Save your current position as a lineup</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!rethrow</code>
+                  <span className="text-[#6b6b8a]">Rethrow your last grenade</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!maps</code>
+                  <span className="text-[#6b6b8a]">Change to a different map</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!pos</code>
+                  <span className="text-[#6b6b8a]">Show your current position and angles</span>
+                </div>
+              </div>
+              <p className="mt-3 text-xs text-[#6b6b8a] italic">
+                Tip: You can also use <code className="text-[#88bbee]">.command</code> instead of <code className="text-[#88bbee]">!command</code>
               </p>
             </div>
-          )}
 
-          {/* Connection Details */}
-          <div className="rounded-lg bg-[#0a0a12] p-4 mb-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-[#6b6b8a]">Console Command</span>
-              <button
-                onClick={copyConnectCommand}
-                className="flex items-center gap-1.5 px-2 py-1 rounded hover:bg-[#1a1a2e] transition-colors text-xs"
-              >
-                {copied ? (
-                  <>
-                    <Check className="h-3.5 w-3.5 text-[#00c850]" />
-                    <span className="text-[#00c850]">Copied!</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="h-3.5 w-3.5 text-[#6b6b8a]" />
-                    <span className="text-[#6b6b8a]">Copy</span>
-                  </>
-                )}
-              </button>
+            {/* AFK Warning */}
+            <div className="rounded-lg bg-[#ff444410] border border-[#ff444430] p-3">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="h-4 w-4 text-[#ff4444] shrink-0 mt-0.5" />
+                <div className="text-xs">
+                  <p className="text-[#ff4444] font-medium mb-1">AFK Warning</p>
+                  <p className="text-[#6b6b8a]">
+                    You will be kicked after 5 minutes of inactivity and your session will end.
+                    Move around or throw grenades to stay active.
+                  </p>
+                </div>
+              </div>
             </div>
-            <code className="block text-sm font-mono text-[#e8e8e8] bg-[#12121a] rounded px-3 py-2 break-all">
-              connect {session.serverIp}:{session.serverPort}; password {session.serverPassword}
-            </code>
+
+            {/* Practice Mode Info */}
+            <div className="rounded-lg bg-[#00c85010] border border-[#00c85030] p-3">
+              <div className="flex items-start gap-2">
+                <Shield className="h-4 w-4 text-[#00c850] shrink-0 mt-0.5" />
+                <div className="text-xs">
+                  <p className="text-[#00c850] font-medium mb-1">Practice Mode Active</p>
+                  <p className="text-[#6b6b8a]">
+                    Godmode, infinite ammo, and grenade trajectories are enabled.
+                    Your lineups are automatically synced with your collections.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
-
-          {/* Connect Button */}
-          {connectUrl && (
-            <a
-              href={connectUrl}
-              className="w-full flex items-center justify-center gap-2 rounded-lg bg-[#f0a500] px-4 py-3 text-sm font-bold text-[#0a0a12] transition-all hover:bg-[#d4900a] mb-3"
-            >
-              <ExternalLink className="h-4 w-4" />
-              Connect via Steam
-            </a>
-          )}
-
-          <button
-            onClick={handleEnd}
-            disabled={ending}
-            className="w-full flex items-center justify-center gap-2 rounded-lg border border-[#2a2a3e] bg-transparent px-4 py-2.5 text-sm font-medium text-[#6b6b8a] transition-all hover:border-[#ff4444] hover:text-[#ff4444] disabled:opacity-50"
-          >
-            {ending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Square className="h-4 w-4" />}
-            Cancel Session
-          </button>
         </div>
       </motion.div>
     );
