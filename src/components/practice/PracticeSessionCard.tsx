@@ -37,6 +37,64 @@ function formatMinutes(totalSeconds: number): string {
   return `${mins} min`;
 }
 
+function CommandsList() {
+  return (
+    <div className="rounded-lg bg-[#0a0a12] p-4">
+      <div className="flex items-center gap-2 mb-3">
+        <Terminal className="h-4 w-4 text-[#f0a500]" />
+        <span className="text-xs font-semibold text-[#e8e8e8] uppercase tracking-wider">
+          Available Commands
+        </span>
+      </div>
+      <div className="space-y-2 text-xs">
+        <div className="flex items-start gap-2">
+          <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!save</code>
+          <span className="text-[#6b6b8a]">Save current position as a lineup <span className="text-[#88bbee]">(!s)</span></span>
+        </div>
+        <div className="flex items-start gap-2">
+          <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!desc</code>
+          <span className="text-[#6b6b8a]">Set description for last saved lineup</span>
+        </div>
+        <div className="flex items-start gap-2">
+          <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!rethrow</code>
+          <span className="text-[#6b6b8a]">Rethrow last grenade <span className="text-[#88bbee]">(!r)</span></span>
+        </div>
+        <div className="flex items-start gap-2">
+          <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!back</code>
+          <span className="text-[#6b6b8a]">Teleport back to last lineup</span>
+        </div>
+        <div className="flex items-start gap-2">
+          <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!clear</code>
+          <span className="text-[#6b6b8a]">Remove smokes, molotovs & decoys <span className="text-[#88bbee]">(!c)</span></span>
+        </div>
+        <div className="flex items-start gap-2">
+          <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!noflash</code>
+          <span className="text-[#6b6b8a]">Toggle flash blindness</span>
+        </div>
+        <div className="flex items-start gap-2">
+          <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!ff</code>
+          <span className="text-[#6b6b8a]">Fast-forward time (skip smokes)</span>
+        </div>
+        <div className="flex items-start gap-2">
+          <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!maps</code>
+          <span className="text-[#6b6b8a]">Change to a different map</span>
+        </div>
+        <div className="flex items-start gap-2">
+          <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!kick</code>
+          <span className="text-[#6b6b8a]">Kick a player from the server</span>
+        </div>
+        <div className="flex items-start gap-2">
+          <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!pos</code>
+          <span className="text-[#6b6b8a]">Show current position and angles</span>
+        </div>
+      </div>
+      <p className="mt-3 text-xs text-[#6b6b8a] italic">
+        Tip: You can also use <code className="text-[#88bbee]">.command</code> instead of <code className="text-[#88bbee]">!command</code>
+      </p>
+    </div>
+  );
+}
+
 export default function PracticeSessionCard() {
   const user = useAuthStore((s) => s.user);
   const [session, setSession] = useState<Session | null>(null);
@@ -361,36 +419,7 @@ export default function PracticeSessionCard() {
         {/* How It Works Card */}
         <div className="glass rounded-xl overflow-hidden" style={{ borderTop: '2px solid #f0a500' }}>
           <div className="p-6 space-y-4">
-            {/* Commands */}
-            <div className="rounded-lg bg-[#0a0a12] p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <Terminal className="h-4 w-4 text-[#f0a500]" />
-                <span className="text-xs font-semibold text-[#e8e8e8] uppercase tracking-wider">
-                  Available Commands
-                </span>
-              </div>
-              <div className="space-y-2 text-xs">
-                <div className="flex items-start gap-2">
-                  <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!save &lt;name&gt;</code>
-                  <span className="text-[#6b6b8a]">Save your current position as a lineup</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!rethrow</code>
-                  <span className="text-[#6b6b8a]">Rethrow your last grenade</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!maps</code>
-                  <span className="text-[#6b6b8a]">Change to a different map</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!pos</code>
-                  <span className="text-[#6b6b8a]">Show your current position and angles</span>
-                </div>
-              </div>
-              <p className="mt-3 text-xs text-[#6b6b8a] italic">
-                Tip: You can also use <code className="text-[#88bbee]">.command</code> instead of <code className="text-[#88bbee]">!command</code>
-              </p>
-            </div>
+            <CommandsList />
 
             {/* AFK Warning */}
             <div className="rounded-lg bg-[#ff444410] border border-[#ff444430] p-3">
@@ -514,36 +543,7 @@ export default function PracticeSessionCard() {
         {/* How It Works Card */}
         <div className="glass rounded-xl overflow-hidden" style={{ borderTop: '2px solid #f0a500' }}>
           <div className="p-6 space-y-4">
-            {/* Commands */}
-            <div className="rounded-lg bg-[#0a0a12] p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <Terminal className="h-4 w-4 text-[#f0a500]" />
-                <span className="text-xs font-semibold text-[#e8e8e8] uppercase tracking-wider">
-                  Available Commands
-                </span>
-              </div>
-              <div className="space-y-2 text-xs">
-                <div className="flex items-start gap-2">
-                  <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!save &lt;name&gt;</code>
-                  <span className="text-[#6b6b8a]">Save your current position as a lineup</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!rethrow</code>
-                  <span className="text-[#6b6b8a]">Rethrow your last grenade</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!maps</code>
-                  <span className="text-[#6b6b8a]">Change to a different map</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!pos</code>
-                  <span className="text-[#6b6b8a]">Show your current position and angles</span>
-                </div>
-              </div>
-              <p className="mt-3 text-xs text-[#6b6b8a] italic">
-                Tip: You can also use <code className="text-[#88bbee]">.command</code> instead of <code className="text-[#88bbee]">!command</code>
-              </p>
-            </div>
+            <CommandsList />
 
             {/* AFK Warning */}
             <div className="rounded-lg bg-[#ff444410] border border-[#ff444430] p-3">
@@ -709,36 +709,7 @@ export default function PracticeSessionCard() {
         {/* How It Works Card */}
         <div className="glass rounded-xl overflow-hidden" style={{ borderTop: '2px solid #f0a500' }}>
           <div className="p-6 space-y-4">
-            {/* Commands */}
-            <div className="rounded-lg bg-[#0a0a12] p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <Terminal className="h-4 w-4 text-[#f0a500]" />
-                <span className="text-xs font-semibold text-[#e8e8e8] uppercase tracking-wider">
-                  Available Commands
-                </span>
-              </div>
-              <div className="space-y-2 text-xs">
-                <div className="flex items-start gap-2">
-                  <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!save &lt;name&gt;</code>
-                  <span className="text-[#6b6b8a]">Save your current position as a lineup</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!rethrow</code>
-                  <span className="text-[#6b6b8a]">Rethrow your last grenade</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!maps</code>
-                  <span className="text-[#6b6b8a]">Change to a different map</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!pos</code>
-                  <span className="text-[#6b6b8a]">Show your current position and angles</span>
-                </div>
-              </div>
-              <p className="mt-3 text-xs text-[#6b6b8a] italic">
-                Tip: You can also use <code className="text-[#88bbee]">.command</code> instead of <code className="text-[#88bbee]">!command</code>
-              </p>
-            </div>
+            <CommandsList />
 
             {/* AFK Warning */}
             <div className="rounded-lg bg-[#ff444410] border border-[#ff444430] p-3">
