@@ -8,7 +8,6 @@ import {
   Map,
   Crown,
   ArrowRight,
-  Construction,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth-store';
 import { lineupsApi } from '@/lib/api';
@@ -97,21 +96,6 @@ export default function DashboardPage() {
       variants={stagger}
       className="max-w-7xl"
     >
-      {/* Early Access Banner */}
-      <motion.div variants={fadeUp} custom={0} className="mb-6">
-        <div className="rounded-lg bg-[#f0a50010] border border-[#f0a50030] px-4 py-3 flex items-start gap-3">
-          <Construction className="h-5 w-5 text-[#f0a500] shrink-0 mt-0.5" />
-          <div className="text-sm">
-            <p className="text-[#f0a500] font-medium">Early Access</p>
-            <p className="text-[#6b6b8a] mt-0.5">
-              NadeLauncher is still in development and may have bugs. If you encounter any issues, please let me know on{' '}
-              <a href="https://discord.gg/nadelauncher" target="_blank" rel="noopener noreferrer" className="text-[#4a9fd4] hover:underline">Discord</a>
-              {' '}&mdash; your feedback helps a lot!
-            </p>
-          </div>
-        </div>
-      </motion.div>
-
       {/* Header */}
       <motion.div variants={fadeUp} custom={0} className="mb-8">
         <h1 className="text-3xl font-bold text-[#e8e8e8]">Dashboard</h1>
