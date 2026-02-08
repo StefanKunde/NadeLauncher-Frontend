@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Search, X, Trash2, EyeOff, Loader2 } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Search, X, Trash2, EyeOff, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GRENADE_TYPES, DIFFICULTIES } from '@/lib/constants';
 import type { Lineup } from '@/lib/types';
@@ -54,13 +54,28 @@ export default function MyLineupsTab({
   onUnassign,
   onRadarClick,
 }: MyLineupsTabProps) {
-  const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
+  const [currentPage, setCurrentPage] = useState(1);
 
+  const totalPages = Math.max(1, Math.ceil(lineups.length / ITEMS_PER_PAGE));
+
+  // Reset to page 1 when filters change
   useEffect(() => {
-    setVisibleCount(ITEMS_PER_PAGE);
+    setCurrentPage(1);
   }, [filterGrenade, search]);
 
-  const visibleLineups = lineups.slice(0, visibleCount);
+  // Auto-navigate to the page containing the selected lineup
+  useEffect(() => {
+    if (!selectedId) return;
+    const idx = lineups.findIndex((l) => l.id === selectedId);
+    if (idx === -1) return;
+    const targetPage = Math.floor(idx / ITEMS_PER_PAGE) + 1;
+    if (targetPage !== currentPage) setCurrentPage(targetPage);
+  }, [selectedId, lineups]);
+
+  const visibleLineups = useMemo(
+    () => lineups.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE),
+    [lineups, currentPage],
+  );
 
   if (loading) {
     return (
@@ -271,25 +286,61 @@ export default function MyLineupsTab({
               </AnimatePresence>
             </motion.div>
 
-            {/* Pagination footer */}
-            {lineups.length > 0 && (
-              <div className="mt-6">
-                <div className="flex items-center justify-center gap-4 py-3">
-                  <div className="h-px flex-1 bg-gradient-to-r from-transparent to-[#2a2a3e]/50" />
-                  <span className="text-xs text-[#6b6b8a]">
-                    Showing {Math.min(visibleCount, lineups.length)} of {lineups.length} lineups
-                  </span>
-                  <div className="h-px flex-1 bg-gradient-to-l from-transparent to-[#2a2a3e]/50" />
-                </div>
-                {visibleCount < lineups.length && (
-                  <button
-                    onClick={() => setVisibleCount((v) => v + ITEMS_PER_PAGE)}
-                    className="w-full py-3 rounded-xl text-sm font-medium bg-[#12121a] border border-[#2a2a3e] text-[#6b6b8a] hover:text-[#f0a500] hover:border-[#f0a500]/30 transition-all"
-                  >
-                    Show {Math.min(ITEMS_PER_PAGE, lineups.length - visibleCount)} more
-                  </button>
-                )}
+            {/* Pagination */}
+            {lineups.length > 0 && totalPages > 1 && (
+              <div className="mt-6 flex items-center justify-center gap-1.5">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="p-2 rounded-lg text-[#6b6b8a] hover:text-[#e8e8e8] hover:bg-[#1a1a2e] transition-colors disabled:opacity-30 disabled:pointer-events-none"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                  // Show: first, last, current, and neighbors; ellipsis for gaps
+                  if (
+                    totalPages <= 7 ||
+                    page === 1 ||
+                    page === totalPages ||
+                    Math.abs(page - currentPage) <= 1
+                  ) {
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`min-w-[32px] h-8 rounded-lg text-xs font-medium transition-all ${
+                          page === currentPage
+                            ? 'bg-[#f0a500]/15 text-[#f0a500] border border-[#f0a500]/30'
+                            : 'text-[#6b6b8a] hover:text-[#e8e8e8] hover:bg-[#1a1a2e]'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    );
+                  }
+                  // Ellipsis — only show once per gap
+                  if (page === 2 || page === totalPages - 1) {
+                    return (
+                      <span key={page} className="px-1 text-xs text-[#6b6b8a]/50">
+                        ...
+                      </span>
+                    );
+                  }
+                  return null;
+                })}
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="p-2 rounded-lg text-[#6b6b8a] hover:text-[#e8e8e8] hover:bg-[#1a1a2e] transition-colors disabled:opacity-30 disabled:pointer-events-none"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
               </div>
+            )}
+            {lineups.length > 0 && (
+              <p className="text-center text-[10px] text-[#6b6b8a]/60 mt-2">
+                {Math.min((currentPage - 1) * ITEMS_PER_PAGE + 1, lineups.length)}–{Math.min(currentPage * ITEMS_PER_PAGE, lineups.length)} of {lineups.length}
+              </p>
             )}
           </div>
 

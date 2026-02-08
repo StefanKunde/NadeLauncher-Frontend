@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { Bookmark, BookmarkCheck, Loader2, Search, X } from 'lucide-react';
+import { Bookmark, BookmarkCheck, Loader2, Search, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GRENADE_TYPES, DIFFICULTIES } from '@/lib/constants';
 import type { Lineup } from '@/lib/types';
@@ -40,10 +40,10 @@ export default function BrowseTab({
 }: BrowseTabProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
-  const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-    setVisibleCount(ITEMS_PER_PAGE);
+    setCurrentPage(1);
   }, [filterGrenade, sort, search]);
 
   const filtered = useMemo(() => {
@@ -65,10 +65,21 @@ export default function BrowseTab({
     return result;
   }, [presets, filterGrenade, sort, search]);
 
+  const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
+
   const visibleLineups = useMemo(
-    () => filtered.slice(0, visibleCount),
-    [filtered, visibleCount],
+    () => filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE),
+    [filtered, currentPage],
   );
+
+  // Auto-navigate to the page containing the selected lineup
+  useEffect(() => {
+    if (!selectedId) return;
+    const idx = filtered.findIndex((l) => l.id === selectedId);
+    if (idx === -1) return;
+    const targetPage = Math.floor(idx / ITEMS_PER_PAGE) + 1;
+    if (targetPage !== currentPage) setCurrentPage(targetPage);
+  }, [selectedId, filtered]);
 
   const selectedLineup = useMemo(
     () => presets.find((l) => l.id === selectedId) ?? null,
@@ -259,7 +270,7 @@ export default function BrowseTab({
                           isAssigning
                             ? 'opacity-50 cursor-not-allowed'
                             : isAssigned
-                              ? 'text-[#00c850]/0 group-hover:text-[#00c850] hover:!bg-[#00c850]/10'
+                              ? 'text-[#f0a500] hover:bg-[#f0a500]/10'
                               : 'text-[#6b6b8a]/0 group-hover:text-[#6b6b8a] hover:!text-[#f0a500] hover:!bg-[#f0a500]/10'
                         }`}
                       >
@@ -277,25 +288,59 @@ export default function BrowseTab({
               </AnimatePresence>
             </motion.div>
 
-            {/* Pagination footer */}
-            {filtered.length > 0 && (
-              <div className="mt-6">
-                <div className="flex items-center justify-center gap-4 py-3">
-                  <div className="h-px flex-1 bg-gradient-to-r from-transparent to-[#2a2a3e]/50" />
-                  <span className="text-xs text-[#6b6b8a]">
-                    Showing {Math.min(visibleCount, filtered.length)} of {filtered.length} lineups
-                  </span>
-                  <div className="h-px flex-1 bg-gradient-to-l from-transparent to-[#2a2a3e]/50" />
-                </div>
-                {visibleCount < filtered.length && (
-                  <button
-                    onClick={() => setVisibleCount((v) => v + ITEMS_PER_PAGE)}
-                    className="w-full py-3 rounded-xl text-sm font-medium bg-[#12121a] border border-[#2a2a3e] text-[#6b6b8a] hover:text-[#f0a500] hover:border-[#f0a500]/30 transition-all"
-                  >
-                    Show {Math.min(ITEMS_PER_PAGE, filtered.length - visibleCount)} more
-                  </button>
-                )}
+            {/* Pagination */}
+            {filtered.length > 0 && totalPages > 1 && (
+              <div className="mt-6 flex items-center justify-center gap-1.5">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="p-2 rounded-lg text-[#6b6b8a] hover:text-[#e8e8e8] hover:bg-[#1a1a2e] transition-colors disabled:opacity-30 disabled:pointer-events-none"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                  if (
+                    totalPages <= 7 ||
+                    page === 1 ||
+                    page === totalPages ||
+                    Math.abs(page - currentPage) <= 1
+                  ) {
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`min-w-[32px] h-8 rounded-lg text-xs font-medium transition-all ${
+                          page === currentPage
+                            ? 'bg-[#f0a500]/15 text-[#f0a500] border border-[#f0a500]/30'
+                            : 'text-[#6b6b8a] hover:text-[#e8e8e8] hover:bg-[#1a1a2e]'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    );
+                  }
+                  if (page === 2 || page === totalPages - 1) {
+                    return (
+                      <span key={page} className="px-1 text-xs text-[#6b6b8a]/50">
+                        ...
+                      </span>
+                    );
+                  }
+                  return null;
+                })}
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="p-2 rounded-lg text-[#6b6b8a] hover:text-[#e8e8e8] hover:bg-[#1a1a2e] transition-colors disabled:opacity-30 disabled:pointer-events-none"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
               </div>
+            )}
+            {filtered.length > 0 && (
+              <p className="text-center text-[10px] text-[#6b6b8a]/60 mt-2">
+                {Math.min((currentPage - 1) * ITEMS_PER_PAGE + 1, filtered.length)}–{Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)} of {filtered.length}
+              </p>
             )}
           </div>
 

@@ -12,6 +12,7 @@ import {
   LogOut,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth-store';
+import SidebarServerStatus from './SidebarServerStatus';
 
 const NAV_ITEMS = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -90,6 +91,9 @@ export default function Sidebar() {
           );
         })}
       </nav>
+
+      {/* Server Status */}
+      <SidebarServerStatus />
 
       {/* User Section */}
       <div className="border-t border-[#2a2a3e] px-4 py-4">
