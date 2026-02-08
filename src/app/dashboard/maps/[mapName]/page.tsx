@@ -127,7 +127,8 @@ export default function MapDetailPage() {
       // If this lineup belongs to a subscribed collection, skip it here —
       // it will be added as 'collection' source in the next loop
       if (collectionLineupIds.has(lineup.id)) continue;
-      const isCreator = user && lineup.creatorId === user.id;
+      // Lineups that belong to any collection are never "self-created" on the user frontend
+      const isCreator = user && lineup.creatorId === user.id && !lineup.collectionId;
       result.push({ ...lineup, source: isCreator ? 'created' : 'added' });
       addedIds.add(lineup.id);
     }
