@@ -114,7 +114,19 @@ export default function MapDetailPage() {
     const result: MergedLineup[] = [];
     const addedIds = new Set<string>();
 
+    // Build set of all visible collection lineup IDs so we can prioritise collection source
+    const collectionLineupIds = new Set<string>();
+    for (const colData of subscribedCollectionData) {
+      const hiddenSet = new Set(colData.hiddenLineupIds);
+      for (const lineup of colData.lineups) {
+        if (!hiddenSet.has(lineup.id)) collectionLineupIds.add(lineup.id);
+      }
+    }
+
     for (const lineup of myLineups) {
+      // If this lineup belongs to a subscribed collection, skip it here —
+      // it will be added as 'collection' source in the next loop
+      if (collectionLineupIds.has(lineup.id)) continue;
       const isCreator = user && lineup.creatorId === user.id;
       result.push({ ...lineup, source: isCreator ? 'created' : 'added' });
       addedIds.add(lineup.id);
