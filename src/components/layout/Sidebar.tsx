@@ -7,21 +7,15 @@ import { motion } from 'framer-motion';
 import {
   LayoutDashboard,
   Map,
-  ListChecks,
-  FolderOpen,
   Crown,
   Settings,
   LogOut,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth-store';
-import { GRENADE_TYPES } from '@/lib/constants';
-import GrenadeIcon from '@/components/ui/GrenadeIcon';
 
 const NAV_ITEMS = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { href: '/dashboard/maps', icon: Map, label: 'Maps' },
-  { href: '/dashboard/lineups', icon: ListChecks, label: 'My Lineups' },
-  { href: '/dashboard/collections', icon: FolderOpen, label: 'Collections' },
   { href: '/dashboard/premium', icon: Crown, label: 'Premium', badge: 'PRO' },
   { href: '/dashboard/settings', icon: Settings, label: 'Settings' },
 ];
@@ -96,29 +90,6 @@ export default function Sidebar() {
           );
         })}
       </nav>
-
-      {/* Grenade Types Section */}
-      <div className="mx-4 mt-2 mb-4">
-        <div className="mx-2 mb-3 h-px bg-[#2a2a3e]/60" />
-        <p className="mb-3 px-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-[#6b6b8a]/70">
-          Grenade Types
-        </p>
-        <div className="grid grid-cols-2 gap-1.5">
-          {(Object.entries(GRENADE_TYPES) as [keyof typeof GRENADE_TYPES, { label: string; color: string }][]).map(
-            ([key, { label, color }]) => (
-              <div
-                key={key}
-                className="flex items-center gap-2 rounded-md px-2 py-1.5"
-              >
-                <GrenadeIcon type={key as 'smoke' | 'flash' | 'molotov' | 'he'} size={16} />
-                <span className="text-xs font-medium" style={{ color }}>
-                  {label}
-                </span>
-              </div>
-            ),
-          )}
-        </div>
-      </div>
 
       {/* User Section */}
       <div className="border-t border-[#2a2a3e] px-4 py-4">

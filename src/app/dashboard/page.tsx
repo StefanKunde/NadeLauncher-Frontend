@@ -2,25 +2,18 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import {
   ListChecks,
   Map,
   Crown,
-  ArrowRight,
+  ChevronRight,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth-store';
 import { lineupsApi } from '@/lib/api';
-import { MAPS, GRENADE_TYPES, MAP_COLORS } from '@/lib/constants';
-import GrenadeIcon from '@/components/ui/GrenadeIcon';
+import { MAPS, MAP_COLORS } from '@/lib/constants';
 import PracticeSessionCard from '@/components/practice/PracticeSessionCard';
-
-const GRENADE_DESCRIPTIONS: Record<string, string> = {
-  smoke: 'Control sightlines',
-  flash: 'Blind enemies',
-  molotov: 'Deny positions',
-  he: 'Deal damage',
-};
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -74,7 +67,7 @@ export default function DashboardPage() {
       iconColor: '#f0a500',
     },
     {
-      label: 'Maps Explored',
+      label: 'Maps',
       sublabel: 'Active Duty Pool',
       value: '7 Maps',
       icon: Map,
@@ -108,7 +101,7 @@ export default function DashboardPage() {
       {/* Stats Row */}
       <div className="mb-10 grid grid-cols-1 gap-4 sm:grid-cols-3">
         {loading
-          ? Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
+          ? Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)
           : stats.map((stat, i) => {
               const Icon = stat.icon;
               return (
@@ -141,100 +134,83 @@ export default function DashboardPage() {
         <PracticeSessionCard />
       </motion.div>
 
-      {/* Quick Start */}
-      <motion.div variants={fadeUp} custom={5} className="mb-10">
-        <h2 className="mb-1 text-xl font-semibold text-[#e8e8e8]">Quick Start</h2>
-        <p className="mb-5 text-sm text-[#6b6b8a]">Jump into a map</p>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {MAPS.map((map, i) => {
+      {/* Maps Quick Start */}
+      <motion.div variants={fadeUp} custom={5}>
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <h2 className="text-xl font-semibold text-[#e8e8e8]">Maps</h2>
+            <p className="text-sm text-[#6b6b8a]">Jump into a map to manage your lineups</p>
+          </div>
+          <Link
+            href="/dashboard/maps"
+            className="text-sm font-medium text-[#f0a500] hover:text-[#ffd700] transition-colors flex items-center gap-1"
+          >
+            View all
+            <ChevronRight className="w-4 h-4" />
+          </Link>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {MAPS.slice(0, 4).map((map, i) => {
             const color = MAP_COLORS[map.name] ?? '#f0a500';
             return (
               <motion.div key={map.name} variants={fadeUp} custom={i + 6}>
                 <Link
                   href={`/dashboard/maps/${map.name}`}
-                  className="group relative flex items-center gap-4 overflow-hidden rounded-xl bg-[#12121a] p-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
-                  style={{
-                    borderLeft: `3px solid ${color}`,
-                    border: `1px solid #2a2a3e`,
-                    borderLeftWidth: '3px',
-                    borderLeftColor: color,
-                  }}
+                  className="group block rounded-xl overflow-hidden bg-[#12121a] border border-[#2a2a3e]/50 transition-all duration-300 hover:border-[#2a2a3e] hover:shadow-lg hover:shadow-black/20"
                 >
-                  <div className="flex-1">
-                    <p className="text-base font-semibold text-[#e8e8e8] group-hover:text-white transition-colors">
-                      {map.displayName}
-                    </p>
-                    <p className="mt-0.5 text-xs font-mono text-[#6b6b8a]">{map.name}</p>
+                  <div className="relative h-24 overflow-hidden">
+                    <Image
+                      src={map.screenshot}
+                      alt={map.displayName}
+                      fill
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                      sizes="25vw"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#12121a] via-[#12121a]/30 to-transparent" />
+                    <div className="absolute bottom-0 left-0 right-0 p-3 pb-2">
+                      <h3 className="text-sm font-bold text-white">{map.displayName}</h3>
+                    </div>
+                    <div
+                      className="absolute bottom-0 left-0 right-0 h-[2px]"
+                      style={{ background: `linear-gradient(to right, ${color}, transparent)` }}
+                    />
                   </div>
-                  <ArrowRight
-                    className="h-4 w-4 text-[#6b6b8a] opacity-0 -translate-x-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0"
-                    style={{ color }}
-                  />
-                  {/* Hover glow */}
-                  <div
-                    className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-                    style={{
-                      background: `radial-gradient(ellipse at left center, ${color}08 0%, transparent 70%)`,
-                    }}
-                  />
                 </Link>
               </motion.div>
             );
           })}
         </div>
-      </motion.div>
-
-      {/* Grenade Arsenal */}
-      <motion.div variants={fadeUp} custom={14} className="mb-10">
-        <h2 className="mb-1 text-xl font-semibold text-[#e8e8e8]">Grenade Arsenal</h2>
-        <p className="mb-5 text-sm text-[#6b6b8a]">Master every utility type</p>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {(Object.entries(GRENADE_TYPES) as [string, { label: string; color: string }][]).map(
-            ([key, { label, color }], i) => (
-              <motion.div
-                key={key}
-                variants={fadeUp}
-                custom={i + 15}
-                className="glass rounded-xl overflow-hidden card-hover"
-                style={{ borderTop: `2px solid ${color}` }}
-              >
-                <div className="p-5">
-                  <div className="mb-4 flex items-center gap-3">
-                    <GrenadeIcon
-                      type={key as 'smoke' | 'flash' | 'molotov' | 'he'}
-                      size={36}
-                      glow
+        {/* Second row - remaining maps */}
+        <div className="grid grid-cols-3 gap-3 mt-3">
+          {MAPS.slice(4, 7).map((map, i) => {
+            const color = MAP_COLORS[map.name] ?? '#f0a500';
+            return (
+              <motion.div key={map.name} variants={fadeUp} custom={i + 10}>
+                <Link
+                  href={`/dashboard/maps/${map.name}`}
+                  className="group block rounded-xl overflow-hidden bg-[#12121a] border border-[#2a2a3e]/50 transition-all duration-300 hover:border-[#2a2a3e] hover:shadow-lg hover:shadow-black/20"
+                >
+                  <div className="relative h-20 overflow-hidden">
+                    <Image
+                      src={map.screenshot}
+                      alt={map.displayName}
+                      fill
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                      sizes="33vw"
                     />
-                    <h3 className="text-lg font-semibold" style={{ color }}>
-                      {label}
-                    </h3>
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#12121a] via-[#12121a]/30 to-transparent" />
+                    <div className="absolute bottom-0 left-0 right-0 p-3 pb-2">
+                      <h3 className="text-sm font-bold text-white">{map.displayName}</h3>
+                    </div>
+                    <div
+                      className="absolute bottom-0 left-0 right-0 h-[2px]"
+                      style={{ background: `linear-gradient(to right, ${color}, transparent)` }}
+                    />
                   </div>
-                  <p className="text-sm text-[#6b6b8a]">
-                    {GRENADE_DESCRIPTIONS[key]}
-                  </p>
-                </div>
+                </Link>
               </motion.div>
-            ),
-          )}
-        </div>
-      </motion.div>
-
-      {/* Recent Activity */}
-      <motion.div variants={fadeUp} custom={19}>
-        <h2 className="mb-1 text-xl font-semibold text-[#e8e8e8]">Recent Activity</h2>
-        <p className="mb-5 text-sm text-[#6b6b8a]">Your practice history</p>
-        <div className="glass rounded-xl p-10 text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#1a1a2e]">
-            <Map className="h-6 w-6 text-[#6b6b8a]" />
-          </div>
-          <p className="mb-1 text-[#6b6b8a]">Start practicing to see your activity here</p>
-          <Link
-            href="/dashboard/maps"
-            className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-[#f0a500] hover:underline"
-          >
-            Browse Maps
-            <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
+            );
+          })}
         </div>
       </motion.div>
     </motion.div>

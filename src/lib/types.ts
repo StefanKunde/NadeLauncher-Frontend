@@ -34,6 +34,8 @@ export interface Lineup {
   instructions: string[];
   difficulty: 'easy' | 'medium' | 'hard';
   tags: string[];
+  collectionId?: string;
+  collectionName?: string;
   createdAt: string;
   updatedAt: string;
 }
