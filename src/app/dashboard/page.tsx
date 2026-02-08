@@ -120,7 +120,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Practice Server */}
-      <motion.div variants={fadeUp} custom={4} className="mb-10 max-w-lg">
+      <motion.div variants={fadeUp} custom={4} className="mb-10">
         <h2 className="mb-1 text-xl font-semibold text-[#e8e8e8]">Practice Server</h2>
         <p className="mb-5 text-sm text-[#6b6b8a]">Start a private CS2 practice session</p>
         <PracticeSessionCard />
