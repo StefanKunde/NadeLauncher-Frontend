@@ -128,11 +128,10 @@ export default function MapDetailPage() {
       // it will be added as 'collection' source in the next loop
       if (collectionLineupIds.has(lineup.id)) continue;
       if (lineup.collectionId) {
-        // Individually assigned from a collection — show collection name
+        // Individually assigned from a collection — show collection name but allow unassign
         result.push({
           ...lineup,
-          source: 'collection',
-          sourceCollectionId: lineup.collectionId,
+          source: 'added',
           sourceCollectionName: lineup.collectionName,
         });
       } else {

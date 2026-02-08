@@ -217,9 +217,15 @@ export default function MyLineupsTab({
                         </span>
                       )}
                       {lineup.source === 'added' && (
-                        <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-[#6b6b8a]/10 text-[#6b6b8a] flex-shrink-0">
-                          Added
-                        </span>
+                        lineup.sourceCollectionName ? (
+                          <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-[#3b82f6]/10 text-[#3b82f6] flex-shrink-0 truncate max-w-[120px]">
+                            {lineup.sourceCollectionName}
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-[#6b6b8a]/10 text-[#6b6b8a] flex-shrink-0">
+                            Added
+                          </span>
+                        )
                       )}
 
                       <span
