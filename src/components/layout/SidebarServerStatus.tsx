@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Loader2, Server, Wifi, Copy, Check, XCircle, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
 import { sessionsApi } from '@/lib/api';
 import { useSessionSocket } from '@/hooks/useSessionSocket';
 import { useAuthStore } from '@/store/auth-store';
@@ -56,7 +57,9 @@ export default function SidebarServerStatus() {
     return () => clearInterval(interval);
   }, [session?.startedAt, session?.status]);
 
-  const handleCopy = useCallback(() => {
+  const handleCopy = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     if (!session?.serverIp) return;
     const cmd = `connect ${session.serverIp}:${session.serverPort}; password ${session.serverPassword}`;
     navigator.clipboard.writeText(cmd);
@@ -74,7 +77,7 @@ export default function SidebarServerStatus() {
   if (!user) return null;
 
   return (
-    <div className="mx-4 mb-2">
+    <Link href="/dashboard" className="block mx-4 mb-2 cursor-pointer">
       <AnimatePresence mode="wait">
         {!hasSession ? (
           <motion.div
@@ -82,7 +85,7 @@ export default function SidebarServerStatus() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="rounded-xl bg-[#12121a] border border-[#2a2a3e] p-3"
+            className="rounded-xl bg-[#12121a] border border-[#2a2a3e] p-3 hover:border-[#3a3a5e] transition-colors"
           >
             <div className="flex items-center gap-2.5">
               <Server className="h-4 w-4 text-[#6b6b8a]/40 flex-shrink-0" />
@@ -96,7 +99,7 @@ export default function SidebarServerStatus() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-        <div className="rounded-xl bg-[#12121a] border border-[#2a2a3e] p-3 space-y-2">
+        <div className="rounded-xl bg-[#12121a] border border-[#2a2a3e] p-3 space-y-2 hover:border-[#3a3a5e] transition-colors">
           {/* Queued */}
           {status === 'queued' && (
             <div className="flex items-center gap-2.5">
@@ -196,6 +199,6 @@ export default function SidebarServerStatus() {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </Link>
   );
 }
