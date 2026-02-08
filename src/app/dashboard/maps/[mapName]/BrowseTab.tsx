@@ -1,15 +1,15 @@
 'use client';
 
-import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
-import { Bookmark, BookmarkCheck, ChevronDown, Clock, Loader2, Search, X } from 'lucide-react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import { Bookmark, BookmarkCheck, Loader2, Search, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GRENADE_TYPES, THROW_TYPES, DIFFICULTIES } from '@/lib/constants';
+import { GRENADE_TYPES, DIFFICULTIES } from '@/lib/constants';
 import type { Lineup } from '@/lib/types';
 import GrenadeIcon from '@/components/ui/GrenadeIcon';
 import MapRadar from '@/components/ui/MapRadar';
 import LineupDetailPanel from './LineupDetailPanel';
 import type { GrenadeFilter, SortMode } from './types';
-import { staggerContainer, fadeIn, DIFF_ORDER } from './types';
+import { staggerContainer, staggerItem, DIFF_ORDER } from './types';
 
 const ITEMS_PER_PAGE = 20;
 
@@ -38,11 +38,9 @@ export default function BrowseTab({
   assigningIds,
   onToggleAssign,
 }: BrowseTabProps) {
-  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
-  const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   useEffect(() => {
     setVisibleCount(ITEMS_PER_PAGE);
@@ -79,22 +77,16 @@ export default function BrowseTab({
 
   const handleRadarClick = useCallback((lineup: Lineup) => {
     setSelectedId((prev) => (prev === lineup.id ? null : lineup.id));
-    setExpandedId((prev) => (prev === lineup.id ? null : lineup.id));
-    const el = cardRefs.current[lineup.id];
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, []);
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="space-y-2">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="glass rounded-xl p-5">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-5 h-5 rounded-full bg-[#1a1a2e] animate-pulse" />
-              <div className="h-5 w-48 bg-[#1a1a2e] rounded animate-pulse" />
-            </div>
-            <div className="h-3 w-32 bg-[#1a1a2e] rounded animate-pulse mb-2" />
-            <div className="h-3 w-full bg-[#1a1a2e] rounded animate-pulse" />
+          <div key={i} className="glass rounded-lg p-3 flex items-center gap-3">
+            <div className="w-5 h-5 rounded-full bg-[#1a1a2e] animate-pulse" />
+            <div className="h-4 w-48 bg-[#1a1a2e] rounded animate-pulse" />
+            <div className="h-4 w-16 bg-[#1a1a2e] rounded animate-pulse ml-auto" />
           </div>
         ))}
       </div>
@@ -108,7 +100,7 @@ export default function BrowseTab({
         <p className="text-sm text-[#6b6b8a] leading-relaxed">
           Explore all available lineups for this map. Assign the ones you want to add them to your
           practice server — they&apos;ll show up in the <span className="text-[#e8e8e8]/70">My Lineups</span> tab
-          and in-game. Use search and filters to find exactly what you need.
+          and in-game.
         </p>
       </div>
 
@@ -195,10 +187,10 @@ export default function BrowseTab({
       {filtered.length === 0 ? (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center py-20">
           <div className="flex justify-center gap-3 mb-6 opacity-40">
-            <GrenadeIcon type="smoke" size={32} />
-            <GrenadeIcon type="flash" size={32} />
-            <GrenadeIcon type="molotov" size={32} />
-            <GrenadeIcon type="he" size={32} />
+            <GrenadeIcon type="smoke" size={28} />
+            <GrenadeIcon type="flash" size={28} />
+            <GrenadeIcon type="molotov" size={28} />
+            <GrenadeIcon type="he" size={28} />
           </div>
           <p className="text-[#6b6b8a] text-lg">
             {search.trim() ? 'No lineups match your search' : 'No presets found for this map'}
@@ -215,7 +207,7 @@ export default function BrowseTab({
         <div className="flex gap-6">
           <div className="flex-1 min-w-0">
             <motion.div
-              className="space-y-3"
+              className="space-y-1"
               variants={staggerContainer}
               initial="hidden"
               animate="show"
@@ -223,173 +215,62 @@ export default function BrowseTab({
             >
               <AnimatePresence mode="popLayout">
                 {visibleLineups.map((lineup) => {
-                  const grenadeInfo = GRENADE_TYPES[lineup.grenadeType as keyof typeof GRENADE_TYPES];
                   const diffInfo = DIFFICULTIES[lineup.difficulty as keyof typeof DIFFICULTIES];
+                  const isActive = selectedId === lineup.id;
                   const isAssigned = assignedIds.has(lineup.id);
-                  const isExpanded = expandedId === lineup.id;
                   const isAssigning = assigningIds.has(lineup.id);
 
                   return (
                     <motion.div
                       key={lineup.id}
-                      ref={(el) => { cardRefs.current[lineup.id] = el; }}
-                      variants={fadeIn}
-                      className="glass rounded-xl overflow-hidden cursor-pointer group transition-colors hover:border-[#3a3a5e]"
-                      onClick={() => {
-                        setExpandedId(isExpanded ? null : lineup.id);
-                        setSelectedId(isExpanded ? null : lineup.id);
-                      }}
+                      variants={staggerItem}
+                      exit={{ opacity: 0, x: -16, transition: { duration: 0.15 } }}
+                      className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-150 group ${
+                        isActive
+                          ? 'bg-[#f0a500]/10 border border-[#f0a500]/30'
+                          : 'bg-[#12121a]/60 border border-transparent hover:bg-[#1a1a2e] hover:border-[#2a2a3e]'
+                      }`}
+                      onClick={() => setSelectedId(isActive ? null : lineup.id)}
                     >
-                      <div className="flex">
-                        <div className="w-1 flex-shrink-0" style={{ backgroundColor: grenadeInfo?.color }} />
+                      <GrenadeIcon type={lineup.grenadeType as 'smoke' | 'flash' | 'molotov' | 'he'} size={18} />
 
-                        <div className="flex-1 p-4">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2.5 mb-1.5">
-                                <GrenadeIcon type={lineup.grenadeType as 'smoke' | 'flash' | 'molotov' | 'he'} size={20} />
-                                <h3 className="font-semibold text-[#e8e8e8] truncate">{lineup.name}</h3>
-                                <span
-                                  className="flex items-center gap-1 text-xs font-medium flex-shrink-0"
-                                  style={{ color: diffInfo?.color }}
-                                >
-                                  <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: diffInfo?.color }} />
-                                  {diffInfo?.label}
-                                </span>
-                              </div>
+                      <span className={`text-sm font-medium truncate flex-1 ${isActive ? 'text-[#e8e8e8]' : 'text-[#b8b8cc]'}`}>
+                        {lineup.name}
+                      </span>
 
-                              <div className="flex items-center gap-2 mb-2">
-                                <span className="text-xs px-2 py-0.5 rounded-full bg-[#1a1a2e] text-[#6b6b8a] border border-[#2a2a3e]">
-                                  {THROW_TYPES[lineup.throwType as keyof typeof THROW_TYPES] ?? lineup.throwType}
-                                </span>
-                                {lineup.throwStrength && lineup.throwStrength !== 'full' && (
-                                  <span className="text-xs px-2 py-0.5 rounded-full bg-[#1a1a2e] text-[#6b6b8a] border border-[#2a2a3e]">
-                                    {lineup.throwStrength}
-                                  </span>
-                                )}
-                              </div>
+                      {/* Collection name badge */}
+                      {lineup.collectionName && (
+                        <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-[#3b82f6]/10 text-[#3b82f6] flex-shrink-0 truncate max-w-[120px]">
+                          {lineup.collectionName}
+                        </span>
+                      )}
 
-                              {lineup.description && !isExpanded && (
-                                <p className="text-sm text-[#6b6b8a] line-clamp-2">{lineup.description}</p>
-                              )}
-                            </div>
+                      <span
+                        className="w-2 h-2 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: diffInfo?.color }}
+                        title={diffInfo?.label}
+                      />
 
-                            <button
-                              onClick={(e) => onToggleAssign(lineup, e)}
-                              disabled={isAssigning}
-                              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex-shrink-0 ${
-                                isAssigned
-                                  ? 'bg-[#00c850]/10 text-[#00c850] border border-[#00c850]/30 hover:bg-[#ff4444]/10 hover:text-[#ff4444] hover:border-[#ff4444]/30'
-                                  : 'bg-[#1a1a2e] text-[#6b6b8a] border border-[#2a2a3e] hover:text-[#f0a500] hover:border-[#f0a500]/30 hover:bg-[#f0a500]/10'
-                              } ${isAssigning ? 'opacity-50 cursor-not-allowed' : ''}`}
-                            >
-                              {isAssigning ? (
-                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                              ) : isAssigned ? (
-                                <>
-                                  <BookmarkCheck className="w-3.5 h-3.5" />
-                                  <span className="hidden sm:inline">Assigned</span>
-                                </>
-                              ) : (
-                                <>
-                                  <Bookmark className="w-3.5 h-3.5" />
-                                  <span className="hidden sm:inline">Assign</span>
-                                </>
-                              )}
-                            </button>
-                          </div>
-
-                          <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#2a2a3e]/50">
-                            <span className="text-xs text-[#6b6b8a]">
-                              {lineup.isPreset ? (
-                                <span className="px-2 py-0.5 rounded-full bg-[#f0a500]/10 text-[#f0a500]">Preset</span>
-                              ) : (
-                                <>By {lineup.creatorName || 'Unknown'}</>
-                              )}
-                            </span>
-                            <ChevronDown
-                              className={`w-4 h-4 text-[#6b6b8a] transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
-                            />
-                          </div>
-
-                          <AnimatePresence>
-                            {isExpanded && (
-                              <motion.div
-                                initial={{ height: 0, opacity: 0 }}
-                                animate={{ height: 'auto', opacity: 1 }}
-                                exit={{ height: 0, opacity: 0 }}
-                                transition={{ duration: 0.25, ease: 'easeInOut' }}
-                                className="overflow-hidden"
-                              >
-                                <div className="mt-4 pt-4 border-t border-[#2a2a3e]/50 space-y-4">
-                                  {lineup.description && (
-                                    <div>
-                                      <h4 className="text-xs font-semibold text-[#f0a500] uppercase tracking-wider mb-1.5">Description</h4>
-                                      <p className="text-sm text-[#6b6b8a]">{lineup.description}</p>
-                                    </div>
-                                  )}
-
-                                  {lineup.instructions.length > 0 && (
-                                    <div>
-                                      <h4 className="text-xs font-semibold text-[#f0a500] uppercase tracking-wider mb-2">Instructions</h4>
-                                      <ol className="space-y-2">
-                                        {lineup.instructions.map((step, i) => (
-                                          <li key={i} className="flex gap-2.5 text-sm">
-                                            <span
-                                              className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold mt-0.5"
-                                              style={{ backgroundColor: `${grenadeInfo?.color}20`, color: grenadeInfo?.color }}
-                                            >
-                                              {i + 1}
-                                            </span>
-                                            <span className="text-[#e8e8e8]/80">{step}</span>
-                                          </li>
-                                        ))}
-                                      </ol>
-                                    </div>
-                                  )}
-
-                                  <div className="grid grid-cols-2 gap-3">
-                                    <div className="bg-[#0a0a0f] rounded-lg p-3">
-                                      <p className="text-[10px] text-[#6b6b8a] uppercase tracking-wider mb-1">Throw Position</p>
-                                      <p className="text-xs font-mono text-[#e8e8e8]/70">
-                                        {lineup.throwPosition.x.toFixed(0)}, {lineup.throwPosition.y.toFixed(0)},{' '}
-                                        {lineup.throwPosition.z.toFixed(0)}
-                                      </p>
-                                    </div>
-                                    <div className="bg-[#0a0a0f] rounded-lg p-3">
-                                      <p className="text-[10px] text-[#6b6b8a] uppercase tracking-wider mb-1">Landing Position</p>
-                                      <p className="text-xs font-mono text-[#e8e8e8]/70">
-                                        {lineup.landingPosition.x.toFixed(0)}, {lineup.landingPosition.y.toFixed(0)},{' '}
-                                        {lineup.landingPosition.z.toFixed(0)}
-                                      </p>
-                                    </div>
-                                  </div>
-
-                                  {lineup.tags.length > 0 && (
-                                    <div className="flex flex-wrap gap-1.5">
-                                      {lineup.tags.map((tag) => (
-                                        <span key={tag} className="text-[10px] px-2 py-0.5 rounded-full bg-[#f0a500]/10 text-[#f0a500]/70">
-                                          {tag}
-                                        </span>
-                                      ))}
-                                    </div>
-                                  )}
-
-                                  <div className="flex items-center gap-1.5 text-xs text-[#6b6b8a]/60">
-                                    <Clock className="w-3 h-3" />
-                                    Created{' '}
-                                    {new Date(lineup.createdAt).toLocaleDateString('en-US', {
-                                      year: 'numeric',
-                                      month: 'short',
-                                      day: 'numeric',
-                                    })}
-                                  </div>
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </div>
-                      </div>
+                      {/* Assign/Unassign button */}
+                      <button
+                        onClick={(e) => onToggleAssign(lineup, e)}
+                        disabled={isAssigning}
+                        className={`flex-shrink-0 flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-all ${
+                          isAssigning
+                            ? 'opacity-50 cursor-not-allowed'
+                            : isAssigned
+                              ? 'text-[#00c850]/0 group-hover:text-[#00c850] hover:!bg-[#00c850]/10'
+                              : 'text-[#6b6b8a]/0 group-hover:text-[#6b6b8a] hover:!text-[#f0a500] hover:!bg-[#f0a500]/10'
+                        }`}
+                      >
+                        {isAssigning ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : isAssigned ? (
+                          <BookmarkCheck className="w-3.5 h-3.5" />
+                        ) : (
+                          <Bookmark className="w-3.5 h-3.5" />
+                        )}
+                      </button>
                     </motion.div>
                   );
                 })}

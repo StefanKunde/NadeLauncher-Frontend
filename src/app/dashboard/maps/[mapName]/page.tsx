@@ -127,9 +127,18 @@ export default function MapDetailPage() {
       // If this lineup belongs to a subscribed collection, skip it here —
       // it will be added as 'collection' source in the next loop
       if (collectionLineupIds.has(lineup.id)) continue;
-      // Lineups that belong to any collection are never "self-created" on the user frontend
-      const isCreator = user && lineup.creatorId === user.id && !lineup.collectionId;
-      result.push({ ...lineup, source: isCreator ? 'created' : 'added' });
+      if (lineup.collectionId) {
+        // Individually assigned from a collection — show collection name
+        result.push({
+          ...lineup,
+          source: 'collection',
+          sourceCollectionId: lineup.collectionId,
+          sourceCollectionName: lineup.collectionName,
+        });
+      } else {
+        const isCreator = user && lineup.creatorId === user.id;
+        result.push({ ...lineup, source: isCreator ? 'created' : 'added' });
+      }
       addedIds.add(lineup.id);
     }
 
@@ -388,6 +397,7 @@ export default function MapDetailPage() {
         {activeTab === 'collections' && (
           <motion.div key="collections" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.2 }}>
             <CollectionsTab
+              mapName={mapName}
               collections={collections}
               loading={collectionsLoading}
               subscribingIds={subscribingIds}

@@ -1,11 +1,19 @@
 'use client';
 
-import { Check, Plus, Loader2, FolderOpen } from 'lucide-react';
-import { motion } from 'framer-motion';
-import type { LineupCollection } from '@/lib/types';
-import { staggerContainer, fadeIn } from './types';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import { Check, Plus, Loader2, FolderOpen, ArrowLeft, Search, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { DIFFICULTIES } from '@/lib/constants';
+import type { Lineup, LineupCollection } from '@/lib/types';
+import { collectionsApi } from '@/lib/api';
+import GrenadeIcon from '@/components/ui/GrenadeIcon';
+import MapRadar from '@/components/ui/MapRadar';
+import LineupDetailPanel from './LineupDetailPanel';
+import { staggerContainer, staggerItem, fadeIn } from './types';
+import toast from 'react-hot-toast';
 
 interface CollectionsTabProps {
+  mapName: string;
   collections: LineupCollection[];
   loading: boolean;
   subscribingIds: Set<string>;
@@ -13,11 +21,63 @@ interface CollectionsTabProps {
 }
 
 export default function CollectionsTab({
+  mapName,
   collections,
   loading,
   subscribingIds,
   onToggleSubscription,
 }: CollectionsTabProps) {
+  const [selectedCollection, setSelectedCollection] = useState<LineupCollection | null>(null);
+  const [collectionLineups, setCollectionLineups] = useState<Lineup[]>([]);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [selectedLineupId, setSelectedLineupId] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+
+  const loadCollectionLineups = useCallback(async (collection: LineupCollection) => {
+    setSelectedCollection(collection);
+    setDetailLoading(true);
+    setSelectedLineupId(null);
+    setSearch('');
+    try {
+      const data = await collectionsApi.getById(collection.id);
+      setCollectionLineups(data.lineups);
+    } catch {
+      toast.error('Failed to load collection lineups');
+      setSelectedCollection(null);
+    } finally {
+      setDetailLoading(false);
+    }
+  }, []);
+
+  const handleBack = useCallback(() => {
+    setSelectedCollection(null);
+    setCollectionLineups([]);
+    setSelectedLineupId(null);
+    setSearch('');
+  }, []);
+
+  const filteredLineups = useMemo(() => {
+    if (!search.trim()) return collectionLineups;
+    const q = search.toLowerCase().trim();
+    return collectionLineups.filter((l) => l.name.toLowerCase().includes(q));
+  }, [collectionLineups, search]);
+
+  const selectedLineup = useMemo(
+    () => collectionLineups.find((l) => l.id === selectedLineupId) ?? null,
+    [collectionLineups, selectedLineupId],
+  );
+
+  const handleRadarClick = useCallback((lineup: Lineup) => {
+    setSelectedLineupId((prev) => (prev === lineup.id ? null : lineup.id));
+  }, []);
+
+  // Reset detail view when the collection list reloads
+  useEffect(() => {
+    if (selectedCollection && !collections.find((c) => c.id === selectedCollection.id)) {
+      handleBack();
+    }
+  }, [collections, selectedCollection, handleBack]);
+
   if (loading) {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -36,6 +96,182 @@ export default function CollectionsTab({
     );
   }
 
+  /* ── Collection Detail View ── */
+  if (selectedCollection) {
+    const isSubscribing = subscribingIds.has(selectedCollection.id);
+    // Get latest subscription state from collections array
+    const latestCollection = collections.find((c) => c.id === selectedCollection.id) ?? selectedCollection;
+
+    return (
+      <>
+        {/* Header */}
+        <div className="flex items-center gap-4 mb-6">
+          <button
+            onClick={handleBack}
+            className="flex items-center gap-1.5 text-sm text-[#6b6b8a] hover:text-[#e8e8e8] transition-colors group"
+          >
+            <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+            Collections
+          </button>
+          <div className="h-4 w-px bg-[#2a2a3e]" />
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <h2 className="text-lg font-semibold text-[#e8e8e8] truncate">{selectedCollection.name}</h2>
+            {selectedCollection.isDefault && (
+              <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-[#f0a500]/15 text-[#f0a500] flex-shrink-0">
+                DEFAULT
+              </span>
+            )}
+          </div>
+          <button
+            onClick={() => onToggleSubscription(latestCollection)}
+            disabled={isSubscribing}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 disabled:opacity-50 flex-shrink-0 ${
+              latestCollection.isSubscribed
+                ? 'bg-[#22c55e]/10 text-[#22c55e] border border-[#22c55e]/30 hover:bg-[#22c55e]/20'
+                : 'bg-[#f0a500]/10 text-[#f0a500] border border-[#f0a500]/30 hover:bg-[#f0a500]/20'
+            }`}
+          >
+            {isSubscribing ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : latestCollection.isSubscribed ? (
+              <>
+                <Check className="w-4 h-4" />
+                Subscribed
+              </>
+            ) : (
+              <>
+                <Plus className="w-4 h-4" />
+                Subscribe
+              </>
+            )}
+          </button>
+        </div>
+
+        {selectedCollection.description && (
+          <div className="mb-6 px-4 py-3 rounded-xl bg-[#12121a]/80 border border-[#2a2a3e]/50">
+            <p className="text-sm text-[#6b6b8a] leading-relaxed">{selectedCollection.description}</p>
+          </div>
+        )}
+
+        {/* Search */}
+        {collectionLineups.length > 5 && (
+          <div className="relative mb-4 max-w-xs">
+            <Search
+              className="absolute top-1/2 -translate-y-1/2 w-4 h-4 text-[#6b6b8a] pointer-events-none"
+              style={{ left: 12 }}
+            />
+            <input
+              type="text"
+              placeholder="Search lineups..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="bg-[#12121a] border border-[#2a2a3e] rounded-xl text-sm text-[#e8e8e8] placeholder-[#6b6b8a]/50 w-full focus:outline-none focus:border-[#f0a500]/40 transition-colors"
+              style={{ paddingLeft: 36, paddingRight: 40, paddingTop: 8, paddingBottom: 8 }}
+            />
+            {search && (
+              <button
+                onClick={() => setSearch('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b6b8a] hover:text-[#e8e8e8] transition-colors"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Lineup List */}
+        {detailLoading ? (
+          <div className="space-y-2">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="glass rounded-lg p-3 flex items-center gap-3">
+                <div className="w-5 h-5 rounded-full bg-[#1a1a2e] animate-pulse" />
+                <div className="h-4 w-48 bg-[#1a1a2e] rounded animate-pulse" />
+                <div className="h-4 w-16 bg-[#1a1a2e] rounded animate-pulse ml-auto" />
+              </div>
+            ))}
+          </div>
+        ) : filteredLineups.length === 0 ? (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center py-16">
+            <FolderOpen className="w-10 h-10 text-[#6b6b8a]/40 mx-auto mb-3" />
+            <p className="text-[#6b6b8a] text-lg">
+              {search.trim() ? 'No lineups match your search' : 'No lineups in this collection'}
+            </p>
+          </motion.div>
+        ) : (
+          <div className="flex gap-6">
+            <div className="flex-1 min-w-0">
+              <motion.div
+                className="space-y-1"
+                variants={staggerContainer}
+                initial="hidden"
+                animate="show"
+                key={search}
+              >
+                <AnimatePresence mode="popLayout">
+                  {filteredLineups.map((lineup) => {
+                    const diffInfo = DIFFICULTIES[lineup.difficulty as keyof typeof DIFFICULTIES];
+                    const isActive = selectedLineupId === lineup.id;
+
+                    return (
+                      <motion.div
+                        key={lineup.id}
+                        variants={staggerItem}
+                        exit={{ opacity: 0, x: -16, transition: { duration: 0.15 } }}
+                        className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-150 group ${
+                          isActive
+                            ? 'bg-[#f0a500]/10 border border-[#f0a500]/30'
+                            : 'bg-[#12121a]/60 border border-transparent hover:bg-[#1a1a2e] hover:border-[#2a2a3e]'
+                        }`}
+                        onClick={() => setSelectedLineupId(isActive ? null : lineup.id)}
+                      >
+                        <GrenadeIcon type={lineup.grenadeType as 'smoke' | 'flash' | 'molotov' | 'he'} size={18} />
+
+                        <span className={`text-sm font-medium truncate flex-1 ${isActive ? 'text-[#e8e8e8]' : 'text-[#b8b8cc]'}`}>
+                          {lineup.name}
+                        </span>
+
+                        <span
+                          className="w-2 h-2 rounded-full flex-shrink-0"
+                          style={{ backgroundColor: diffInfo?.color }}
+                          title={diffInfo?.label}
+                        />
+                      </motion.div>
+                    );
+                  })}
+                </AnimatePresence>
+              </motion.div>
+
+              {/* Count */}
+              <div className="mt-4 flex items-center justify-center gap-4 py-2">
+                <div className="h-px flex-1 bg-gradient-to-r from-transparent to-[#2a2a3e]/50" />
+                <span className="text-xs text-[#6b6b8a]">
+                  {filteredLineups.length} {filteredLineups.length === 1 ? 'lineup' : 'lineups'}
+                </span>
+                <div className="h-px flex-1 bg-gradient-to-l from-transparent to-[#2a2a3e]/50" />
+              </div>
+            </div>
+
+            {/* Right: Radar + Details panel */}
+            <div className="w-[500px] flex-shrink-0 hidden lg:block">
+              <div className="sticky top-4 space-y-4">
+                <MapRadar
+                  mapName={mapName}
+                  lineups={filteredLineups}
+                  selectedLineupId={selectedLineupId}
+                  onLineupClick={handleRadarClick}
+                />
+                <AnimatePresence mode="wait">
+                  {selectedLineup && <LineupDetailPanel lineup={selectedLineup} />}
+                </AnimatePresence>
+              </div>
+            </div>
+          </div>
+        )}
+      </>
+    );
+  }
+
+  /* ── Collection List View ── */
   if (collections.length === 0) {
     return (
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center py-20">
@@ -52,75 +288,75 @@ export default function CollectionsTab({
       <div className="mb-6 px-4 py-3 rounded-xl bg-[#12121a]/80 border border-[#2a2a3e]/50">
         <p className="text-sm text-[#6b6b8a] leading-relaxed">
           Lineup packs curated for this map. Subscribe to a collection to instantly add all its
-          lineups to your arsenal. You can hide individual lineups you don&apos;t need from
-          the <span className="text-[#e8e8e8]/70">My Lineups</span> tab.
+          lineups to your arsenal. Click a collection to preview its lineups.
         </p>
       </div>
 
       <motion.div
         className="grid grid-cols-1 lg:grid-cols-2 gap-4"
-      variants={staggerContainer}
-      initial="hidden"
-      animate="show"
-    >
-      {collections.map((collection) => {
-        const isSubscribing = subscribingIds.has(collection.id);
+        variants={staggerContainer}
+        initial="hidden"
+        animate="show"
+      >
+        {collections.map((collection) => {
+          const isSubscribing = subscribingIds.has(collection.id);
 
-        return (
-          <motion.div
-            key={collection.id}
-            variants={fadeIn}
-            className="glass rounded-xl p-5 group transition-colors hover:border-[#3a3a5e]"
-          >
-            <div className="flex items-start justify-between gap-3 mb-2">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <h3 className="font-semibold text-[#e8e8e8] truncate">{collection.name}</h3>
-                  {collection.isDefault && (
-                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-[#f0a500]/15 text-[#f0a500] flex-shrink-0">
-                      DEFAULT
-                    </span>
+          return (
+            <motion.div
+              key={collection.id}
+              variants={fadeIn}
+              className="glass rounded-xl p-5 group transition-colors hover:border-[#3a3a5e] cursor-pointer"
+              onClick={() => loadCollectionLineups(collection)}
+            >
+              <div className="flex items-start justify-between gap-3 mb-2">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="font-semibold text-[#e8e8e8] truncate">{collection.name}</h3>
+                    {collection.isDefault && (
+                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-[#f0a500]/15 text-[#f0a500] flex-shrink-0">
+                        DEFAULT
+                      </span>
+                    )}
+                  </div>
+                  {collection.description && (
+                    <p className="text-sm text-[#6b6b8a] line-clamp-2">{collection.description}</p>
                   )}
                 </div>
-                {collection.description && (
-                  <p className="text-sm text-[#6b6b8a] line-clamp-2">{collection.description}</p>
-                )}
               </div>
-            </div>
 
-            <div className="flex items-center justify-between mt-4 pt-3 border-t border-[#2a2a3e]/50">
-              <span className="text-xs text-[#6b6b8a]">
-                {collection.lineupCount} {collection.lineupCount === 1 ? 'lineup' : 'lineups'}
-              </span>
+              <div className="flex items-center justify-between mt-4 pt-3 border-t border-[#2a2a3e]/50">
+                <span className="text-xs text-[#6b6b8a]">
+                  {collection.lineupCount} {collection.lineupCount === 1 ? 'lineup' : 'lineups'}
+                </span>
 
-              <button
-                onClick={() => onToggleSubscription(collection)}
-                disabled={isSubscribing}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 disabled:opacity-50 ${
-                  collection.isSubscribed
-                    ? 'bg-[#22c55e]/10 text-[#22c55e] border border-[#22c55e]/30 hover:bg-[#22c55e]/20'
-                    : 'bg-[#f0a500]/10 text-[#f0a500] border border-[#f0a500]/30 hover:bg-[#f0a500]/20'
-                }`}
-              >
-                {isSubscribing ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : collection.isSubscribed ? (
-                  <>
-                    <Check className="w-4 h-4" />
-                    Subscribed
-                  </>
-                ) : (
-                  <>
-                    <Plus className="w-4 h-4" />
-                    Subscribe
-                  </>
-                )}
-              </button>
-            </div>
-          </motion.div>
-        );
-      })}
-    </motion.div>
+                <button
+                  onClick={(e) => { e.stopPropagation(); onToggleSubscription(collection); }}
+                  disabled={isSubscribing}
+                  className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 disabled:opacity-50 ${
+                    collection.isSubscribed
+                      ? 'bg-[#22c55e]/10 text-[#22c55e] border border-[#22c55e]/30 hover:bg-[#22c55e]/20'
+                      : 'bg-[#f0a500]/10 text-[#f0a500] border border-[#f0a500]/30 hover:bg-[#f0a500]/20'
+                  }`}
+                >
+                  {isSubscribing ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : collection.isSubscribed ? (
+                    <>
+                      <Check className="w-4 h-4" />
+                      Subscribed
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-4 h-4" />
+                      Subscribe
+                    </>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          );
+        })}
+      </motion.div>
     </>
   );
 }
