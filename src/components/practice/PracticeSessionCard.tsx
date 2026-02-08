@@ -68,6 +68,10 @@ function CommandsList() {
           <span className="text-[#6b6b8a]">Remove smokes, molotovs & decoys <span className="text-[#88bbee]">(!c)</span></span>
         </div>
         <div className="flex items-start gap-2">
+          <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!filter</code>
+          <span className="text-[#6b6b8a]">Filter by grenade type (smoke, flash, he, molotov, all) <span className="text-[#88bbee]">(!f)</span></span>
+        </div>
+        <div className="flex items-start gap-2">
           <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!noflash</code>
           <span className="text-[#6b6b8a]">Toggle flash blindness</span>
         </div>
