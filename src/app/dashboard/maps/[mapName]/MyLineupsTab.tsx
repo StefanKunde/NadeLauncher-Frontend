@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Search, X, Trash2, EyeOff, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GRENADE_TYPES, DIFFICULTIES } from '@/lib/constants';
@@ -9,6 +10,8 @@ import MapRadar from '@/components/ui/MapRadar';
 import LineupDetailPanel from './LineupDetailPanel';
 import type { MergedLineup, GrenadeFilter } from './types';
 import { staggerContainer, staggerItem } from './types';
+
+const ITEMS_PER_PAGE = 20;
 
 interface MyLineupsTabProps {
   mapName: string;
@@ -51,6 +54,14 @@ export default function MyLineupsTab({
   onUnassign,
   onRadarClick,
 }: MyLineupsTabProps) {
+  const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
+
+  useEffect(() => {
+    setVisibleCount(ITEMS_PER_PAGE);
+  }, [filterGrenade, search]);
+
+  const visibleLineups = lineups.slice(0, visibleCount);
+
   if (loading) {
     return (
       <div className="space-y-2">
@@ -67,6 +78,15 @@ export default function MyLineupsTab({
 
   return (
     <>
+      {/* Intro */}
+      <div className="mb-6 px-4 py-3 rounded-xl bg-[#12121a]/80 border border-[#2a2a3e]/50">
+        <p className="text-sm text-[#6b6b8a] leading-relaxed">
+          Your active lineup arsenal — everything here will be available in your practice server.
+          Includes your own lineups, individually assigned presets, and lineups from
+          {' '}<span className="text-[#e8e8e8]/70">subscribed collections</span>.
+        </p>
+      </div>
+
       {/* Filter bar */}
       <div className="flex flex-wrap items-center gap-3 mb-6">
         <div className="flex gap-2 flex-wrap">
@@ -160,7 +180,7 @@ export default function MyLineupsTab({
               key={`${filterGrenade}-${search}`}
             >
               <AnimatePresence mode="popLayout">
-                {lineups.map((lineup) => {
+                {visibleLineups.map((lineup) => {
                   const diffInfo = DIFFICULTIES[lineup.difficulty as keyof typeof DIFFICULTIES];
                   const isActive = selectedId === lineup.id;
                   const isDeleting = deletingIds.has(lineup.id);
@@ -244,10 +264,31 @@ export default function MyLineupsTab({
                 })}
               </AnimatePresence>
             </motion.div>
+
+            {/* Pagination footer */}
+            {lineups.length > 0 && (
+              <div className="mt-6">
+                <div className="flex items-center justify-center gap-4 py-3">
+                  <div className="h-px flex-1 bg-gradient-to-r from-transparent to-[#2a2a3e]/50" />
+                  <span className="text-xs text-[#6b6b8a]">
+                    Showing {Math.min(visibleCount, lineups.length)} of {lineups.length} lineups
+                  </span>
+                  <div className="h-px flex-1 bg-gradient-to-l from-transparent to-[#2a2a3e]/50" />
+                </div>
+                {visibleCount < lineups.length && (
+                  <button
+                    onClick={() => setVisibleCount((v) => v + ITEMS_PER_PAGE)}
+                    className="w-full py-3 rounded-xl text-sm font-medium bg-[#12121a] border border-[#2a2a3e] text-[#6b6b8a] hover:text-[#f0a500] hover:border-[#f0a500]/30 transition-all"
+                  >
+                    Show {Math.min(ITEMS_PER_PAGE, lineups.length - visibleCount)} more
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Right: Radar + Details panel */}
-          <div className="w-[400px] flex-shrink-0 hidden lg:block">
+          <div className="w-[500px] flex-shrink-0 hidden lg:block">
             <div className="sticky top-4 space-y-4">
               <MapRadar
                 mapName={mapName}

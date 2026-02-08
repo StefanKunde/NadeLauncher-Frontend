@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useMemo, useCallback, useRef } from 'react';
-import { Bookmark, BookmarkCheck, ChevronDown, Clock, Loader2 } from 'lucide-react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import { Bookmark, BookmarkCheck, ChevronDown, Clock, Loader2, Search, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GRENADE_TYPES, THROW_TYPES, DIFFICULTIES } from '@/lib/constants';
 import type { Lineup } from '@/lib/types';
@@ -10,6 +10,8 @@ import MapRadar from '@/components/ui/MapRadar';
 import LineupDetailPanel from './LineupDetailPanel';
 import type { GrenadeFilter, SortMode } from './types';
 import { staggerContainer, fadeIn, DIFF_ORDER } from './types';
+
+const ITEMS_PER_PAGE = 20;
 
 interface BrowseTabProps {
   mapName: string;
@@ -38,12 +40,22 @@ export default function BrowseTab({
 }: BrowseTabProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  useEffect(() => {
+    setVisibleCount(ITEMS_PER_PAGE);
+  }, [filterGrenade, sort, search]);
 
   const filtered = useMemo(() => {
     let result = presets;
     if (filterGrenade !== 'all') {
       result = result.filter((l) => l.grenadeType === filterGrenade);
+    }
+    if (search.trim()) {
+      const q = search.toLowerCase().trim();
+      result = result.filter((l) => l.name.toLowerCase().includes(q));
     }
     if (sort === 'name') {
       result = [...result].sort((a, b) => a.name.localeCompare(b.name));
@@ -53,7 +65,12 @@ export default function BrowseTab({
       result = [...result].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     }
     return result;
-  }, [presets, filterGrenade, sort]);
+  }, [presets, filterGrenade, sort, search]);
+
+  const visibleLineups = useMemo(
+    () => filtered.slice(0, visibleCount),
+    [filtered, visibleCount],
+  );
 
   const selectedLineup = useMemo(
     () => presets.find((l) => l.id === selectedId) ?? null,
@@ -86,6 +103,15 @@ export default function BrowseTab({
 
   return (
     <>
+      {/* Intro */}
+      <div className="mb-6 px-4 py-3 rounded-xl bg-[#12121a]/80 border border-[#2a2a3e]/50">
+        <p className="text-sm text-[#6b6b8a] leading-relaxed">
+          Explore all available lineups for this map. Assign the ones you want to add them to your
+          practice server — they&apos;ll show up in the <span className="text-[#e8e8e8]/70">My Lineups</span> tab
+          and in-game. Use search and filters to find exactly what you need.
+        </p>
+      </div>
+
       {/* Filter Bar */}
       <div className="flex flex-wrap items-center gap-3 mb-6">
         <div className="flex gap-2 flex-wrap">
@@ -120,21 +146,48 @@ export default function BrowseTab({
           ))}
         </div>
 
-        <div className="ml-auto flex items-center gap-2">
-          <span className="text-xs text-[#6b6b8a]">Sort:</span>
-          {(['name', 'difficulty', 'newest'] as SortMode[]).map((s) => (
-            <button
-              key={s}
-              onClick={() => setSort(s)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                sort === s
-                  ? 'bg-[#1a1a2e] text-[#e8e8e8] border border-[#3a3a5e]'
-                  : 'text-[#6b6b8a] hover:text-[#e8e8e8]'
-              }`}
-            >
-              {s.charAt(0).toUpperCase() + s.slice(1)}
-            </button>
-          ))}
+        <div className="ml-auto flex items-center gap-3">
+          {/* Search */}
+          <div className="relative">
+            <Search
+              className="absolute top-1/2 -translate-y-1/2 w-4 h-4 text-[#6b6b8a] pointer-events-none"
+              style={{ left: 12 }}
+            />
+            <input
+              type="text"
+              placeholder="Search lineups..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="bg-[#12121a] border border-[#2a2a3e] rounded-xl text-sm text-[#e8e8e8] placeholder-[#6b6b8a]/50 w-56 focus:outline-none focus:border-[#f0a500]/40 transition-colors"
+              style={{ paddingLeft: 36, paddingRight: 40, paddingTop: 8, paddingBottom: 8 }}
+            />
+            {search && (
+              <button
+                onClick={() => setSearch('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b6b8a] hover:text-[#e8e8e8] transition-colors"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          {/* Sort */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-[#6b6b8a]">Sort:</span>
+            {(['name', 'difficulty', 'newest'] as SortMode[]).map((s) => (
+              <button
+                key={s}
+                onClick={() => setSort(s)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                  sort === s
+                    ? 'bg-[#1a1a2e] text-[#e8e8e8] border border-[#3a3a5e]'
+                    : 'text-[#6b6b8a] hover:text-[#e8e8e8]'
+                }`}
+              >
+                {s.charAt(0).toUpperCase() + s.slice(1)}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -147,9 +200,15 @@ export default function BrowseTab({
             <GrenadeIcon type="molotov" size={32} />
             <GrenadeIcon type="he" size={32} />
           </div>
-          <p className="text-[#6b6b8a] text-lg">No presets found for this map</p>
+          <p className="text-[#6b6b8a] text-lg">
+            {search.trim() ? 'No lineups match your search' : 'No presets found for this map'}
+          </p>
           <p className="text-[#6b6b8a]/60 text-sm mt-1">
-            {filterGrenade !== 'all' ? 'Try changing the grenade type filter' : 'Check back later for new lineups'}
+            {search.trim()
+              ? 'Try a different search term or change the filters'
+              : filterGrenade !== 'all'
+                ? 'Try changing the grenade type filter'
+                : 'Check back later for new lineups'}
           </p>
         </motion.div>
       ) : (
@@ -160,10 +219,10 @@ export default function BrowseTab({
               variants={staggerContainer}
               initial="hidden"
               animate="show"
-              key={`${filterGrenade}-${sort}`}
+              key={`${filterGrenade}-${sort}-${search}`}
             >
               <AnimatePresence mode="popLayout">
-                {filtered.map((lineup) => {
+                {visibleLineups.map((lineup) => {
                   const grenadeInfo = GRENADE_TYPES[lineup.grenadeType as keyof typeof GRENADE_TYPES];
                   const diffInfo = DIFFICULTIES[lineup.difficulty as keyof typeof DIFFICULTIES];
                   const isAssigned = assignedIds.has(lineup.id);
@@ -336,10 +395,31 @@ export default function BrowseTab({
                 })}
               </AnimatePresence>
             </motion.div>
+
+            {/* Pagination footer */}
+            {filtered.length > 0 && (
+              <div className="mt-6">
+                <div className="flex items-center justify-center gap-4 py-3">
+                  <div className="h-px flex-1 bg-gradient-to-r from-transparent to-[#2a2a3e]/50" />
+                  <span className="text-xs text-[#6b6b8a]">
+                    Showing {Math.min(visibleCount, filtered.length)} of {filtered.length} lineups
+                  </span>
+                  <div className="h-px flex-1 bg-gradient-to-l from-transparent to-[#2a2a3e]/50" />
+                </div>
+                {visibleCount < filtered.length && (
+                  <button
+                    onClick={() => setVisibleCount((v) => v + ITEMS_PER_PAGE)}
+                    className="w-full py-3 rounded-xl text-sm font-medium bg-[#12121a] border border-[#2a2a3e] text-[#6b6b8a] hover:text-[#f0a500] hover:border-[#f0a500]/30 transition-all"
+                  >
+                    Show {Math.min(ITEMS_PER_PAGE, filtered.length - visibleCount)} more
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Right: Radar + Details panel */}
-          <div className="w-[400px] flex-shrink-0 hidden lg:block">
+          <div className="w-[500px] flex-shrink-0 hidden lg:block">
             <div className="sticky top-4 space-y-4">
               <MapRadar
                 mapName={mapName}

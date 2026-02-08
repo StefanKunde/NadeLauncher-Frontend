@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { lineupsApi, collectionsApi } from '@/lib/api';
 import { useAuthStore } from '@/store/auth-store';
@@ -39,6 +39,7 @@ export default function MapDetailPage() {
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
   const [hidingIds, setHidingIds] = useState<Set<string>>(new Set());
   const [unassigningIds, setUnassigningIds] = useState<Set<string>>(new Set());
+  const [pendingDeleteLineup, setPendingDeleteLineup] = useState<MergedLineup | null>(null);
 
   /* ── Tab 2: Collections State ── */
   const [collections, setCollections] = useState<LineupCollection[]>([]);
@@ -158,8 +159,14 @@ export default function MapDetailPage() {
   }, [mergedLineups]);
 
   /* ── Tab 1: Actions ── */
-  const handleDeleteLineup = useCallback(async (lineup: MergedLineup) => {
-    if (deletingIds.has(lineup.id)) return;
+  const handleDeleteLineup = useCallback((lineup: MergedLineup) => {
+    setPendingDeleteLineup(lineup);
+  }, []);
+
+  const confirmDelete = useCallback(async () => {
+    if (!pendingDeleteLineup || deletingIds.has(pendingDeleteLineup.id)) return;
+    const lineup = pendingDeleteLineup;
+    setPendingDeleteLineup(null);
     setDeletingIds((prev) => new Set(prev).add(lineup.id));
     try {
       await lineupsApi.delete(lineup.id);
@@ -171,7 +178,7 @@ export default function MapDetailPage() {
     } finally {
       setDeletingIds((prev) => { const next = new Set(prev); next.delete(lineup.id); return next; });
     }
-  }, [deletingIds, mySelectedId]);
+  }, [pendingDeleteLineup, deletingIds, mySelectedId]);
 
   const handleToggleHide = useCallback(async (lineup: MergedLineup) => {
     if (!lineup.sourceCollectionId || hidingIds.has(lineup.id)) return;
@@ -390,6 +397,62 @@ export default function MapDetailPage() {
               assigningIds={assigningIds}
               onToggleAssign={handleToggleAssign}
             />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {pendingDeleteLineup && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+            onClick={() => setPendingDeleteLineup(null)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 8 }}
+              transition={{ duration: 0.15 }}
+              className="glass rounded-2xl p-6 w-full max-w-md mx-4 border border-[#2a2a3e]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-start gap-4 mb-4">
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-[#ff4444]/10 flex items-center justify-center">
+                  <AlertTriangle className="w-5 h-5 text-[#ff4444]" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-lg font-semibold text-[#e8e8e8] mb-1">Delete Lineup</h3>
+                  <p className="text-sm text-[#6b6b8a] leading-relaxed">
+                    Are you sure you want to delete <span className="text-[#e8e8e8]/80 font-medium">{pendingDeleteLineup.name}</span>?
+                    This action cannot be undone.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setPendingDeleteLineup(null)}
+                  className="flex-shrink-0 p-1 rounded-lg text-[#6b6b8a] hover:text-[#e8e8e8] hover:bg-[#1a1a2e] transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => setPendingDeleteLineup(null)}
+                  className="px-4 py-2 rounded-xl text-sm font-medium bg-[#1a1a2e] border border-[#2a2a3e] text-[#e8e8e8] hover:bg-[#2a2a3e] transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  className="px-4 py-2 rounded-xl text-sm font-medium bg-[#ff4444]/10 border border-[#ff4444]/30 text-[#ff4444] hover:bg-[#ff4444]/20 transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

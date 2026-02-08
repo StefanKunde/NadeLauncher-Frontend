@@ -47,8 +47,18 @@ export default function CollectionsTab({
   }
 
   return (
-    <motion.div
-      className="grid grid-cols-1 lg:grid-cols-2 gap-4"
+    <>
+      {/* Intro */}
+      <div className="mb-6 px-4 py-3 rounded-xl bg-[#12121a]/80 border border-[#2a2a3e]/50">
+        <p className="text-sm text-[#6b6b8a] leading-relaxed">
+          Lineup packs curated for this map. Subscribe to a collection to instantly add all its
+          lineups to your arsenal. You can hide individual lineups you don&apos;t need from
+          the <span className="text-[#e8e8e8]/70">My Lineups</span> tab.
+        </p>
+      </div>
+
+      <motion.div
+        className="grid grid-cols-1 lg:grid-cols-2 gap-4"
       variants={staggerContainer}
       initial="hidden"
       animate="show"
@@ -111,5 +121,6 @@ export default function CollectionsTab({
         );
       })}
     </motion.div>
+    </>
   );
 }
