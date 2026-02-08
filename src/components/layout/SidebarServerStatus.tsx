@@ -69,18 +69,33 @@ export default function SidebarServerStatus() {
     : '';
 
   const status = session?.status;
+  const hasSession = session && status !== 'ended' && status !== 'ending';
 
-  // Don't render if no relevant session
-  if (!session || status === 'ended' || status === 'ending') return null;
+  if (!user) return null;
 
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0, height: 0 }}
-        animate={{ opacity: 1, height: 'auto' }}
-        exit={{ opacity: 0, height: 0 }}
-        className="mx-4 mb-2"
-      >
+    <div className="mx-4 mb-2">
+      <AnimatePresence mode="wait">
+        {!hasSession ? (
+          <motion.div
+            key="idle"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="rounded-xl bg-[#12121a] border border-[#2a2a3e] p-3"
+          >
+            <div className="flex items-center gap-2.5">
+              <Server className="h-4 w-4 text-[#6b6b8a]/40 flex-shrink-0" />
+              <p className="text-[10px] text-[#6b6b8a]/60">No active server</p>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="active"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
         <div className="rounded-xl bg-[#12121a] border border-[#2a2a3e] p-3 space-y-2">
           {/* Queued */}
           {status === 'queued' && (
@@ -178,7 +193,9 @@ export default function SidebarServerStatus() {
             </div>
           )}
         </div>
-      </motion.div>
-    </AnimatePresence>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }

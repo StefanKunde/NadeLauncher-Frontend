@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Search, X, Trash2, EyeOff, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GRENADE_TYPES, DIFFICULTIES } from '@/lib/constants';
+import { GRENADE_TYPES } from '@/lib/constants';
 import type { Lineup } from '@/lib/types';
 import GrenadeIcon from '@/components/ui/GrenadeIcon';
 import MapRadar from '@/components/ui/MapRadar';
@@ -11,7 +11,7 @@ import LineupDetailPanel from './LineupDetailPanel';
 import type { MergedLineup, GrenadeFilter } from './types';
 import { staggerContainer, staggerItem } from './types';
 
-const ITEMS_PER_PAGE = 20;
+const ITEMS_PER_PAGE = 12;
 
 interface MyLineupsTabProps {
   mapName: string;
@@ -196,7 +196,6 @@ export default function MyLineupsTab({
             >
               <AnimatePresence mode="popLayout">
                 {visibleLineups.map((lineup) => {
-                  const diffInfo = DIFFICULTIES[lineup.difficulty as keyof typeof DIFFICULTIES];
                   const isActive = selectedId === lineup.id;
                   const isDeleting = deletingIds.has(lineup.id);
                   const isHiding = hidingIds.has(lineup.id);
@@ -242,12 +241,6 @@ export default function MyLineupsTab({
                           </span>
                         )
                       )}
-
-                      <span
-                        className="w-2 h-2 rounded-full flex-shrink-0"
-                        style={{ backgroundColor: diffInfo?.color }}
-                        title={diffInfo?.label}
-                      />
 
                       {/* Action buttons */}
                       {lineup.source === 'created' && (

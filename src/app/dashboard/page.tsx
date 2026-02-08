@@ -6,7 +6,6 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import {
   ListChecks,
-  Map,
   Crown,
   ChevronRight,
 } from 'lucide-react';
@@ -67,13 +66,6 @@ export default function DashboardPage() {
       iconColor: '#f0a500',
     },
     {
-      label: 'Maps',
-      sublabel: 'Active Duty Pool',
-      value: '7 Maps',
-      icon: Map,
-      iconColor: '#4a9fd4',
-    },
-    {
       label: 'Account',
       sublabel: user?.isPremium ? 'Full access unlocked' : 'Upgrade for more',
       value: user?.isPremium ? 'Premium' : 'Free',
@@ -99,9 +91,9 @@ export default function DashboardPage() {
       </motion.div>
 
       {/* Stats Row */}
-      <div className="mb-10 grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="mb-10 grid grid-cols-1 gap-4 sm:grid-cols-2">
         {loading
-          ? Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)
+          ? Array.from({ length: 2 }).map((_, i) => <SkeletonCard key={i} />)
           : stats.map((stat, i) => {
               const Icon = stat.icon;
               return (
@@ -128,7 +120,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Practice Server */}
-      <motion.div variants={fadeUp} custom={4} className="mb-10">
+      <motion.div variants={fadeUp} custom={4} className="mb-10 max-w-lg">
         <h2 className="mb-1 text-xl font-semibold text-[#e8e8e8]">Practice Server</h2>
         <p className="mb-5 text-sm text-[#6b6b8a]">Start a private CS2 practice session</p>
         <PracticeSessionCard />

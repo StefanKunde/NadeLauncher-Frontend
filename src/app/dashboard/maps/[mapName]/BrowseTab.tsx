@@ -3,15 +3,15 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Bookmark, BookmarkCheck, Loader2, Search, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GRENADE_TYPES, DIFFICULTIES } from '@/lib/constants';
+import { GRENADE_TYPES } from '@/lib/constants';
 import type { Lineup } from '@/lib/types';
 import GrenadeIcon from '@/components/ui/GrenadeIcon';
 import MapRadar from '@/components/ui/MapRadar';
 import LineupDetailPanel from './LineupDetailPanel';
 import type { GrenadeFilter, SortMode } from './types';
-import { staggerContainer, staggerItem, DIFF_ORDER } from './types';
+import { staggerContainer, staggerItem } from './types';
 
-const ITEMS_PER_PAGE = 20;
+const ITEMS_PER_PAGE = 12;
 
 interface BrowseTabProps {
   mapName: string;
@@ -57,8 +57,6 @@ export default function BrowseTab({
     }
     if (sort === 'name') {
       result = [...result].sort((a, b) => a.name.localeCompare(b.name));
-    } else if (sort === 'difficulty') {
-      result = [...result].sort((a, b) => (DIFF_ORDER[a.difficulty] ?? 1) - (DIFF_ORDER[b.difficulty] ?? 1));
     } else if (sort === 'newest') {
       result = [...result].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     }
@@ -177,7 +175,7 @@ export default function BrowseTab({
           {/* Sort */}
           <div className="flex items-center gap-2">
             <span className="text-xs text-[#6b6b8a]">Sort:</span>
-            {(['name', 'difficulty', 'newest'] as SortMode[]).map((s) => (
+            {(['name', 'newest'] as SortMode[]).map((s) => (
               <button
                 key={s}
                 onClick={() => setSort(s)}
@@ -226,7 +224,6 @@ export default function BrowseTab({
             >
               <AnimatePresence mode="popLayout">
                 {visibleLineups.map((lineup) => {
-                  const diffInfo = DIFFICULTIES[lineup.difficulty as keyof typeof DIFFICULTIES];
                   const isActive = selectedId === lineup.id;
                   const isAssigned = assignedIds.has(lineup.id);
                   const isAssigning = assigningIds.has(lineup.id);
@@ -255,12 +252,6 @@ export default function BrowseTab({
                           {lineup.collectionName}
                         </span>
                       )}
-
-                      <span
-                        className="w-2 h-2 rounded-full flex-shrink-0"
-                        style={{ backgroundColor: diffInfo?.color }}
-                        title={diffInfo?.label}
-                      />
 
                       {/* Assign/Unassign button */}
                       <button

@@ -2,13 +2,12 @@
 
 import { Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { GRENADE_TYPES, THROW_TYPES, DIFFICULTIES } from '@/lib/constants';
+import { GRENADE_TYPES, THROW_TYPES } from '@/lib/constants';
 import type { Lineup } from '@/lib/types';
 import GrenadeIcon from '@/components/ui/GrenadeIcon';
 
 export default function LineupDetailPanel({ lineup }: { lineup: Lineup }) {
   const grenadeInfo = GRENADE_TYPES[lineup.grenadeType as keyof typeof GRENADE_TYPES];
-  const diffInfo = DIFFICULTIES[lineup.difficulty as keyof typeof DIFFICULTIES];
 
   return (
     <motion.div
@@ -32,10 +31,6 @@ export default function LineupDetailPanel({ lineup }: { lineup: Lineup }) {
                 {lineup.throwStrength}
               </span>
             )}
-            <span className="flex items-center gap-1 text-xs font-medium" style={{ color: diffInfo?.color }}>
-              <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: diffInfo?.color }} />
-              {diffInfo?.label}
-            </span>
           </div>
         </div>
       </div>
@@ -74,26 +69,17 @@ export default function LineupDetailPanel({ lineup }: { lineup: Lineup }) {
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-2">
-        <div className="bg-[#0a0a0f] rounded-lg p-2.5">
-          <p className="text-[9px] text-[#6b6b8a] uppercase tracking-wider mb-0.5">Throw</p>
-          <p className="text-[11px] font-mono text-[#e8e8e8]/70">
-            {lineup.throwPosition.x.toFixed(0)}, {lineup.throwPosition.y.toFixed(0)},{' '}
-            {lineup.throwPosition.z.toFixed(0)}
-          </p>
-        </div>
-        <div className="bg-[#0a0a0f] rounded-lg p-2.5">
-          <p className="text-[9px] text-[#6b6b8a] uppercase tracking-wider mb-0.5">Landing</p>
-          <p className="text-[11px] font-mono text-[#e8e8e8]/70">
-            {lineup.landingPosition.x.toFixed(0)}, {lineup.landingPosition.y.toFixed(0)},{' '}
-            {lineup.landingPosition.z.toFixed(0)}
-          </p>
-        </div>
-      </div>
-
       <div className="flex items-center justify-between text-xs text-[#6b6b8a]/60 pt-2 border-t border-[#2a2a3e]/50">
-        <span>By {lineup.creatorName || 'Unknown'}</span>
-        <span className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="truncate">By {lineup.creatorName || 'Unknown'}</span>
+          {lineup.collectionName && (
+            <>
+              <span className="text-[#2a2a3e]">&middot;</span>
+              <span className="text-[#3b82f6]/60 truncate">{lineup.collectionName}</span>
+            </>
+          )}
+        </div>
+        <span className="flex items-center gap-1 flex-shrink-0">
           <Clock className="w-3 h-3" />
           {new Date(lineup.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
         </span>

@@ -27,12 +27,6 @@ export const THROW_TYPES = {
   runjumpthrow: 'Run Jump Throw',
 } as const;
 
-export const DIFFICULTIES = {
-  easy: { label: 'Easy', color: '#00c850' },
-  medium: { label: 'Medium', color: '#f0a500' },
-  hard: { label: 'Hard', color: '#ff4444' },
-} as const;
-
 export const MAP_COLORS: Record<string, string> = {
   de_dust2: '#d4a04a',
   de_mirage: '#4a9fd4',

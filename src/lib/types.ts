@@ -32,7 +32,6 @@ export interface Lineup {
   throwType: string;
   throwStrength?: string;
   instructions: string[];
-  difficulty: 'easy' | 'medium' | 'hard';
   tags: string[];
   collectionId?: string;
   collectionName?: string;

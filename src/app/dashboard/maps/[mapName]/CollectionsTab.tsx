@@ -1,9 +1,8 @@
 'use client';
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { Check, Plus, Loader2, FolderOpen, ArrowLeft, Search, X } from 'lucide-react';
+import { Check, Plus, Loader2, FolderOpen, ArrowLeft, Search, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { DIFFICULTIES } from '@/lib/constants';
 import type { Lineup, LineupCollection } from '@/lib/types';
 import { collectionsApi } from '@/lib/api';
 import GrenadeIcon from '@/components/ui/GrenadeIcon';
@@ -11,6 +10,8 @@ import MapRadar from '@/components/ui/MapRadar';
 import LineupDetailPanel from './LineupDetailPanel';
 import { staggerContainer, staggerItem, fadeIn } from './types';
 import toast from 'react-hot-toast';
+
+const ITEMS_PER_PAGE = 12;
 
 interface CollectionsTabProps {
   mapName: string;
@@ -32,12 +33,14 @@ export default function CollectionsTab({
   const [detailLoading, setDetailLoading] = useState(false);
   const [selectedLineupId, setSelectedLineupId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
 
   const loadCollectionLineups = useCallback(async (collection: LineupCollection) => {
     setSelectedCollection(collection);
     setDetailLoading(true);
     setSelectedLineupId(null);
     setSearch('');
+    setCurrentPage(1);
     try {
       const data = await collectionsApi.getById(collection.id);
       setCollectionLineups(data.lineups);
@@ -56,11 +59,32 @@ export default function CollectionsTab({
     setSearch('');
   }, []);
 
+  // Reset page when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
+
   const filteredLineups = useMemo(() => {
     if (!search.trim()) return collectionLineups;
     const q = search.toLowerCase().trim();
     return collectionLineups.filter((l) => l.name.toLowerCase().includes(q));
   }, [collectionLineups, search]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredLineups.length / ITEMS_PER_PAGE));
+
+  const visibleLineups = useMemo(
+    () => filteredLineups.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE),
+    [filteredLineups, currentPage],
+  );
+
+  // Auto-navigate to the page containing the selected lineup
+  useEffect(() => {
+    if (!selectedLineupId) return;
+    const idx = filteredLineups.findIndex((l) => l.id === selectedLineupId);
+    if (idx === -1) return;
+    const targetPage = Math.floor(idx / ITEMS_PER_PAGE) + 1;
+    if (targetPage !== currentPage) setCurrentPage(targetPage);
+  }, [selectedLineupId, filteredLineups]);
 
   const selectedLineup = useMemo(
     () => collectionLineups.find((l) => l.id === selectedLineupId) ?? null,
@@ -208,8 +232,7 @@ export default function CollectionsTab({
                 key={search}
               >
                 <AnimatePresence mode="popLayout">
-                  {filteredLineups.map((lineup) => {
-                    const diffInfo = DIFFICULTIES[lineup.difficulty as keyof typeof DIFFICULTIES];
+                  {visibleLineups.map((lineup) => {
                     const isActive = selectedLineupId === lineup.id;
 
                     return (
@@ -230,25 +253,66 @@ export default function CollectionsTab({
                           {lineup.name}
                         </span>
 
-                        <span
-                          className="w-2 h-2 rounded-full flex-shrink-0"
-                          style={{ backgroundColor: diffInfo?.color }}
-                          title={diffInfo?.label}
-                        />
                       </motion.div>
                     );
                   })}
                 </AnimatePresence>
               </motion.div>
 
-              {/* Count */}
-              <div className="mt-4 flex items-center justify-center gap-4 py-2">
-                <div className="h-px flex-1 bg-gradient-to-r from-transparent to-[#2a2a3e]/50" />
-                <span className="text-xs text-[#6b6b8a]">
-                  {filteredLineups.length} {filteredLineups.length === 1 ? 'lineup' : 'lineups'}
-                </span>
-                <div className="h-px flex-1 bg-gradient-to-l from-transparent to-[#2a2a3e]/50" />
-              </div>
+              {/* Pagination */}
+              {filteredLineups.length > 0 && totalPages > 1 && (
+                <div className="mt-6 flex items-center justify-center gap-1.5">
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="p-2 rounded-lg text-[#6b6b8a] hover:text-[#e8e8e8] hover:bg-[#1a1a2e] transition-colors disabled:opacity-30 disabled:pointer-events-none"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                    if (
+                      totalPages <= 7 ||
+                      page === 1 ||
+                      page === totalPages ||
+                      Math.abs(page - currentPage) <= 1
+                    ) {
+                      return (
+                        <button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          className={`min-w-[32px] h-8 rounded-lg text-xs font-medium transition-all ${
+                            page === currentPage
+                              ? 'bg-[#f0a500]/15 text-[#f0a500] border border-[#f0a500]/30'
+                              : 'text-[#6b6b8a] hover:text-[#e8e8e8] hover:bg-[#1a1a2e]'
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      );
+                    }
+                    if (page === 2 || page === totalPages - 1) {
+                      return (
+                        <span key={page} className="px-1 text-xs text-[#6b6b8a]/50">
+                          ...
+                        </span>
+                      );
+                    }
+                    return null;
+                  })}
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="p-2 rounded-lg text-[#6b6b8a] hover:text-[#e8e8e8] hover:bg-[#1a1a2e] transition-colors disabled:opacity-30 disabled:pointer-events-none"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+              {filteredLineups.length > 0 && (
+                <p className="text-center text-[10px] text-[#6b6b8a]/60 mt-2">
+                  {Math.min((currentPage - 1) * ITEMS_PER_PAGE + 1, filteredLineups.length)}–{Math.min(currentPage * ITEMS_PER_PAGE, filteredLineups.length)} of {filteredLineups.length}
+                </p>
+              )}
             </div>
 
             {/* Right: Radar + Details panel */}

@@ -1,7 +1,7 @@
 import type { Lineup } from '@/lib/types';
 
 export type TabKey = 'my-lineups' | 'collections' | 'browse';
-export type SortMode = 'name' | 'difficulty' | 'newest';
+export type SortMode = 'name' | 'newest';
 export type GrenadeFilter = 'all' | 'smoke' | 'flash' | 'molotov' | 'he';
 
 export interface MergedLineup extends Lineup {
@@ -10,8 +10,6 @@ export interface MergedLineup extends Lineup {
   sourceCollectionName?: string;
   isHidden?: boolean;
 }
-
-export const DIFF_ORDER: Record<string, number> = { easy: 0, medium: 1, hard: 2 };
 
 export const staggerContainer = {
   hidden: { opacity: 0 },

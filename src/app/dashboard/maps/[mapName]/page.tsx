@@ -103,11 +103,12 @@ export default function MapDetailPage() {
     }
   }, [mapName]);
 
+  // Load all tab data on mount so counts are accurate from the start
   useEffect(() => {
-    if (activeTab === 'my-lineups') loadMyLineups();
-    else if (activeTab === 'collections') loadCollections();
-    else if (activeTab === 'browse') loadBrowse();
-  }, [activeTab, mapName, loadMyLineups, loadCollections, loadBrowse]);
+    loadMyLineups();
+    loadCollections();
+    loadBrowse();
+  }, [mapName, loadMyLineups, loadCollections, loadBrowse]);
 
   /* ── Tab 1: Merged lineup list ── */
   const mergedLineups = useMemo<MergedLineup[]>(() => {
@@ -251,12 +252,14 @@ export default function MapDetailPage() {
         setCollections((prev) => prev.map((c) => (c.id === collection.id ? { ...c, isSubscribed: true } : c)));
         toast.success(`Subscribed to ${collection.name}`);
       }
+      // Refresh My Lineups so the tab count updates
+      loadMyLineups();
     } catch {
       toast.error('Failed to update subscription');
     } finally {
       setSubscribingIds((prev) => { const next = new Set(prev); next.delete(collection.id); return next; });
     }
-  }, [subscribingIds]);
+  }, [subscribingIds, loadMyLineups]);
 
   /* ── Tab 3: Assign/Unassign ── */
   const handleToggleAssign = useCallback(async (lineup: Lineup, e: React.MouseEvent) => {
@@ -273,12 +276,14 @@ export default function MapDetailPage() {
         setAssignedIds((prev) => new Set(prev).add(lineup.id));
         toast.success(`Assigned: ${lineup.name}`);
       }
+      // Refresh My Lineups so the tab count updates
+      loadMyLineups();
     } catch {
       toast.error('Failed to update assignment');
     } finally {
       setAssigningIds((prev) => { const next = new Set(prev); next.delete(lineup.id); return next; });
     }
-  }, [assigningIds, assignedIds]);
+  }, [assigningIds, assignedIds, loadMyLineups]);
 
   const handleMyRadarClick = useCallback((lineup: Lineup) => {
     setMySelectedId((prev) => (prev === lineup.id ? null : lineup.id));
