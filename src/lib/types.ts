@@ -35,6 +35,18 @@ export interface Lineup {
   tags: string[];
   collectionId?: string;
   collectionName?: string;
+  // Impact data (from pro demo analysis)
+  totalDamage?: number;
+  enemiesBlinded?: number;
+  totalBlindDuration?: number;
+  flashAssists?: number;
+  // Pro references
+  playerName?: string;
+  teamName?: string;
+  teamSide?: string;
+  roundNumber?: number;
+  isPistolRound?: boolean;
+  proMatchId?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -84,6 +96,8 @@ export interface LineupCollection {
   sortOrder: number;
   lineupCount: number;
   isSubscribed?: boolean;
+  autoManaged?: boolean;
+  proCategory?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -101,3 +115,72 @@ export interface CollectionWithLineups {
   lineups: Lineup[];
   hiddenLineupIds: string[];
 }
+
+// Pro Nades types
+export interface ProTeam {
+  id: string;
+  name: string;
+  hltvId?: number;
+  logoUrl?: string;
+  createdAt: string;
+}
+
+export interface ProPlayer {
+  id: string;
+  nickname: string;
+  steamId: string;
+  teamId?: string;
+  teamName?: string;
+  hltvId?: number;
+  createdAt: string;
+}
+
+export interface ProDemo {
+  id: string;
+  matchId?: string;
+  fileName: string;
+  sourceUrl?: string;
+  status: 'pending' | 'downloading' | 'extracting' | 'analyzing' | 'completed' | 'failed';
+  errorMessage?: string;
+  throwsExtracted: number;
+  patternsDetected: number;
+  processedAt?: string;
+  createdAt: string;
+}
+
+export interface ProMatch {
+  id: string;
+  hltvMatchId?: number;
+  team1Id?: string;
+  team2Id?: string;
+  team1Name?: string;
+  team2Name?: string;
+  mapName: string;
+  matchDate: string;
+  eventName?: string;
+  score?: string;
+  demos: ProDemo[];
+  createdAt: string;
+}
+
+export interface ProCollection extends LineupCollection {
+  proCategory?: string;
+  proTeamId?: string;
+  proPlayerId?: string;
+  proMatchId?: string;
+  timeWindow?: string;
+  autoManaged: boolean;
+}
+
+export interface Notification {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  data?: Record<string, unknown>;
+  isRead: boolean;
+  createdAt: string;
+}
+
+export type ProCategory = 'meta' | 'team' | 'player' | 'match' | 'top_he' | 'top_flash' | 'most_used' | 'pistol' | 'eco';
+export type TimeWindow = 'last_30d' | 'last_90d' | 'all_time';

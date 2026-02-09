@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { useAuthStore } from '@/store/auth-store';
-import type { AuthResponse, Lineup, MapInfo, Session, UsageStats, LineupCollection, UserSubscription, CollectionWithLineups } from './types';
+import type { AuthResponse, Lineup, MapInfo, Session, UsageStats, LineupCollection, UserSubscription, CollectionWithLineups, ProCollection, ProTeam, ProPlayer, ProMatch, Notification } from './types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://nadelauncher-backend-a99d397c.apps.deploypilot.stefankunde.dev';
 
@@ -100,6 +100,34 @@ export const collectionsApi = {
     api.post(`/api/collections/${collectionId}/lineups/${lineupId}/hide`),
   unhideLineup: (collectionId: string, lineupId: string) =>
     api.delete(`/api/collections/${collectionId}/lineups/${lineupId}/hide`),
+};
+
+// Pro Nades
+export const proNadesApi = {
+  getCollections: (map?: string, category?: string, timeWindow?: string) =>
+    api.get<{ data: ProCollection[] }>('/api/collections', {
+      params: { map, proCategory: category, timeWindow },
+    }).then((r) => r.data.data),
+  getTeams: () =>
+    api.get<{ data: ProTeam[] }>('/api/pro-nades/teams').then((r) => r.data.data),
+  getPlayers: () =>
+    api.get<{ data: ProPlayer[] }>('/api/pro-nades/players').then((r) => r.data.data),
+  getMatches: () =>
+    api.get<{ data: ProMatch[] }>('/api/pro-nades/matches').then((r) => r.data.data),
+  getMatch: (id: string) =>
+    api.get<{ data: ProMatch }>(`/api/pro-nades/matches/${id}`).then((r) => r.data.data),
+};
+
+// Notifications
+export const notificationsApi = {
+  getAll: (limit = 20, offset = 0) =>
+    api.get<{ data: Notification[] }>('/api/notifications', { params: { limit, offset } }).then((r) => r.data.data),
+  getUnreadCount: () =>
+    api.get<{ data: number }>('/api/notifications/unread-count').then((r) => r.data.data),
+  markAsRead: (id: string) =>
+    api.patch(`/api/notifications/${id}/read`),
+  markAllAsRead: () =>
+    api.post('/api/notifications/read-all'),
 };
 
 export default api;

@@ -145,6 +145,11 @@ export default function CollectionsTab({
                 DEFAULT
               </span>
             )}
+            {selectedCollection.autoManaged && (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#8b5cf6]/15 text-[#8b5cf6] flex-shrink-0 tracking-wider">
+                PRO
+              </span>
+            )}
           </div>
           <button
             onClick={() => onToggleSubscription(latestCollection)}
@@ -379,6 +384,11 @@ export default function CollectionsTab({
                     {collection.isDefault && (
                       <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-[#f0a500]/15 text-[#f0a500] flex-shrink-0">
                         DEFAULT
+                      </span>
+                    )}
+                    {collection.autoManaged && (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#8b5cf6]/15 text-[#8b5cf6] flex-shrink-0 tracking-wider">
+                        PRO
                       </span>
                     )}
                   </div>
