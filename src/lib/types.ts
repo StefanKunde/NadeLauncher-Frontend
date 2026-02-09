@@ -98,6 +98,7 @@ export interface LineupCollection {
   isSubscribed?: boolean;
   autoManaged?: boolean;
   proCategory?: string;
+  timeWindow?: string;
   createdAt: string;
   updatedAt: string;
 }
