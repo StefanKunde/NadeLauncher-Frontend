@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { Check, Plus, Loader2, FolderOpen, ArrowLeft, Search, X, ChevronLeft, ChevronRight, Trophy, TrendingUp, Users, User, Swords, Flame, Eye, Crosshair, Layers } from 'lucide-react';
+import { Check, Plus, Loader2, FolderOpen, ArrowLeft, Search, X, ChevronLeft, ChevronRight, Trophy, TrendingUp, Users, Crosshair, Layers, ArrowUpDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Lineup, LineupCollection, TimeWindow } from '@/lib/types';
 import { collectionsApi } from '@/lib/api';
@@ -26,10 +26,6 @@ const CATEGORY_TABS: CategoryTab[] = [
   { key: 'regular', label: 'Regular', icon: <Layers className="h-4 w-4" />, filter: (c) => !c.autoManaged },
   { key: 'meta', label: 'Meta', icon: <TrendingUp className="h-4 w-4" />, filter: (c) => c.proCategory === 'meta' },
   { key: 'team', label: 'Teams', icon: <Users className="h-4 w-4" />, filter: (c) => c.proCategory === 'team' },
-  { key: 'player', label: 'Players', icon: <User className="h-4 w-4" />, filter: (c) => c.proCategory === 'player' },
-  { key: 'match', label: 'Matches', icon: <Swords className="h-4 w-4" />, filter: (c) => c.proCategory === 'match' },
-  { key: 'top_he', label: 'Top HE', icon: <Flame className="h-4 w-4" />, filter: (c) => c.proCategory === 'top_he' },
-  { key: 'top_flash', label: 'Top Flash', icon: <Eye className="h-4 w-4" />, filter: (c) => c.proCategory === 'top_flash' },
   { key: 'pistol', label: 'Pistol', icon: <Crosshair className="h-4 w-4" />, filter: (c) => c.proCategory === 'pistol' },
 ];
 
@@ -54,6 +50,7 @@ export default function CollectionsTab({
   const [selectedLineupId, setSelectedLineupId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [sortBy, setSortBy] = useState<'name' | 'damage' | 'blind'>('name');
 
   // Collection list filters
   const [activeTab, setActiveTab] = useState('all');
@@ -66,6 +63,7 @@ export default function CollectionsTab({
     setSelectedLineupId(null);
     setSearch('');
     setCurrentPage(1);
+    setSortBy('name');
     try {
       const data = await collectionsApi.getById(collection.id);
       setCollectionLineups(data.lineups);
@@ -89,11 +87,23 @@ export default function CollectionsTab({
     setCurrentPage(1);
   }, [search]);
 
+  const sortedLineups = useMemo(() => {
+    const list = [...collectionLineups];
+    if (sortBy === 'damage') {
+      list.sort((a, b) => (b.totalDamage ?? 0) - (a.totalDamage ?? 0));
+    } else if (sortBy === 'blind') {
+      list.sort((a, b) => (b.totalBlindDuration ?? 0) - (a.totalBlindDuration ?? 0));
+    } else {
+      list.sort((a, b) => a.name.localeCompare(b.name));
+    }
+    return list;
+  }, [collectionLineups, sortBy]);
+
   const filteredLineups = useMemo(() => {
-    if (!search.trim()) return collectionLineups;
+    if (!search.trim()) return sortedLineups;
     const q = search.toLowerCase().trim();
-    return collectionLineups.filter((l) => l.name.toLowerCase().includes(q));
-  }, [collectionLineups, search]);
+    return sortedLineups.filter((l) => l.name.toLowerCase().includes(q));
+  }, [sortedLineups, search]);
 
   const totalPages = Math.max(1, Math.ceil(filteredLineups.length / ITEMS_PER_PAGE));
 
@@ -235,29 +245,43 @@ export default function CollectionsTab({
           </div>
         )}
 
-        {/* Search */}
+        {/* Search + Sort */}
         {collectionLineups.length > 5 && (
-          <div className="relative mb-4 max-w-xs">
-            <Search
-              className="absolute top-1/2 -translate-y-1/2 w-4 h-4 text-[#6b6b8a] pointer-events-none"
-              style={{ left: 12 }}
-            />
-            <input
-              type="text"
-              placeholder="Search lineups..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="bg-[#12121a] border border-[#2a2a3e] rounded-xl text-sm text-[#e8e8e8] placeholder-[#6b6b8a]/50 w-full focus:outline-none focus:border-[#f0a500]/40 transition-colors"
-              style={{ paddingLeft: 36, paddingRight: 40, paddingTop: 8, paddingBottom: 8 }}
-            />
-            {search && (
-              <button
-                onClick={() => setSearch('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b6b8a] hover:text-[#e8e8e8] transition-colors"
+          <div className="flex items-center gap-3 mb-4">
+            <div className="relative flex-1 max-w-xs">
+              <Search
+                className="absolute top-1/2 -translate-y-1/2 w-4 h-4 text-[#6b6b8a] pointer-events-none"
+                style={{ left: 12 }}
+              />
+              <input
+                type="text"
+                placeholder="Search lineups..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="bg-[#12121a] border border-[#2a2a3e] rounded-xl text-sm text-[#e8e8e8] placeholder-[#6b6b8a]/50 w-full focus:outline-none focus:border-[#f0a500]/40 transition-colors"
+                style={{ paddingLeft: 36, paddingRight: 40, paddingTop: 8, paddingBottom: 8 }}
+              />
+              {search && (
+                <button
+                  onClick={() => setSearch('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b6b8a] hover:text-[#e8e8e8] transition-colors"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+            <div className="flex items-center gap-1.5">
+              <ArrowUpDown className="h-3.5 w-3.5 text-[#6b6b8a]" />
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as 'name' | 'damage' | 'blind')}
+                className="rounded-lg border border-[#2a2a3e] bg-[#12121a] px-2 py-1.5 text-xs text-[#e8e8e8] focus:border-[#f0a500]/40 focus:outline-none"
               >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
+                <option value="name">Sort by name</option>
+                <option value="damage">Sort by damage</option>
+                <option value="blind">Sort by blind duration</option>
+              </select>
+            </div>
           </div>
         )}
 

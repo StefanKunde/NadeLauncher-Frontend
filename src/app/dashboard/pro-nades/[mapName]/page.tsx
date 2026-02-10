@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, Trophy, Search, Users, User, Swords, Flame, Eye, Crosshair, TrendingUp } from 'lucide-react';
+import { ArrowLeft, Trophy, Search, Users, Crosshair, TrendingUp, ArrowUpDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MAPS, MAP_COLORS, GRENADE_TYPES } from '@/lib/constants';
 import { proNadesApi, collectionsApi } from '@/lib/api';
@@ -27,10 +27,6 @@ const CATEGORY_TABS: CategoryTab[] = [
   { key: 'all', label: 'All', icon: <Trophy className="h-4 w-4" />, filter: () => true },
   { key: 'meta', label: 'Meta', icon: <TrendingUp className="h-4 w-4" />, filter: (c) => c.proCategory === 'meta' },
   { key: 'team', label: 'Teams', icon: <Users className="h-4 w-4" />, filter: (c) => c.proCategory === 'team' },
-  { key: 'player', label: 'Players', icon: <User className="h-4 w-4" />, filter: (c) => c.proCategory === 'player' },
-  { key: 'match', label: 'Matches', icon: <Swords className="h-4 w-4" />, filter: (c) => c.proCategory === 'match' },
-  { key: 'top_he', label: 'Top HE', icon: <Flame className="h-4 w-4" />, filter: (c) => c.proCategory === 'top_he' },
-  { key: 'top_flash', label: 'Top Flash', icon: <Eye className="h-4 w-4" />, filter: (c) => c.proCategory === 'top_flash' },
   { key: 'pistol', label: 'Pistol', icon: <Crosshair className="h-4 w-4" />, filter: (c) => c.proCategory === 'pistol' },
 ];
 
@@ -53,6 +49,7 @@ export default function ProNadesMapPage() {
   const [collectionLineups, setCollectionLineups] = useState<Lineup[]>([]);
   const [loadingLineups, setLoadingLineups] = useState(false);
   const [selectedLineup, setSelectedLineup] = useState<Lineup | null>(null);
+  const [sortBy, setSortBy] = useState<'name' | 'damage' | 'blind'>('name');
 
   useEffect(() => {
     setLoading(true);
@@ -80,10 +77,23 @@ export default function ProNadesMapPage() {
     return filtered;
   }, [collections, activeTab, timeWindow, search]);
 
+  const sortedLineups = useMemo(() => {
+    const list = [...collectionLineups];
+    if (sortBy === 'damage') {
+      list.sort((a, b) => (b.totalDamage ?? 0) - (a.totalDamage ?? 0));
+    } else if (sortBy === 'blind') {
+      list.sort((a, b) => (b.totalBlindDuration ?? 0) - (a.totalBlindDuration ?? 0));
+    } else {
+      list.sort((a, b) => a.name.localeCompare(b.name));
+    }
+    return list;
+  }, [collectionLineups, sortBy]);
+
   const openCollection = useCallback(async (col: ProCollection) => {
     setSelectedCollection(col);
     setLoadingLineups(true);
     setSelectedLineup(null);
+    setSortBy('name');
     try {
       const data: CollectionWithLineups = await collectionsApi.getById(col.id);
       setCollectionLineups(data.lineups);
@@ -134,8 +144,20 @@ export default function ProNadesMapPage() {
               </span>
             )}
             <span className="text-xs text-[#6b6b8a]">
-              {collectionLineups.length} lineups
+              {sortedLineups.length} lineups
             </span>
+            <div className="ml-auto flex items-center gap-1.5">
+              <ArrowUpDown className="h-3.5 w-3.5 text-[#6b6b8a]" />
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as 'name' | 'damage' | 'blind')}
+                className="rounded-lg border border-[#2a2a3e] bg-[#12121a] px-2 py-1 text-xs text-[#e8e8e8] focus:border-[#f0a500]/40 focus:outline-none"
+              >
+                <option value="name">Sort by name</option>
+                <option value="damage">Sort by damage</option>
+                <option value="blind">Sort by blind duration</option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -149,12 +171,12 @@ export default function ProNadesMapPage() {
                   <div className="mt-2 h-3 w-24 bg-[#1a1a2e] rounded" />
                 </div>
               ))
-            ) : collectionLineups.length === 0 ? (
+            ) : sortedLineups.length === 0 ? (
               <div className="rounded-lg border border-[#2a2a3e]/50 bg-[#12121a] px-6 py-12 text-center text-sm text-[#6b6b8a]">
                 No lineups in this collection
               </div>
             ) : (
-              collectionLineups.map((lineup) => (
+              sortedLineups.map((lineup) => (
                 <button
                   key={lineup.id}
                   onClick={() => setSelectedLineup(lineup)}
@@ -189,7 +211,7 @@ export default function ProNadesMapPage() {
             <div className="rounded-xl border border-[#2a2a3e]/50 bg-[#12121a] overflow-hidden">
               <MapRadar
                 mapName={mapName}
-                lineups={collectionLineups}
+                lineups={sortedLineups}
                 selectedLineupId={selectedLineup?.id}
                 onLineupClick={(lineup) => setSelectedLineup(lineup)}
                 mini={false}
