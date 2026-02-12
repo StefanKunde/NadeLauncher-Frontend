@@ -121,7 +121,7 @@ export default function PremiumPage() {
           </div>
           <div>
             <h1 className="text-3xl font-bold text-[#e8e8e8]">Premium</h1>
-            <p className="text-[#6b6b8a]">Unlock the full NadeLauncher experience</p>
+            <p className="text-[#6b6b8a]">Unlock the full NadePro experience</p>
           </div>
         </div>
       </motion.div>
@@ -135,7 +135,7 @@ export default function PremiumPage() {
             </div>
             <div>
               <p className="text-lg font-semibold text-[#e8e8e8]">You&apos;re on Premium</p>
-              <p className="text-sm text-[#6b6b8a]">Thank you for supporting NadeLauncher</p>
+              <p className="text-sm text-[#6b6b8a]">Thank you for supporting NadePro</p>
             </div>
             <div className="ml-auto">
               <span className="rounded-full bg-[#00c850]/15 px-3 py-1 text-xs font-bold text-[#00c850]">

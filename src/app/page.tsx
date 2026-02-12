@@ -228,7 +228,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
           <Link href="/" className="text-xl font-bold tracking-tight">
             <span className="text-gradient-gold">NADE</span>
-            <span className="text-[#e8e8e8]">LAUNCHER</span>
+            <span className="text-[#e8e8e8]">PRO</span>
           </Link>
 
           <div className="hidden md:flex items-center gap-8">
@@ -469,7 +469,7 @@ export default function HomePage() {
             className="text-center mb-16"
           >
             <h2 className="text-3xl md:text-5xl font-bold mb-4">
-              Why <span className="text-gradient-gold">NadeLauncher</span>?
+              Why <span className="text-gradient-gold">NadePro</span>?
             </h2>
             <p className="text-[#6b6b8a] text-lg max-w-xl mx-auto">
               Everything you need to perfect your utility game

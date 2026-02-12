@@ -11,7 +11,7 @@ export function Footer() {
           <div className="md:col-span-1">
             <span className="text-xl font-bold">
               <span className="text-gradient-gold">NADE</span>
-              <span className="text-[#e8e8e8]">LAUNCHER</span>
+              <span className="text-[#e8e8e8]">PRO</span>
             </span>
             <p className="text-[#6b6b8a] text-sm mt-3 leading-relaxed">
               The ultimate CS2 grenade practice platform. Master every lineup, dominate every map.
@@ -51,7 +51,7 @@ export function Footer() {
 
         <div className="border-t border-[#2a2a3e] mt-10 pt-6 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-[#6b6b8a] text-sm">
-            &copy; {new Date().getFullYear()} NadeLauncher. All rights reserved.
+            &copy; {new Date().getFullYear()} NadePro. All rights reserved.
           </p>
           <p className="text-[#6b6b8a] text-xs">
             Not affiliated with Valve Corporation. CS2 is a trademark of Valve Corporation.

@@ -3,7 +3,7 @@ import { Toaster } from "react-hot-toast";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "NadeLauncher — CS2 Grenade Practice Tool",
+  title: "NadePro — CS2 Grenade Practice Tool",
   description:
     "Master every smoke, flash, molotov and HE grenade in Counter-Strike 2. Practice lineups, save positions, and dominate every map.",
   keywords: [

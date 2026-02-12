@@ -17,7 +17,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <div className="text-sm">
                 <p className="text-[#f0a500] font-medium">Early Access</p>
                 <p className="text-[#6b6b8a] mt-0.5">
-                  NadeLauncher is still in development and may have bugs. If you encounter any issues, your feedback helps a lot!
+                  NadePro is still in development and may have bugs. If you encounter any issues, your feedback helps a lot!
                 </p>
               </div>
             </div>
