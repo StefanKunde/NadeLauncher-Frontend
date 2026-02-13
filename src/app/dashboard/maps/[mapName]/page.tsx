@@ -486,16 +486,25 @@ export default function MapDetailPage() {
                                 <p className="px-4 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#6b6b8a]">
                                   Choose a collection
                                 </p>
-                                {practiceCollections.map((c) => (
-                                  <button
-                                    key={c.id}
-                                    onClick={() => handleStartServer(c.id)}
-                                    className="flex w-full items-center gap-2 px-4 py-2 text-sm text-[#b8b8cc] hover:bg-[#1a1a2e] hover:text-[#e8e8e8]"
-                                  >
-                                    <Play className="h-3 w-3 text-[#f0a500]" />
-                                    <span className="truncate">{c.name}</span>
-                                  </button>
-                                ))}
+                                {practiceCollections.map((c) => {
+                                  const isActive = sourceFilter.type === 'collection' && sourceFilter.collectionId === c.id;
+                                  return (
+                                    <button
+                                      key={c.id}
+                                      onClick={() => {
+                                        setSourceFilter({ type: 'collection', collectionId: c.id, collectionName: c.name });
+                                        setServerCollectionPicker(false);
+                                      }}
+                                      className={`flex w-full items-center gap-2 px-4 py-2 text-sm transition-colors ${
+                                        isActive
+                                          ? 'bg-[#f0a500]/10 text-[#f0a500]'
+                                          : 'text-[#b8b8cc] hover:bg-[#1a1a2e] hover:text-[#e8e8e8]'
+                                      }`}
+                                    >
+                                      <span className="truncate">{c.name}</span>
+                                    </button>
+                                  );
+                                })}
                               </div>
                             </>
                           )}

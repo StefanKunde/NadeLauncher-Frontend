@@ -56,6 +56,7 @@ export default function FilterSidebar({
   const user = useAuthStore((s) => s.user);
   const isPremium = user?.isPremium ?? false;
   const [proExpanded, setProExpanded] = useState(true);
+  const [teamsExpanded, setTeamsExpanded] = useState(false);
   const [eventsExpanded, setEventsExpanded] = useState(false);
   const [myExpanded, setMyExpanded] = useState(true);
   const [search, setSearch] = useState('');
@@ -86,7 +87,7 @@ export default function FilterSidebar({
 
   return (
     <>
-      <div className="w-64 shrink-0 space-y-5 overflow-y-auto max-h-[calc(100vh-8rem)] pr-1 scrollbar-thin">
+      <div className="w-64 shrink-0 space-y-5 overflow-y-auto max-h-[calc(100vh-5rem)] pr-1 scrollbar-thin">
         {/* Search Collections */}
         <div className="flex items-center gap-2 rounded-lg border border-[#2a2a3e] bg-[#12121a] px-3">
           <Search className="h-4 w-4 shrink-0 text-[#6b6b8a]" />
@@ -124,73 +125,6 @@ export default function FilterSidebar({
             ))}
           </div>
         </div>
-
-        {/* Pro Collections */}
-        {proCollections.length > 0 && (
-          <div>
-            <button
-              onClick={() => setProExpanded(!proExpanded)}
-              className="mb-2 flex w-full items-center gap-1 text-xs font-semibold uppercase tracking-wider text-[#6b6b8a] hover:text-[#e8e8e8] transition-colors"
-            >
-              {proExpanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-              Pro Collections
-            </button>
-            <AnimatePresence>
-              {proExpanded && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="overflow-hidden space-y-0.5"
-                >
-                  {filteredMeta.map((c) => {
-                    const label = getProLabel(c);
-                    const grenadeType = c.proCategory === 'meta'
-                      ? (c.name.toLowerCase().includes('smoke') ? 'smoke' as const
-                        : c.name.toLowerCase().includes('flash') ? 'flash' as const
-                        : c.name.toLowerCase().includes('he') ? 'he' as const
-                        : c.name.toLowerCase().includes('molotov') ? 'molotov' as const
-                        : undefined)
-                      : undefined;
-                    return (
-                      <SourceButton
-                        key={c.id}
-                        active={isSourceActive(c.id)}
-                        onClick={() => handleProClick(c, label)}
-                        label={label}
-                        count={c.lineupCount}
-                        grenadeType={grenadeType}
-                        locked={!isPremium}
-                      />
-                    );
-                  })}
-
-                  {filteredTeams.length > 0 && (
-                    <>
-                      <div className="my-2 h-px bg-[#2a2a3e]/50" />
-                      <p className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-wider text-[#6b6b8a]/70">Teams</p>
-                      {filteredTeams.map((c) => {
-                        const label = c.name.replace(/\s+—\s+.*$/, '');
-                        return (
-                          <SourceButton
-                            key={c.id}
-                            active={isSourceActive(c.id)}
-                            onClick={() => handleProClick(c, label)}
-                            label={label}
-                            count={c.lineupCount}
-                            locked={!isPremium}
-                            logoUrl={c.coverImage}
-                          />
-                        );
-                      })}
-                    </>
-                  )}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        )}
 
         {/* My Collections */}
         <div>
@@ -249,6 +183,91 @@ export default function FilterSidebar({
             )}
           </AnimatePresence>
         </div>
+
+        {/* Pro Collections */}
+        {proCollections.length > 0 && (
+          <div>
+            <button
+              onClick={() => setProExpanded(!proExpanded)}
+              className="mb-2 flex w-full items-center gap-1 text-xs font-semibold uppercase tracking-wider text-[#6b6b8a] hover:text-[#e8e8e8] transition-colors"
+            >
+              {proExpanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+              Pro Collections
+            </button>
+            <AnimatePresence>
+              {proExpanded && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden space-y-0.5"
+                >
+                  {filteredMeta.map((c) => {
+                    const label = getProLabel(c);
+                    const grenadeType = c.proCategory === 'meta'
+                      ? (c.name.toLowerCase().includes('smoke') ? 'smoke' as const
+                        : c.name.toLowerCase().includes('flash') ? 'flash' as const
+                        : c.name.toLowerCase().includes('he') ? 'he' as const
+                        : c.name.toLowerCase().includes('molotov') ? 'molotov' as const
+                        : undefined)
+                      : undefined;
+                    return (
+                      <SourceButton
+                        key={c.id}
+                        active={isSourceActive(c.id)}
+                        onClick={() => handleProClick(c, label)}
+                        label={label}
+                        count={c.lineupCount}
+                        grenadeType={grenadeType}
+                        locked={!isPremium}
+                      />
+                    );
+                  })}
+
+                  {filteredTeams.length > 0 && (
+                    <>
+                      <div className="my-2 h-px bg-[#2a2a3e]/50" />
+                      <button
+                        onClick={() => setTeamsExpanded(!teamsExpanded)}
+                        className="mb-1 flex w-full items-center gap-1 px-2 text-[10px] font-semibold uppercase tracking-wider text-[#6b6b8a]/70 hover:text-[#e8e8e8] transition-colors"
+                      >
+                        {teamsExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                        Teams
+                      </button>
+                      <AnimatePresence>
+                        {teamsExpanded && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="overflow-hidden space-y-0.5"
+                          >
+                            {filteredTeams.map((c) => {
+                              const label = c.name.replace(/\s+—\s+.*$/, '');
+                              return (
+                                <SourceButton
+                                  key={c.id}
+                                  active={isSourceActive(c.id)}
+                                  onClick={() => handleProClick(c, label)}
+                                  label={label}
+                                  count={c.lineupCount}
+                                  locked={!isPremium}
+                                  logoUrl={c.coverImage}
+                                />
+                              );
+                            })}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        )}
 
         {/* Event Collections */}
         {eventCollections.length > 0 && (
