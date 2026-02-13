@@ -81,6 +81,9 @@ export default function FilterSidebar({
     .filter((c) => c.proCategory === 'team_archive' && c.timeWindow === activeQuarter);
   const teamCollections = proCollections.filter((c) => c.proCategory === 'team');
   const eventCollections = proCollections.filter((c) => c.proCategory === 'event');
+  const matchCollections = proCollections
+    .filter((c) => c.proCategory === 'match')
+    .sort((a, b) => (b.timeWindow ?? '').localeCompare(a.timeWindow ?? ''));
 
   const q = search.toLowerCase().trim();
   const filteredMeta = q ? metaCollections.filter((c) => getProLabel(c).toLowerCase().includes(q)) : metaCollections;
@@ -88,6 +91,7 @@ export default function FilterSidebar({
   const filteredQuarterTeams = q ? quarterTeamArchives.filter((c) => c.name.replace(/\s+—\s+.*$/, '').toLowerCase().includes(q)) : quarterTeamArchives;
   const filteredTeams = q ? teamCollections.filter((c) => c.name.replace(/\s+—\s+.*$/, '').toLowerCase().includes(q)) : teamCollections;
   const filteredEvents = q ? eventCollections.filter((c) => c.name.replace(/\s+—\s+.*$/, '').toLowerCase().includes(q)) : eventCollections;
+  const filteredMatches = q ? matchCollections.filter((c) => c.name.replace(/\s+—\s+.*$/, '').toLowerCase().includes(q)) : matchCollections;
   const filteredUser = q ? userCollections.filter((c) => c.name.toLowerCase().includes(q)) : userCollections;
 
   const isSourceActive = (id: string) =>
@@ -383,8 +387,8 @@ export default function FilterSidebar({
           </div>
         )}
 
-        {/* Event Collections */}
-        {eventCollections.length > 0 && (
+        {/* Event & Match Collections */}
+        {(eventCollections.length > 0 || matchCollections.length > 0) && (
           <div>
             <button
               onClick={() => setEventsExpanded(!eventsExpanded)}
@@ -418,6 +422,29 @@ export default function FilterSidebar({
                       />
                     );
                   })}
+
+                  {filteredMatches.length > 0 && (
+                    <>
+                      <div className="my-1.5 h-px bg-[#2a2a3e]/50" />
+                      <p className="px-2 text-[10px] font-semibold uppercase tracking-wider text-[#6b6b8a]/70 mb-0.5">
+                        Recent Matches
+                      </p>
+                      {filteredMatches.map((c) => {
+                        const matchLabel = c.name.replace(/\s+—\s+.*$/, '');
+                        return (
+                          <SourceButton
+                            key={c.id}
+                            active={isSourceActive(c.id)}
+                            onClick={() => handleProClick(c, matchLabel)}
+                            label={matchLabel}
+                            count={c.lineupCount}
+                            locked={!isPremium}
+                            badge={c.timeWindow ?? undefined}
+                          />
+                        );
+                      })}
+                    </>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>

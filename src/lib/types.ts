@@ -186,5 +186,5 @@ export interface Notification {
   createdAt: string;
 }
 
-export type ProCategory = 'meta' | 'meta_all' | 'meta_archive' | 'team' | 'team_archive' | 'event';
+export type ProCategory = 'meta' | 'meta_all' | 'meta_archive' | 'team' | 'team_archive' | 'event' | 'match';
 export type TimeWindow = 'last_30d' | 'last_90d' | 'all_time';
