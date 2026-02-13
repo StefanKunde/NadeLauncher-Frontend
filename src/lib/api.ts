@@ -71,8 +71,8 @@ export const lineupsApi = {
 
 // Sessions
 export const sessionsApi = {
-  create: (mapName: string) =>
-    api.post<{ data: Session }>('/api/sessions', { mapName }).then((r) => r.data.data),
+  create: (mapName: string, collectionId?: string) =>
+    api.post<{ data: Session }>('/api/sessions', { mapName, collectionId }).then((r) => r.data.data),
   getActive: () =>
     api.get<{ data: Session | null }>('/api/sessions/active').then((r) => r.data.data),
   getUsage: () =>
@@ -100,6 +100,22 @@ export const collectionsApi = {
     api.post(`/api/collections/${collectionId}/lineups/${lineupId}/hide`),
   unhideLineup: (collectionId: string, lineupId: string) =>
     api.delete(`/api/collections/${collectionId}/lineups/${lineupId}/hide`),
+};
+
+// User Collections
+export const userCollectionsApi = {
+  getMy: (map?: string) =>
+    api.get<{ data: LineupCollection[] }>('/api/collections/my', { params: { map } }).then((r) => r.data.data),
+  create: (data: { name: string; description?: string; mapName: string }) =>
+    api.post<{ data: LineupCollection }>('/api/collections/my', data).then((r) => r.data.data),
+  update: (id: string, data: { name?: string; description?: string }) =>
+    api.put<{ data: LineupCollection }>(`/api/collections/my/${id}`, data).then((r) => r.data.data),
+  delete: (id: string) =>
+    api.delete(`/api/collections/my/${id}`),
+  addLineup: (collectionId: string, lineupId: string) =>
+    api.post(`/api/collections/my/${collectionId}/lineups/${lineupId}`),
+  removeLineup: (collectionId: string, lineupId: string) =>
+    api.delete(`/api/collections/my/${collectionId}/lineups/${lineupId}`),
 };
 
 // Pro Nades

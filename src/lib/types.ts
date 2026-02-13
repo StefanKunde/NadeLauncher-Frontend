@@ -77,6 +77,8 @@ export interface Session {
   createdAt: string;
   queuePosition?: number;
   queuedAt?: string;
+  practiceCollectionId?: string;
+  practiceCollectionName?: string;
 }
 
 export interface UsageStats {
@@ -99,6 +101,7 @@ export interface LineupCollection {
   autoManaged?: boolean;
   proCategory?: string;
   timeWindow?: string;
+  ownerId?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -183,5 +186,5 @@ export interface Notification {
   createdAt: string;
 }
 
-export type ProCategory = 'meta' | 'team' | 'player' | 'match' | 'top_he' | 'top_flash' | 'most_used' | 'pistol' | 'eco';
+export type ProCategory = 'meta' | 'meta_all' | 'team' | 'event';
 export type TimeWindow = 'last_30d' | 'last_90d' | 'all_time';

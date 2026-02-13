@@ -1,16 +1,3 @@
-import type { Lineup } from '@/lib/types';
-
-export type TabKey = 'my-lineups' | 'collections' | 'browse';
-export type SortMode = 'name' | 'newest';
-export type GrenadeFilter = 'all' | 'smoke' | 'flash' | 'molotov' | 'he';
-
-export interface MergedLineup extends Lineup {
-  source: 'created' | 'collection' | 'added';
-  sourceCollectionId?: string;
-  sourceCollectionName?: string;
-  isHidden?: boolean;
-}
-
 export const staggerContainer = {
   hidden: { opacity: 0 },
   show: {

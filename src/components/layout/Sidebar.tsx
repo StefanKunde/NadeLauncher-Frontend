@@ -10,7 +10,6 @@ import {
   Crown,
   Settings,
   LogOut,
-  Trophy,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth-store';
 import SidebarServerStatus from './SidebarServerStatus';
@@ -18,8 +17,7 @@ import NotificationBell from '@/components/notifications/NotificationBell';
 
 const NAV_ITEMS = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { href: '/dashboard/maps', icon: Map, label: 'Maps' },
-  { href: '/dashboard/pro-nades', icon: Trophy, label: 'Pro Nades', badge: 'NEW' },
+  { href: '/dashboard/maps', icon: Map, label: 'Nades' },
   { href: '/dashboard/premium', icon: Crown, label: 'Premium', badge: 'PRO' },
   { href: '/dashboard/settings', icon: Settings, label: 'Settings' },
 ];
