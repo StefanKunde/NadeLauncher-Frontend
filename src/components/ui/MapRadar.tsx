@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback, useRef } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { Plus, Minus, Maximize2 } from 'lucide-react';
 import { MAP_COORDINATES, worldToRadar } from '@/lib/map-coordinates';
@@ -41,6 +41,7 @@ export default function MapRadar({
   // Zoom & pan state (only for non-mini mode)
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
+  const containerRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
   const dragStart = useRef({ x: 0, y: 0 });
   const panStart = useRef({ x: 0, y: 0 });
@@ -69,16 +70,21 @@ export default function MapRadar({
       });
   }, [lineups, config, showLower, hasLayers]);
 
-  const handleWheel = useCallback((e: React.WheelEvent) => {
-    if (mini) return;
-    e.preventDefault();
-    setZoom((prev) => {
-      const delta = e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP;
-      const next = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, prev + delta));
-      // Reset pan when zooming back to 1
-      if (next <= 1) setPan({ x: 0, y: 0 });
-      return next;
-    });
+  // Attach wheel listener as non-passive so preventDefault stops page scroll
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || mini) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      setZoom((prev) => {
+        const delta = e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP;
+        const next = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, prev + delta));
+        if (next <= 1) setPan({ x: 0, y: 0 });
+        return next;
+      });
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
   }, [mini]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -134,10 +140,10 @@ export default function MapRadar({
 
   return (
     <div
+      ref={containerRef}
       className={`relative aspect-square w-full overflow-hidden rounded-xl bg-[#0a0a0f] ${
         !mini && zoom > 1 ? 'cursor-grab active:cursor-grabbing' : ''
       }`}
-      onWheel={handleWheel}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
