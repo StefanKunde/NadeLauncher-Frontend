@@ -45,14 +45,23 @@ export default function Sidebar() {
     <aside className="fixed left-0 top-0 z-40 flex h-screen w-72 flex-col border-r border-[#2a2a3e] bg-[#0d0d14]">
       {/* Logo */}
       <div className="px-6 pt-7 pb-5">
-        <Link href="/dashboard" className="block">
-          <h1 className="text-xl font-extrabold tracking-wider">
-            <span className="text-gradient-gold">NADE</span>
-            <span className="text-[#e8e8e8]">PRO</span>
-          </h1>
-          <p className="mt-1 text-xs font-medium tracking-widest text-[#6b6b8a] uppercase">
-            CS2 Practice Tool
-          </p>
+        <Link href="/dashboard" className="flex items-center gap-3">
+          <Image
+            src="/logo.png"
+            alt="NadePro"
+            width={40}
+            height={40}
+            className="shrink-0"
+          />
+          <div>
+            <h1 className="text-xl font-extrabold tracking-wider">
+              <span className="text-gradient-gold">NADE</span>
+              <span className="text-[#e8e8e8]">PRO</span>
+            </h1>
+            <p className="mt-0.5 text-xs font-medium tracking-widest text-[#6b6b8a] uppercase">
+              CS2 Practice Tool
+            </p>
+          </div>
         </Link>
       </div>
 

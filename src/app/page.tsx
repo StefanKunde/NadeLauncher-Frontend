@@ -215,7 +215,8 @@ export default function HomePage() {
         }`}
       >
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <Link href="/" className="text-xl font-bold tracking-tight">
+          <Link href="/" className="flex items-center gap-2 text-xl font-bold tracking-tight">
+            <Image src="/logo.png" alt="NadePro" width={32} height={32} className="shrink-0" />
             <span className="text-gradient-gold">NADE</span>
             <span className="text-[#e8e8e8]">PRO</span>
           </Link>
