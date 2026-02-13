@@ -107,16 +107,16 @@ export default function FilterSidebar({
 
   return (
     <>
-      <div className="w-64 shrink-0 space-y-5 overflow-y-auto max-h-[calc(100vh-5rem)] pr-1 scrollbar-thin">
+      <div className="w-64 shrink-0 space-y-5 overflow-y-auto max-h-[calc(100vh-5rem)] p-1 scrollbar-thin">
         {/* Search Collections */}
-        <div className="flex items-center gap-2 rounded-lg border border-[#2a2a3e] bg-[#12121a] px-3">
+        <div className="flex items-center gap-2 rounded-lg border border-[#2a2a3e] bg-[#12121a] px-3 transition-colors focus-within:border-[#f0a500] focus-within:shadow-[0_0_0_3px_rgba(240,165,0,0.15)]">
           <Search className="h-4 w-4 shrink-0 text-[#6b6b8a]" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search collections..."
-            className="w-full bg-transparent py-2 text-sm text-[#e8e8e8] placeholder:text-[#6b6b8a] focus:outline-none"
+            className="w-full !border-none !bg-transparent !rounded-none !shadow-none !px-0 !py-2 text-sm text-[#e8e8e8] placeholder:text-[#6b6b8a] focus:!outline-none focus:!shadow-none focus:!border-none"
           />
           {search && (
             <button onClick={() => setSearch('')} className="shrink-0 text-[#6b6b8a] hover:text-[#e8e8e8]">
