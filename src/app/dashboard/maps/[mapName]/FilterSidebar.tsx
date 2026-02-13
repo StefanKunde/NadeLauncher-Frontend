@@ -58,6 +58,7 @@ export default function FilterSidebar({
   const [proExpanded, setProExpanded] = useState(true);
   const [teamsExpanded, setTeamsExpanded] = useState(false);
   const [eventsExpanded, setEventsExpanded] = useState(false);
+  const [archivesExpanded, setArchivesExpanded] = useState(false);
   const [myExpanded, setMyExpanded] = useState(true);
   const [search, setSearch] = useState('');
   const [showPremiumModal, setShowPremiumModal] = useState(false);
@@ -65,11 +66,15 @@ export default function FilterSidebar({
   const metaCollections = proCollections
     .filter((c) => c.proCategory === 'meta' || c.proCategory === 'meta_all')
     .sort((a, b) => (a.proCategory === 'meta_all' ? -1 : b.proCategory === 'meta_all' ? 1 : 0));
+  const archiveCollections = proCollections
+    .filter((c) => c.proCategory === 'meta_archive')
+    .sort((a, b) => (b.timeWindow ?? '').localeCompare(a.timeWindow ?? ''));
   const teamCollections = proCollections.filter((c) => c.proCategory === 'team');
   const eventCollections = proCollections.filter((c) => c.proCategory === 'event');
 
   const q = search.toLowerCase().trim();
   const filteredMeta = q ? metaCollections.filter((c) => getProLabel(c).toLowerCase().includes(q)) : metaCollections;
+  const filteredArchives = q ? archiveCollections.filter((c) => c.name.replace(/\s+—\s+.*$/, '').toLowerCase().includes(q)) : archiveCollections;
   const filteredTeams = q ? teamCollections.filter((c) => c.name.replace(/\s+—\s+.*$/, '').toLowerCase().includes(q)) : teamCollections;
   const filteredEvents = q ? eventCollections.filter((c) => c.name.replace(/\s+—\s+.*$/, '').toLowerCase().includes(q)) : eventCollections;
   const filteredUser = q ? userCollections.filter((c) => c.name.toLowerCase().includes(q)) : userCollections;
@@ -221,9 +226,49 @@ export default function FilterSidebar({
                         count={c.lineupCount}
                         grenadeType={grenadeType}
                         locked={!isPremium}
+                        badge={c.timeWindow === 'current' ? 'Current' : undefined}
                       />
                     );
                   })}
+
+                  {filteredArchives.length > 0 && (
+                    <>
+                      <div className="my-2 h-px bg-[#2a2a3e]/50" />
+                      <button
+                        onClick={() => setArchivesExpanded(!archivesExpanded)}
+                        className="mb-1 flex w-full items-center gap-1 px-2 text-[10px] font-semibold uppercase tracking-wider text-[#6b6b8a]/70 hover:text-[#e8e8e8] transition-colors"
+                      >
+                        {archivesExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                        Archives
+                      </button>
+                      <AnimatePresence>
+                        {archivesExpanded && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="overflow-hidden space-y-0.5"
+                          >
+                            {filteredArchives.map((c) => {
+                              const label = c.name.replace(/\s+—\s+.*$/, '');
+                              return (
+                                <SourceButton
+                                  key={c.id}
+                                  active={isSourceActive(c.id)}
+                                  onClick={() => handleProClick(c, label)}
+                                  label={label}
+                                  count={c.lineupCount}
+                                  locked={!isPremium}
+                                  badge={c.timeWindow ?? undefined}
+                                />
+                              );
+                            })}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </>
+                  )}
 
                   {filteredTeams.length > 0 && (
                     <>
@@ -289,15 +334,21 @@ export default function FilterSidebar({
                   transition={{ duration: 0.2 }}
                   className="overflow-hidden space-y-0.5"
                 >
-                  {filteredEvents.map((c) => (
-                    <SourceButton
-                      key={c.id}
-                      active={isSourceActive(c.id)}
-                      onClick={() => onSourceFilterChange({ type: 'collection', collectionId: c.id, collectionName: c.name })}
-                      label={c.name.replace(/\s+—\s+.*$/, '')}
-                      count={c.lineupCount}
-                    />
-                  ))}
+                  {filteredEvents.map((c) => {
+                    const eventLabel = c.name.replace(/\s+—\s+.*$/, '');
+                    const dateBadge = c.timeWindow?.includes('/') ? c.timeWindow.split('/').map((d) => d.slice(5)).join(' – ') : undefined;
+                    return (
+                      <SourceButton
+                        key={c.id}
+                        active={isSourceActive(c.id)}
+                        onClick={() => handleProClick(c, eventLabel)}
+                        label={eventLabel}
+                        count={c.lineupCount}
+                        locked={!isPremium}
+                        badge={dateBadge}
+                      />
+                    );
+                  })}
                 </motion.div>
               )}
             </AnimatePresence>
@@ -361,6 +412,7 @@ function SourceButton({
   locked,
   grenadeType,
   logoUrl,
+  badge,
 }: {
   active: boolean;
   onClick: () => void;
@@ -369,6 +421,7 @@ function SourceButton({
   locked?: boolean;
   grenadeType?: 'smoke' | 'flash' | 'molotov' | 'he';
   logoUrl?: string;
+  badge?: string;
 }) {
   return (
     <button
@@ -392,6 +445,9 @@ function SourceButton({
       ) : null}
       {locked && !logoUrl && !grenadeType && <Lock className="h-3 w-3 text-[#6b6b8a]/50" />}
       <span className="truncate flex-1 text-left">{label}</span>
+      {badge && (
+        <span className="shrink-0 rounded bg-[#f0a500]/10 px-1 py-0.5 text-[9px] font-semibold text-[#f0a500]/70">{badge}</span>
+      )}
       {locked && <Lock className="h-2.5 w-2.5 shrink-0 text-[#6b6b8a]/40" />}
       {count !== undefined && !locked && (
         <span className={`text-[10px] ${active ? 'text-[#f0a500]/70' : 'text-[#6b6b8a]'}`}>{count}</span>

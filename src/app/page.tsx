@@ -14,12 +14,10 @@ import {
   Play,
   Check,
   Crown,
-  Users,
   Upload,
   BarChart3,
   Crosshair,
   Layers,
-  X,
 } from 'lucide-react';
 import Image from 'next/image';
 import GrenadeIcon from '@/components/ui/GrenadeIcon';
@@ -111,19 +109,19 @@ const FEATURES = [
     desc: 'Lineups auto-extracted from Tier-1 pro matches — always stay up to date',
   },
   {
-    icon: Users,
-    title: 'Team Scouting',
-    desc: 'Upload opponent demos to analyze their utility patterns and prepare counters',
+    icon: Play,
+    title: 'Ghost Replay',
+    desc: 'Watch 3D ghost replays of grenade trajectories to perfect your positioning and timing',
   },
   {
     icon: Trophy,
     title: 'Collections & Library',
-    desc: 'Organize lineups into collections, assign roles, and share with your team',
+    desc: 'Create and manage personal lineup collections — organize directly in-game or on the web',
   },
   {
     icon: Crown,
-    title: 'Premium Features',
-    desc: 'Unlock unlimited lineups, pro analysis, team features, and advanced tools',
+    title: 'Pro Collections',
+    desc: 'Curated lineups from Tier-1 pro teams and major events — always up to date with the meta',
   },
 ];
 
@@ -156,15 +154,6 @@ const PRO_FEATURES = [
   'Map coverage heatmaps',
   'Collections & folders',
   'Priority support',
-];
-
-const TEAM_FEATURES = [
-  'Everything in Pro',
-  'Shared team library',
-  'Gegner-scouting reports',
-  'Team execute practice',
-  'Role assignments',
-  'Unlimited team members',
 ];
 
 const STATS = [
@@ -589,7 +578,7 @@ export default function HomePage() {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
             {/* Free Tier */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
@@ -658,48 +647,7 @@ export default function HomePage() {
                 Coming Soon
               </button>
               <p className="text-[#6b6b8a] text-xs text-center mt-3">
-                Launches Q2 2025
-              </p>
-            </motion.div>
-
-            {/* Team Tier */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="relative rounded-2xl p-7 flex flex-col border border-[#4a9fd4]/30 bg-[#12121a]"
-            >
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#4a9fd4] to-[#3580b0] text-white text-xs font-bold px-4 py-1 rounded-full uppercase tracking-wider whitespace-nowrap">
-                For Teams
-              </div>
-
-              <div className="flex items-center gap-2 mb-2">
-                <Users className="w-5 h-5 text-[#4a9fd4]" />
-                <h3 className="text-xl font-bold text-[#4a9fd4]">Team</h3>
-              </div>
-              <div className="mb-6">
-                <span className="text-4xl font-extrabold text-[#e8e8e8]">&euro;15</span>
-                <span className="text-[#6b6b8a] ml-1">/month</span>
-              </div>
-
-              <ul className="space-y-3 mb-8 flex-1">
-                {TEAM_FEATURES.map((feat) => (
-                  <li key={feat} className="flex items-center gap-3 text-sm text-[#e8e8e8]">
-                    <Check className="w-4 h-4 text-[#4a9fd4] shrink-0" />
-                    {feat}
-                  </li>
-                ))}
-              </ul>
-
-              <button
-                disabled
-                className="w-full text-center py-3 font-semibold rounded-lg border border-[#4a9fd4]/40 text-[#4a9fd4] opacity-60 cursor-not-allowed"
-              >
                 Coming Soon
-              </button>
-              <p className="text-[#6b6b8a] text-xs text-center mt-3">
-                Launches Q3 2025
               </p>
             </motion.div>
           </div>

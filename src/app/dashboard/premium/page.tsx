@@ -2,26 +2,23 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Crown, Check, X, ChevronDown, ChevronUp, Lock, Sparkles, Users } from 'lucide-react';
+import { Crown, Check, X, ChevronDown, ChevronUp, Lock, Sparkles } from 'lucide-react';
 import { useAuthStore } from '@/store/auth-store';
 import toast from 'react-hot-toast';
 
 const COMPARISON_ROWS = [
-  { feature: 'Lineup browser & 2D radar maps', free: true, pro: true, team: true },
-  { feature: 'Community lineups', free: true, pro: true, team: true },
-  { feature: 'In-game practice (CS2 plugin)', free: true, pro: true, team: true },
-  { feature: 'Own lineups', free: 'Up to 20', pro: 'Unlimited', team: 'Unlimited' },
-  { feature: 'Practice server time', free: '30 min', pro: 'Unlimited', team: 'Unlimited' },
-  { feature: 'Curated pro lineups', free: false, pro: true, team: true },
-  { feature: 'Demo import & analysis', free: false, pro: true, team: true },
-  { feature: 'Pro demo pipeline', free: false, pro: true, team: true },
-  { feature: 'Execute sequences', free: false, pro: true, team: true },
-  { feature: 'Landing verification', free: false, pro: true, team: true },
-  { feature: 'Map coverage heatmaps', free: false, pro: true, team: true },
-  { feature: 'Collections & folders', free: false, pro: true, team: true },
-  { feature: 'Gegner-scouting reports', free: false, pro: false, team: true },
-  { feature: 'Shared team library', free: false, pro: false, team: true },
-  { feature: 'Team execute practice', free: false, pro: false, team: true },
+  { feature: 'Lineup browser & 2D radar maps', free: true, pro: true },
+  { feature: 'Community lineups', free: true, pro: true },
+  { feature: 'In-game practice (CS2 plugin)', free: true, pro: true },
+  { feature: 'Own lineups', free: 'Up to 20', pro: 'Unlimited' },
+  { feature: 'Practice server time', free: '30 min', pro: 'Unlimited' },
+  { feature: 'Curated pro lineups', free: false, pro: true },
+  { feature: 'Pro demo pipeline', free: false, pro: true },
+  { feature: 'Ghost replay', free: false, pro: true },
+  { feature: 'Landing verification', free: false, pro: true },
+  { feature: 'Collections & in-game management', free: false, pro: true },
+  { feature: 'Pro team & event collections', free: false, pro: true },
+  { feature: 'Priority support', free: false, pro: true },
 ];
 
 const FAQ_ITEMS = [
@@ -38,12 +35,8 @@ const FAQ_ITEMS = [
     a: 'Your assigned presets are kept. Custom lineups become read-only.',
   },
   {
-    q: 'What is the difference between Pro and Team?',
-    a: 'Pro is for individual players. Team adds shared libraries, gegner-scouting, role assignments, and team execute practice for competitive teams.',
-  },
-  {
-    q: 'When do paid plans launch?',
-    a: 'Pro is planned for Q2 2025, Team for Q3 2025. Sign up now to be notified.',
+    q: 'When does Pro launch?',
+    a: 'Pro is coming soon. Sign up now to be the first to know when it launches.',
   },
 ];
 
@@ -65,15 +58,6 @@ const PRO_FEATURES = [
   'Map coverage heatmaps',
   'Collections & folders',
   'Priority support',
-];
-
-const TEAM_FEATURES = [
-  'Everything in Pro',
-  'Shared team library',
-  'Gegner-scouting reports',
-  'Team execute practice',
-  'Role assignments',
-  'Unlimited team members',
 ];
 
 const fadeUp = {
@@ -161,17 +145,16 @@ export default function PremiumPage() {
         <h2 className="mb-5 text-xl font-semibold text-[#e8e8e8]">Feature Comparison</h2>
         <div className="glass rounded-xl overflow-hidden overflow-x-auto">
           {/* Table header */}
-          <div className="grid grid-cols-[1fr_90px_90px_90px] min-w-[500px] border-b border-[#2a2a3e] px-5 py-3">
+          <div className="grid grid-cols-[1fr_90px_90px] min-w-[400px] border-b border-[#2a2a3e] px-5 py-3">
             <span className="text-xs font-semibold uppercase tracking-wider text-[#6b6b8a]">Feature</span>
             <span className="text-center text-xs font-semibold uppercase tracking-wider text-[#6b6b8a]">Free</span>
             <span className="text-center text-xs font-semibold uppercase tracking-wider text-[#f0a500]">Pro</span>
-            <span className="text-center text-xs font-semibold uppercase tracking-wider text-[#4a9fd4]">Team</span>
           </div>
           {/* Table rows */}
           {COMPARISON_ROWS.map((row, i) => (
             <div
               key={row.feature}
-              className={`grid grid-cols-[1fr_90px_90px_90px] min-w-[500px] items-center px-5 py-3 ${
+              className={`grid grid-cols-[1fr_90px_90px] min-w-[400px] items-center px-5 py-3 ${
                 i % 2 === 0 ? 'bg-transparent' : 'bg-[#1a1a2e]/30'
               } ${i < COMPARISON_ROWS.length - 1 ? 'border-b border-[#2a2a3e]/50' : ''}`}
             >
@@ -182,9 +165,6 @@ export default function PremiumPage() {
               <div className="text-center">
                 <CellValue value={row.pro} color="#f0a500" />
               </div>
-              <div className="text-center">
-                <CellValue value={row.team} color="#4a9fd4" />
-              </div>
             </div>
           ))}
         </div>
@@ -193,7 +173,7 @@ export default function PremiumPage() {
       {/* Pricing Cards */}
       <motion.div variants={fadeUp} custom={3} className="mb-10">
         <h2 className="mb-5 text-xl font-semibold text-[#e8e8e8]">Choose Your Plan</h2>
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 max-w-3xl">
           {/* Free Tier */}
           <div className="glass rounded-xl p-6">
             <h3 className="text-lg font-semibold text-[#e8e8e8] mb-1">Free</h3>
@@ -239,46 +219,14 @@ export default function PremiumPage() {
               ))}
             </ul>
             <button
-              onClick={() => toast('Pro launches Q2 2025. Stay tuned!')}
+              onClick={() => toast('Pro is coming soon. Stay tuned!')}
               className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#f0a500]/20 py-2.5 text-sm font-semibold text-[#f0a500] cursor-not-allowed"
               disabled
             >
               <Lock className="h-4 w-4" />
               Coming Soon
             </button>
-            <p className="mt-3 text-center text-xs text-[#6b6b8a]">Pro launches Q2 2025</p>
-          </div>
-
-          {/* Team Tier */}
-          <div className="relative rounded-xl p-6 glass" style={{ borderColor: 'rgba(74,159,212,0.3)' }}>
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[#4a9fd4] px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white">
-              For Teams
-            </div>
-            <div className="mb-1 flex items-center gap-2">
-              <Users className="h-5 w-5 text-[#4a9fd4]" />
-              <h3 className="text-lg font-semibold text-[#4a9fd4]">Team</h3>
-            </div>
-            <p className="mb-5">
-              <span className="text-4xl font-bold text-[#e8e8e8]">&euro;15</span>
-              <span className="ml-1 text-sm text-[#6b6b8a]">/ month</span>
-            </p>
-            <ul className="mb-6 space-y-3">
-              {TEAM_FEATURES.map((f) => (
-                <li key={f} className="flex items-center gap-2.5 text-sm text-[#e8e8e8]">
-                  <Check className="h-4 w-4 shrink-0 text-[#4a9fd4]" />
-                  {f}
-                </li>
-              ))}
-            </ul>
-            <button
-              onClick={() => toast('Team plan launches Q3 2025. Stay tuned!')}
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#4a9fd4]/20 py-2.5 text-sm font-semibold text-[#4a9fd4] cursor-not-allowed"
-              disabled
-            >
-              <Lock className="h-4 w-4" />
-              Coming Soon
-            </button>
-            <p className="mt-3 text-center text-xs text-[#6b6b8a]">Team launches Q3 2025</p>
+            <p className="mt-3 text-center text-xs text-[#6b6b8a]">Coming Soon</p>
           </div>
         </div>
       </motion.div>
