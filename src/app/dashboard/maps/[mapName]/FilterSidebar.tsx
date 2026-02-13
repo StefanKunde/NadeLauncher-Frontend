@@ -59,6 +59,8 @@ export default function FilterSidebar({
   const [teamsExpanded, setTeamsExpanded] = useState(false);
   const [eventsExpanded, setEventsExpanded] = useState(false);
   const [archivesExpanded, setArchivesExpanded] = useState(false);
+  const [selectedQuarter, setSelectedQuarter] = useState<string | null>(null);
+  const [archiveTeamsExpanded, setArchiveTeamsExpanded] = useState(false);
   const [myExpanded, setMyExpanded] = useState(true);
   const [search, setSearch] = useState('');
   const [showPremiumModal, setShowPremiumModal] = useState(false);
@@ -67,14 +69,23 @@ export default function FilterSidebar({
     .filter((c) => c.proCategory === 'meta' || c.proCategory === 'meta_all')
     .sort((a, b) => (a.proCategory === 'meta_all' ? -1 : b.proCategory === 'meta_all' ? 1 : 0));
   const archiveCollections = proCollections
-    .filter((c) => c.proCategory === 'meta_archive')
+    .filter((c) => c.proCategory === 'meta_archive' || c.proCategory === 'team_archive')
     .sort((a, b) => (b.timeWindow ?? '').localeCompare(a.timeWindow ?? ''));
+  const archiveQuarters = [...new Set(archiveCollections.map((c) => c.timeWindow).filter(Boolean))]
+    .sort((a, b) => b!.localeCompare(a!)) as string[];
+  const activeQuarter = selectedQuarter ?? archiveQuarters[0] ?? null;
+  const quarterMetaArchives = archiveCollections
+    .filter((c) => c.proCategory === 'meta_archive' && c.timeWindow === activeQuarter)
+    .sort((a, b) => (a.name.startsWith('Pro Nades') ? -1 : b.name.startsWith('Pro Nades') ? 1 : 0));
+  const quarterTeamArchives = archiveCollections
+    .filter((c) => c.proCategory === 'team_archive' && c.timeWindow === activeQuarter);
   const teamCollections = proCollections.filter((c) => c.proCategory === 'team');
   const eventCollections = proCollections.filter((c) => c.proCategory === 'event');
 
   const q = search.toLowerCase().trim();
   const filteredMeta = q ? metaCollections.filter((c) => getProLabel(c).toLowerCase().includes(q)) : metaCollections;
-  const filteredArchives = q ? archiveCollections.filter((c) => c.name.replace(/\s+—\s+.*$/, '').toLowerCase().includes(q)) : archiveCollections;
+  const filteredQuarterMeta = q ? quarterMetaArchives.filter((c) => c.name.replace(/\s+—\s+.*$/, '').toLowerCase().includes(q)) : quarterMetaArchives;
+  const filteredQuarterTeams = q ? quarterTeamArchives.filter((c) => c.name.replace(/\s+—\s+.*$/, '').toLowerCase().includes(q)) : quarterTeamArchives;
   const filteredTeams = q ? teamCollections.filter((c) => c.name.replace(/\s+—\s+.*$/, '').toLowerCase().includes(q)) : teamCollections;
   const filteredEvents = q ? eventCollections.filter((c) => c.name.replace(/\s+—\s+.*$/, '').toLowerCase().includes(q)) : eventCollections;
   const filteredUser = q ? userCollections.filter((c) => c.name.toLowerCase().includes(q)) : userCollections;
@@ -226,12 +237,12 @@ export default function FilterSidebar({
                         count={c.lineupCount}
                         grenadeType={grenadeType}
                         locked={!isPremium}
-                        badge={c.timeWindow === 'current' ? 'Current' : undefined}
+                        badge={c.timeWindow === 'current' || c.timeWindow === 'all' ? 'Current' : undefined}
                       />
                     );
                   })}
 
-                  {filteredArchives.length > 0 && (
+                  {archiveQuarters.length > 0 && (
                     <>
                       <div className="my-2 h-px bg-[#2a2a3e]/50" />
                       <button
@@ -250,20 +261,78 @@ export default function FilterSidebar({
                             transition={{ duration: 0.2 }}
                             className="overflow-hidden space-y-0.5"
                           >
-                            {filteredArchives.map((c) => {
+                            {/* Quarter selector */}
+                            <select
+                              value={activeQuarter ?? ''}
+                              onChange={(e) => setSelectedQuarter(e.target.value)}
+                              className="w-full rounded-lg border border-[#2a2a3e] bg-[#12121a] px-2.5 py-1.5 text-xs text-[#b8b8cc] focus:outline-none focus:border-[#f0a500]/40 mb-1"
+                            >
+                              {archiveQuarters.map((qtr) => (
+                                <option key={qtr} value={qtr}>{qtr}</option>
+                              ))}
+                            </select>
+
+                            {/* Meta archives for selected quarter */}
+                            {filteredQuarterMeta.map((c) => {
                               const label = c.name.replace(/\s+—\s+.*$/, '');
+                              const grenadeType = !label.startsWith('Pro Nades')
+                                ? (label.toLowerCase().includes('smoke') ? 'smoke' as const
+                                  : label.toLowerCase().includes('flash') ? 'flash' as const
+                                  : label.toLowerCase().includes('he') ? 'he' as const
+                                  : label.toLowerCase().includes('molotov') ? 'molotov' as const
+                                  : undefined)
+                                : undefined;
                               return (
                                 <SourceButton
                                   key={c.id}
                                   active={isSourceActive(c.id)}
                                   onClick={() => handleProClick(c, label)}
-                                  label={label}
+                                  label={label.replace(` ${activeQuarter}`, '')}
                                   count={c.lineupCount}
                                   locked={!isPremium}
-                                  badge={c.timeWindow ?? undefined}
+                                  grenadeType={grenadeType}
                                 />
                               );
                             })}
+
+                            {/* Team archives for selected quarter */}
+                            {filteredQuarterTeams.length > 0 && (
+                              <>
+                                <button
+                                  onClick={() => setArchiveTeamsExpanded(!archiveTeamsExpanded)}
+                                  className="mt-1 mb-0.5 flex w-full items-center gap-1 px-2 text-[10px] font-semibold uppercase tracking-wider text-[#6b6b8a]/70 hover:text-[#e8e8e8] transition-colors"
+                                >
+                                  {archiveTeamsExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                                  Teams
+                                </button>
+                                <AnimatePresence>
+                                  {archiveTeamsExpanded && (
+                                    <motion.div
+                                      initial={{ height: 0, opacity: 0 }}
+                                      animate={{ height: 'auto', opacity: 1 }}
+                                      exit={{ height: 0, opacity: 0 }}
+                                      transition={{ duration: 0.2 }}
+                                      className="overflow-hidden space-y-0.5"
+                                    >
+                                      {filteredQuarterTeams.map((c) => {
+                                        const label = c.name.replace(/\s+—\s+.*$/, '');
+                                        return (
+                                          <SourceButton
+                                            key={c.id}
+                                            active={isSourceActive(c.id)}
+                                            onClick={() => handleProClick(c, label)}
+                                            label={label.replace(` ${activeQuarter}`, '')}
+                                            count={c.lineupCount}
+                                            locked={!isPremium}
+                                            logoUrl={c.coverImage}
+                                          />
+                                        );
+                                      })}
+                                    </motion.div>
+                                  )}
+                                </AnimatePresence>
+                              </>
+                            )}
                           </motion.div>
                         )}
                       </AnimatePresence>
