@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Play, ChevronDown, Loader2, Monitor } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { ArrowLeft, Play, ChevronDown, Loader2, Monitor, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { MAPS, MAP_COLORS } from '@/lib/constants';
 import { collectionsApi, userCollectionsApi, sessionsApi, lineupsApi } from '@/lib/api';
@@ -35,7 +35,6 @@ export default function MapDetailPage() {
   // Filters
   const [grenadeFilter, setGrenadeFilter] = useState<GrenadeFilter>('all');
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>({ type: 'all' });
-  const [search, setSearch] = useState('');
 
   // Selection
   const [selectedLineup, setSelectedLineup] = useState<Lineup | null>(null);
@@ -51,6 +50,16 @@ export default function MapDetailPage() {
 
   // On-demand collection loading
   const [loadingCollection, setLoadingCollection] = useState(false);
+
+  // Create collection modal
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createCollectionName, setCreateCollectionName] = useState('');
+  const createInputRef = useRef<HTMLInputElement>(null);
+
+  // Edit collection modal
+  const [editingCollection, setEditingCollection] = useState<LineupCollection | null>(null);
+  const [editCollectionName, setEditCollectionName] = useState('');
+  const editInputRef = useRef<HTMLInputElement>(null);
 
   // ── Data Loading ───────────────────────────────────────────────
   const loadData = useCallback(async () => {
@@ -111,6 +120,27 @@ export default function MapDetailPage() {
     loadData();
   }, [loadData]);
 
+  // Auto-select meta_all collection after initial load
+  useEffect(() => {
+    if (loading) return;
+    if (sourceFilter.type === 'collection') return;
+
+    const isPremium = user?.isPremium ?? false;
+    if (isPremium) {
+      const metaAll = allCollections.find((c) => c.proCategory === 'meta_all');
+      if (metaAll) {
+        setSourceFilter({ type: 'collection', collectionId: metaAll.id, collectionName: 'All Pro Meta Nades' });
+        return;
+      }
+    }
+
+    // Non-premium: select first user collection if available
+    if (userCollections.length > 0) {
+      const first = userCollections[0];
+      setSourceFilter({ type: 'collection', collectionId: first.id, collectionName: first.name });
+    }
+  }, [loading, allCollections, userCollections, sourceFilter.type, user]);
+
   // On-demand loading when selecting a collection not yet loaded
   useEffect(() => {
     if (sourceFilter.type !== 'collection') return;
@@ -134,6 +164,15 @@ export default function MapDetailPage() {
 
     return () => { cancelled = true; };
   }, [sourceFilter, lineupsByCollection]);
+
+  // Focus modal inputs
+  useEffect(() => {
+    if (showCreateModal) setTimeout(() => createInputRef.current?.focus(), 100);
+  }, [showCreateModal]);
+
+  useEffect(() => {
+    if (editingCollection) setTimeout(() => editInputRef.current?.focus(), 100);
+  }, [editingCollection]);
 
   // ── Filtered Lineups ──────────────────────────────────────────
   const proCollections = useMemo(
@@ -162,8 +201,6 @@ export default function MapDetailPage() {
       for (const c of userCollections) {
         addLineups(lineupsByCollection.get(c.id) ?? []);
       }
-    } else if (sourceFilter.type === 'my-nades') {
-      addLineups(myNades);
     } else if (sourceFilter.type === 'collection') {
       addLineups(lineupsByCollection.get(sourceFilter.collectionId) ?? []);
     }
@@ -172,36 +209,26 @@ export default function MapDetailPage() {
   }, [sourceFilter, myNades, allCollections, userCollections, lineupsByCollection]);
 
   const filteredLineups = useMemo(() => {
-    let result = allLineups;
-
-    if (grenadeFilter !== 'all') {
-      result = result.filter((l) => l.grenadeType === grenadeFilter);
-    }
-
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      result = result.filter(
-        (l) =>
-          l.name.toLowerCase().includes(q) ||
-          l.tags?.some((t) => t.toLowerCase().includes(q)) ||
-          l.description?.toLowerCase().includes(q),
-      );
-    }
-
-    return result;
-  }, [allLineups, grenadeFilter, search]);
+    if (grenadeFilter === 'all') return allLineups;
+    return allLineups.filter((l) => l.grenadeType === grenadeFilter);
+  }, [allLineups, grenadeFilter]);
 
   // ── Actions ────────────────────────────────────────────────────
-  const handleCreateCollection = async () => {
-    const name = prompt('Collection name:');
-    if (!name?.trim()) return;
+  const handleCreateCollection = () => {
+    setCreateCollectionName('');
+    setShowCreateModal(true);
+  };
+
+  const handleCreateCollectionSubmit = async () => {
+    if (!createCollectionName.trim()) return;
 
     setCreatingCollection(true);
     try {
-      const newColl = await userCollectionsApi.create({ name: name.trim(), mapName });
+      const newColl = await userCollectionsApi.create({ name: createCollectionName.trim(), mapName });
       setUserCollections((prev) => [...prev, newColl]);
       setUserCollectionLineupIds((prev) => new Map(prev).set(newColl.id, new Set()));
-      toast.success(`Created "${name.trim()}"`);
+      toast.success(`Created "${createCollectionName.trim()}"`);
+      setShowCreateModal(false);
     } catch (err: any) {
       const msg = err?.response?.data?.message || 'Failed to create collection';
       toast.error(msg);
@@ -210,14 +237,22 @@ export default function MapDetailPage() {
     }
   };
 
-  const handleEditCollection = async (c: LineupCollection) => {
-    const name = prompt('New name:', c.name);
-    if (!name?.trim() || name.trim() === c.name) return;
+  const handleEditCollection = (c: LineupCollection) => {
+    setEditingCollection(c);
+    setEditCollectionName(c.name);
+  };
+
+  const handleEditCollectionSubmit = async () => {
+    if (!editingCollection || !editCollectionName.trim() || editCollectionName.trim() === editingCollection.name) {
+      setEditingCollection(null);
+      return;
+    }
 
     try {
-      const updated = await userCollectionsApi.update(c.id, { name: name.trim() });
-      setUserCollections((prev) => prev.map((x) => (x.id === c.id ? updated : x)));
+      const updated = await userCollectionsApi.update(editingCollection.id, { name: editCollectionName.trim() });
+      setUserCollections((prev) => prev.map((x) => (x.id === editingCollection.id ? updated : x)));
       toast.success('Collection renamed');
+      setEditingCollection(null);
     } catch {
       toast.error('Failed to rename');
     }
@@ -276,6 +311,10 @@ export default function MapDetailPage() {
     }
   };
 
+  // Current collection for practice server
+  const currentCollectionId = sourceFilter.type === 'collection' ? sourceFilter.collectionId : undefined;
+  const currentCollectionName = sourceFilter.type === 'collection' ? sourceFilter.collectionName : undefined;
+
   // All collections for the practice picker
   const practiceCollections = useMemo(() => {
     const result: { id: string; name: string }[] = [];
@@ -333,8 +372,6 @@ export default function MapDetailPage() {
             onGrenadeFilterChange={setGrenadeFilter}
             sourceFilter={sourceFilter}
             onSourceFilterChange={setSourceFilter}
-            search={search}
-            onSearchChange={setSearch}
             proCollections={proCollections}
             userCollections={userCollections}
             onCreateCollection={handleCreateCollection}
@@ -345,6 +382,71 @@ export default function MapDetailPage() {
 
           {/* Center: Radar + Nade List */}
           <div className="flex-1 min-w-0 space-y-4">
+            {/* Practice Server Card — prominent position */}
+            <div className="max-w-[700px] rounded-xl border border-[#f0a500]/20 bg-gradient-to-r from-[#12121a] to-[#1a1a2e] p-4">
+              <div className="flex items-center gap-4">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#f0a500]/10">
+                  <Monitor className="h-5 w-5 text-[#f0a500]" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <h3 className="text-sm font-semibold text-[#e8e8e8]">Practice Server</h3>
+                      {currentCollectionName ? (
+                        <p className="mt-0.5 text-xs text-[#6b6b8a] truncate">
+                          Collection: <span className="text-[#f0a500]">{currentCollectionName}</span>
+                        </p>
+                      ) : (
+                        <p className="mt-0.5 text-xs text-[#6b6b8a]">All nades on this map</p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        onClick={() => handleStartServer(currentCollectionId)}
+                        disabled={startingServer}
+                        className="flex items-center gap-2 rounded-lg bg-[#f0a500] px-4 py-2 text-sm font-semibold text-[#0a0a0f] hover:bg-[#ffd700] transition-colors disabled:opacity-50"
+                      >
+                        {startingServer ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+                        Start Server
+                      </button>
+                      {practiceCollections.length > 0 && (
+                        <div className="relative">
+                          <button
+                            onClick={() => setServerCollectionPicker(!serverCollectionPicker)}
+                            disabled={startingServer}
+                            className="flex items-center gap-1.5 rounded-lg border border-[#2a2a3e] bg-[#12121a] px-3 py-2 text-sm text-[#b8b8cc] hover:border-[#f0a500]/30 hover:text-[#e8e8e8] transition-colors disabled:opacity-50"
+                          >
+                            <ChevronDown className={`h-3.5 w-3.5 transition-transform ${serverCollectionPicker ? 'rotate-180' : ''}`} />
+                            Change
+                          </button>
+                          {serverCollectionPicker && (
+                            <>
+                              <div className="fixed inset-0 z-40" onClick={() => setServerCollectionPicker(false)} />
+                              <div className="absolute right-0 bottom-full z-50 mb-2 w-64 rounded-xl border border-[#2a2a3e] bg-[#12121a] py-2 shadow-2xl shadow-black/50">
+                                <p className="px-4 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#6b6b8a]">
+                                  Choose a collection
+                                </p>
+                                {practiceCollections.map((c) => (
+                                  <button
+                                    key={c.id}
+                                    onClick={() => handleStartServer(c.id)}
+                                    className="flex w-full items-center gap-2 px-4 py-2 text-sm text-[#b8b8cc] hover:bg-[#1a1a2e] hover:text-[#e8e8e8]"
+                                  >
+                                    <Play className="h-3 w-3 text-[#f0a500]" />
+                                    <span className="truncate">{c.name}</span>
+                                  </button>
+                                ))}
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div className="max-w-[700px] rounded-xl border border-[#2a2a3e]/50 bg-[#12121a] overflow-hidden">
               <MapRadar
                 mapName={mapName}
@@ -353,63 +455,6 @@ export default function MapDetailPage() {
                 onLineupClick={(lineup) => setSelectedLineup(lineup)}
                 mini={false}
               />
-            </div>
-
-            {/* Practice Server Card */}
-            <div className="max-w-[700px] relative rounded-xl border border-[#2a2a3e]/50 bg-gradient-to-r from-[#12121a] to-[#1a1a2e] p-4">
-              <div className="flex items-start gap-4">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#f0a500]/10">
-                  <Monitor className="h-5 w-5 text-[#f0a500]" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-sm font-semibold text-[#e8e8e8]">Practice Server</h3>
-                  <p className="mt-0.5 text-xs text-[#6b6b8a]">
-                    Launch a private CS2 server with ghost guidance to practice these lineups
-                  </p>
-                  <div className="mt-3 flex items-center gap-2">
-                    <button
-                      onClick={() => handleStartServer()}
-                      disabled={startingServer}
-                      className="flex items-center gap-2 rounded-lg bg-[#f0a500] px-4 py-2 text-sm font-semibold text-[#0a0a0f] hover:bg-[#ffd700] transition-colors disabled:opacity-50"
-                    >
-                      {startingServer ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
-                      Practice All Nades
-                    </button>
-                    {practiceCollections.length > 0 && (
-                      <div className="relative">
-                        <button
-                          onClick={() => setServerCollectionPicker(!serverCollectionPicker)}
-                          disabled={startingServer}
-                          className="flex items-center gap-1.5 rounded-lg border border-[#2a2a3e] bg-[#12121a] px-3 py-2 text-sm text-[#b8b8cc] hover:border-[#f0a500]/30 hover:text-[#e8e8e8] transition-colors disabled:opacity-50"
-                        >
-                          <ChevronDown className={`h-3.5 w-3.5 transition-transform ${serverCollectionPicker ? 'rotate-180' : ''}`} />
-                          With Collection
-                        </button>
-                        {serverCollectionPicker && (
-                          <>
-                            <div className="fixed inset-0 z-40" onClick={() => setServerCollectionPicker(false)} />
-                            <div className="absolute left-0 bottom-full z-50 mb-2 w-64 rounded-xl border border-[#2a2a3e] bg-[#12121a] py-2 shadow-2xl shadow-black/50">
-                              <p className="px-4 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#6b6b8a]">
-                                Choose a collection
-                              </p>
-                              {practiceCollections.map((c) => (
-                                <button
-                                  key={c.id}
-                                  onClick={() => handleStartServer(c.id)}
-                                  className="flex w-full items-center gap-2 px-4 py-2 text-sm text-[#b8b8cc] hover:bg-[#1a1a2e] hover:text-[#e8e8e8]"
-                                >
-                                  <Play className="h-3 w-3 text-[#f0a500]" />
-                                  <span className="truncate">{c.name}</span>
-                                </button>
-                              ))}
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
             </div>
 
             <div className="flex items-center justify-between">
@@ -457,6 +502,110 @@ export default function MapDetailPage() {
           </div>
         </div>
       )}
+
+      {/* Create Collection Modal */}
+      <AnimatePresence>
+        {showCreateModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+            onClick={() => setShowCreateModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-96 rounded-xl border border-[#2a2a3e] bg-[#12121a] p-6 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-base font-semibold text-[#e8e8e8]">Create Collection</h3>
+                <button onClick={() => setShowCreateModal(false)} className="text-[#6b6b8a] hover:text-[#e8e8e8]">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <input
+                ref={createInputRef}
+                type="text"
+                value={createCollectionName}
+                onChange={(e) => setCreateCollectionName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleCreateCollectionSubmit()}
+                placeholder="Collection name..."
+                className="mb-4 w-full rounded-lg border border-[#2a2a3e] bg-[#0a0a0f] px-4 py-2.5 text-sm text-[#e8e8e8] placeholder:text-[#6b6b8a] focus:border-[#f0a500]/50 focus:outline-none"
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowCreateModal(false)}
+                  className="flex-1 rounded-lg border border-[#2a2a3e] px-3 py-2 text-sm text-[#b8b8cc] hover:bg-[#1a1a2e] transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCreateCollectionSubmit}
+                  disabled={!createCollectionName.trim() || creatingCollection}
+                  className="flex-1 rounded-lg bg-[#f0a500] px-3 py-2 text-sm font-semibold text-[#0a0a0f] hover:bg-[#ffd700] transition-colors disabled:opacity-50"
+                >
+                  {creatingCollection ? <Loader2 className="mx-auto h-4 w-4 animate-spin" /> : 'Create'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Edit Collection Modal */}
+      <AnimatePresence>
+        {editingCollection && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+            onClick={() => setEditingCollection(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-96 rounded-xl border border-[#2a2a3e] bg-[#12121a] p-6 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-base font-semibold text-[#e8e8e8]">Rename Collection</h3>
+                <button onClick={() => setEditingCollection(null)} className="text-[#6b6b8a] hover:text-[#e8e8e8]">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <input
+                ref={editInputRef}
+                type="text"
+                value={editCollectionName}
+                onChange={(e) => setEditCollectionName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleEditCollectionSubmit()}
+                placeholder="New name..."
+                className="mb-4 w-full rounded-lg border border-[#2a2a3e] bg-[#0a0a0f] px-4 py-2.5 text-sm text-[#e8e8e8] placeholder:text-[#6b6b8a] focus:border-[#f0a500]/50 focus:outline-none"
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setEditingCollection(null)}
+                  className="flex-1 rounded-lg border border-[#2a2a3e] px-3 py-2 text-sm text-[#b8b8cc] hover:bg-[#1a1a2e] transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleEditCollectionSubmit}
+                  disabled={!editCollectionName.trim() || editCollectionName.trim() === editingCollection.name}
+                  className="flex-1 rounded-lg bg-[#f0a500] px-3 py-2 text-sm font-semibold text-[#0a0a0f] hover:bg-[#ffd700] transition-colors disabled:opacity-50"
+                >
+                  Rename
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
