@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Play, ChevronDown, Loader2 } from 'lucide-react';
+import { ArrowLeft, Play, ChevronDown, Loader2, Monitor } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { MAPS, MAP_COLORS } from '@/lib/constants';
@@ -48,6 +48,9 @@ export default function MapDetailPage() {
 
   // User collection lineup tracking
   const [userCollectionLineupIds, setUserCollectionLineupIds] = useState<Map<string, Set<string>>>(new Map());
+
+  // On-demand collection loading
+  const [loadingCollection, setLoadingCollection] = useState(false);
 
   // ── Data Loading ───────────────────────────────────────────────
   const loadData = useCallback(async () => {
@@ -107,6 +110,30 @@ export default function MapDetailPage() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // On-demand loading when selecting a collection not yet loaded
+  useEffect(() => {
+    if (sourceFilter.type !== 'collection') return;
+    if (lineupsByCollection.has(sourceFilter.collectionId)) return;
+
+    let cancelled = false;
+    setLoadingCollection(true);
+
+    collectionsApi.getById(sourceFilter.collectionId).then((data) => {
+      if (cancelled) return;
+      setLineupsByCollection((prev) => {
+        const next = new Map(prev);
+        next.set(sourceFilter.collectionId, data.lineups);
+        return next;
+      });
+    }).catch(() => {
+      if (!cancelled) toast.error('Failed to load collection');
+    }).finally(() => {
+      if (!cancelled) setLoadingCollection(false);
+    });
+
+    return () => { cancelled = true; };
+  }, [sourceFilter, lineupsByCollection]);
 
   // ── Filtered Lineups ──────────────────────────────────────────
   const proCollections = useMemo(
@@ -273,68 +300,17 @@ export default function MapDetailPage() {
   return (
     <motion.div variants={fadeIn} initial="hidden" animate="show" className="max-w-[1600px]">
       {/* Header */}
-      <div className="mb-5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Link
-            href="/dashboard/maps"
-            className="flex items-center gap-1 text-sm text-[#6b6b8a] hover:text-[#e8e8e8] transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Maps
-          </Link>
-          <div className="h-4 w-px bg-[#2a2a3e]" />
-          <h1 className="text-xl font-bold text-[#e8e8e8]">{map.displayName}</h1>
-          <div className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
-        </div>
-
-        {/* Start Server Button */}
-        <div className="relative">
-          <div className="flex">
-            <button
-              onClick={() => handleStartServer()}
-              disabled={startingServer}
-              className="flex items-center gap-2 rounded-l-lg bg-[#f0a500] px-4 py-2 text-sm font-semibold text-[#0a0a0f] hover:bg-[#ffd700] transition-colors disabled:opacity-50"
-            >
-              {startingServer ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
-              Practice
-            </button>
-            <button
-              onClick={() => setServerCollectionPicker(!serverCollectionPicker)}
-              disabled={startingServer}
-              className="flex items-center rounded-r-lg border-l border-[#0a0a0f]/20 bg-[#f0a500] px-2 py-2 text-[#0a0a0f] hover:bg-[#ffd700] transition-colors disabled:opacity-50"
-            >
-              <ChevronDown className="h-4 w-4" />
-            </button>
-          </div>
-
-          {serverCollectionPicker && (
-            <>
-              <div className="fixed inset-0 z-40" onClick={() => setServerCollectionPicker(false)} />
-              <div className="absolute right-0 top-full z-50 mt-2 w-64 rounded-xl border border-[#2a2a3e] bg-[#12121a] py-2 shadow-2xl shadow-black/50">
-                <p className="px-4 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#6b6b8a]">
-                  Practice with collection
-                </p>
-                <button
-                  onClick={() => handleStartServer()}
-                  className="flex w-full items-center gap-2 px-4 py-2 text-sm text-[#b8b8cc] hover:bg-[#1a1a2e] hover:text-[#e8e8e8]"
-                >
-                  <Play className="h-3.5 w-3.5 text-[#f0a500]" />
-                  All subscribed nades
-                </button>
-                {practiceCollections.length > 0 && <div className="my-1 h-px bg-[#2a2a3e]/50" />}
-                {practiceCollections.map((c) => (
-                  <button
-                    key={c.id}
-                    onClick={() => handleStartServer(c.id)}
-                    className="flex w-full items-center gap-2 px-4 py-2 text-sm text-[#b8b8cc] hover:bg-[#1a1a2e] hover:text-[#e8e8e8]"
-                  >
-                    <span className="truncate">{c.name}</span>
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
+      <div className="mb-5 flex items-center gap-3">
+        <Link
+          href="/dashboard/maps"
+          className="flex items-center gap-1 text-sm text-[#6b6b8a] hover:text-[#e8e8e8] transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Maps
+        </Link>
+        <div className="h-4 w-px bg-[#2a2a3e]" />
+        <h1 className="text-xl font-bold text-[#e8e8e8]">{map.displayName}</h1>
+        <div className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
       </div>
 
       {/* Main Layout */}
@@ -369,7 +345,7 @@ export default function MapDetailPage() {
 
           {/* Center: Radar + Nade List */}
           <div className="flex-1 min-w-0 space-y-4">
-            <div className="rounded-xl border border-[#2a2a3e]/50 bg-[#12121a] overflow-hidden">
+            <div className="max-w-[700px] rounded-xl border border-[#2a2a3e]/50 bg-[#12121a] overflow-hidden">
               <MapRadar
                 mapName={mapName}
                 lineups={filteredLineups}
@@ -379,11 +355,77 @@ export default function MapDetailPage() {
               />
             </div>
 
+            {/* Practice Server Card */}
+            <div className="max-w-[700px] relative rounded-xl border border-[#2a2a3e]/50 bg-gradient-to-r from-[#12121a] to-[#1a1a2e] p-4">
+              <div className="flex items-start gap-4">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#f0a500]/10">
+                  <Monitor className="h-5 w-5 text-[#f0a500]" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm font-semibold text-[#e8e8e8]">Practice Server</h3>
+                  <p className="mt-0.5 text-xs text-[#6b6b8a]">
+                    Launch a private CS2 server with ghost guidance to practice these lineups
+                  </p>
+                  <div className="mt-3 flex items-center gap-2">
+                    <button
+                      onClick={() => handleStartServer()}
+                      disabled={startingServer}
+                      className="flex items-center gap-2 rounded-lg bg-[#f0a500] px-4 py-2 text-sm font-semibold text-[#0a0a0f] hover:bg-[#ffd700] transition-colors disabled:opacity-50"
+                    >
+                      {startingServer ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+                      Practice All Nades
+                    </button>
+                    {practiceCollections.length > 0 && (
+                      <div className="relative">
+                        <button
+                          onClick={() => setServerCollectionPicker(!serverCollectionPicker)}
+                          disabled={startingServer}
+                          className="flex items-center gap-1.5 rounded-lg border border-[#2a2a3e] bg-[#12121a] px-3 py-2 text-sm text-[#b8b8cc] hover:border-[#f0a500]/30 hover:text-[#e8e8e8] transition-colors disabled:opacity-50"
+                        >
+                          <ChevronDown className={`h-3.5 w-3.5 transition-transform ${serverCollectionPicker ? 'rotate-180' : ''}`} />
+                          With Collection
+                        </button>
+                        {serverCollectionPicker && (
+                          <>
+                            <div className="fixed inset-0 z-40" onClick={() => setServerCollectionPicker(false)} />
+                            <div className="absolute left-0 bottom-full z-50 mb-2 w-64 rounded-xl border border-[#2a2a3e] bg-[#12121a] py-2 shadow-2xl shadow-black/50">
+                              <p className="px-4 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#6b6b8a]">
+                                Choose a collection
+                              </p>
+                              {practiceCollections.map((c) => (
+                                <button
+                                  key={c.id}
+                                  onClick={() => handleStartServer(c.id)}
+                                  className="flex w-full items-center gap-2 px-4 py-2 text-sm text-[#b8b8cc] hover:bg-[#1a1a2e] hover:text-[#e8e8e8]"
+                                >
+                                  <Play className="h-3 w-3 text-[#f0a500]" />
+                                  <span className="truncate">{c.name}</span>
+                                </button>
+                              ))}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div className="flex items-center justify-between">
               <p className="text-xs text-[#6b6b8a]">
-                {filteredLineups.length} nade{filteredLineups.length !== 1 ? 's' : ''}
-                {sourceFilter.type === 'collection' && (
-                  <span className="text-[#f0a500]"> in {sourceFilter.collectionName}</span>
+                {loadingCollection ? (
+                  <span className="flex items-center gap-1.5">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    Loading collection...
+                  </span>
+                ) : (
+                  <>
+                    {filteredLineups.length} nade{filteredLineups.length !== 1 ? 's' : ''}
+                    {sourceFilter.type === 'collection' && (
+                      <span className="text-[#f0a500]"> in {sourceFilter.collectionName}</span>
+                    )}
+                  </>
                 )}
               </p>
             </div>

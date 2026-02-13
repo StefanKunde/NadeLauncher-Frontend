@@ -130,6 +130,61 @@ export default function FilterSidebar({
         </div>
       </div>
 
+      {/* My Collections — placed high for quick access */}
+      <div>
+        <button
+          onClick={() => setMyExpanded(!myExpanded)}
+          className="mb-2 flex w-full items-center gap-1 text-xs font-semibold uppercase tracking-wider text-[#6b6b8a] hover:text-[#e8e8e8] transition-colors"
+        >
+          {myExpanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+          My Collections
+        </button>
+        <AnimatePresence>
+          {myExpanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden space-y-0.5"
+            >
+              {userCollections.map((c) => (
+                <div key={c.id} className="group relative">
+                  <SourceButton
+                    active={isSourceActive('collection', c.id)}
+                    onClick={() => onSourceFilterChange({ type: 'collection', collectionId: c.id, collectionName: c.name })}
+                    label={c.name}
+                    count={c.lineupCount}
+                  />
+                  <div className="absolute right-1 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-0.5">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onEditCollection(c); }}
+                      className="p-1 rounded text-[#6b6b8a] hover:text-[#e8e8e8] hover:bg-[#1a1a2e]"
+                    >
+                      <Pencil className="h-3 w-3" />
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onDeleteCollection(c); }}
+                      className="p-1 rounded text-[#6b6b8a] hover:text-[#ff4444] hover:bg-[#ff4444]/10"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+              <button
+                onClick={onCreateCollection}
+                disabled={creatingCollection}
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-[#6b6b8a] hover:text-[#f0a500] hover:bg-[#f0a500]/5 transition-colors disabled:opacity-50"
+              >
+                {creatingCollection ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
+                Create Collection
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
       {/* Pro Collections */}
       {proCollections.length > 0 && (
         <div>
@@ -150,16 +205,27 @@ export default function FilterSidebar({
                 className="overflow-hidden space-y-0.5"
               >
                 {/* Meta collections */}
-                {metaCollections.map((c) => (
-                  <SourceButton
-                    key={c.id}
-                    active={isSourceActive('collection', c.id)}
-                    onClick={() => onSourceFilterChange({ type: 'collection', collectionId: c.id, collectionName: c.name })}
-                    label={c.name.replace(/^Pro\s+(Nades|Smokes|Flashes|HEs|Molotovs)\s+—\s+/, '')}
-                    count={c.lineupCount}
-                    grenadeType={c.proCategory === 'meta' ? (c.name.toLowerCase().includes('smoke') ? 'smoke' : c.name.toLowerCase().includes('flash') ? 'flash' : c.name.toLowerCase().includes('he') ? 'he' : c.name.toLowerCase().includes('molotov') ? 'molotov' : undefined) : undefined}
-                  />
-                ))}
+                {metaCollections.map((c) => {
+                  const baseName = c.name.replace(/\s+—\s+.*$/, '');
+                  const label = c.proCategory === 'meta_all' ? `All ${baseName}` : baseName;
+                  const grenadeType = c.proCategory === 'meta'
+                    ? (c.name.toLowerCase().includes('smoke') ? 'smoke' as const
+                      : c.name.toLowerCase().includes('flash') ? 'flash' as const
+                      : c.name.toLowerCase().includes('he') ? 'he' as const
+                      : c.name.toLowerCase().includes('molotov') ? 'molotov' as const
+                      : undefined)
+                    : undefined;
+                  return (
+                    <SourceButton
+                      key={c.id}
+                      active={isSourceActive('collection', c.id)}
+                      onClick={() => onSourceFilterChange({ type: 'collection', collectionId: c.id, collectionName: c.name })}
+                      label={label}
+                      count={c.lineupCount}
+                      grenadeType={grenadeType}
+                    />
+                  );
+                })}
 
                 {/* Team collections */}
                 {teamCollections.length > 0 && (
@@ -222,61 +288,6 @@ export default function FilterSidebar({
           </AnimatePresence>
         </div>
       )}
-
-      {/* My Collections */}
-      <div>
-        <button
-          onClick={() => setMyExpanded(!myExpanded)}
-          className="mb-2 flex w-full items-center gap-1 text-xs font-semibold uppercase tracking-wider text-[#6b6b8a] hover:text-[#e8e8e8] transition-colors"
-        >
-          {myExpanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-          My Collections
-        </button>
-        <AnimatePresence>
-          {myExpanded && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="overflow-hidden space-y-0.5"
-            >
-              {userCollections.map((c) => (
-                <div key={c.id} className="group relative">
-                  <SourceButton
-                    active={isSourceActive('collection', c.id)}
-                    onClick={() => onSourceFilterChange({ type: 'collection', collectionId: c.id, collectionName: c.name })}
-                    label={c.name}
-                    count={c.lineupCount}
-                  />
-                  <div className="absolute right-1 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-0.5">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); onEditCollection(c); }}
-                      className="p-1 rounded text-[#6b6b8a] hover:text-[#e8e8e8] hover:bg-[#1a1a2e]"
-                    >
-                      <Pencil className="h-3 w-3" />
-                    </button>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); onDeleteCollection(c); }}
-                      className="p-1 rounded text-[#6b6b8a] hover:text-[#ff4444] hover:bg-[#ff4444]/10"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-              <button
-                onClick={onCreateCollection}
-                disabled={creatingCollection}
-                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-[#6b6b8a] hover:text-[#f0a500] hover:bg-[#f0a500]/5 transition-colors disabled:opacity-50"
-              >
-                {creatingCollection ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
-                Create Collection
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
     </div>
   );
 }
