@@ -9,7 +9,7 @@ import toast from 'react-hot-toast';
 import { MAPS, MAP_COLORS } from '@/lib/constants';
 import { collectionsApi, userCollectionsApi, sessionsApi, lineupsApi } from '@/lib/api';
 import { useAuthStore } from '@/store/auth-store';
-import type { Lineup, LineupCollection } from '@/lib/types';
+import type { Lineup, LineupCollection, Session } from '@/lib/types';
 import MapRadar from '@/components/ui/MapRadar';
 import FilterSidebar, { type GrenadeFilter, type SourceFilter } from './FilterSidebar';
 import NadeList from './NadeList';
@@ -44,6 +44,7 @@ export default function MapDetailPage() {
   const [addingToCollection, setAddingToCollection] = useState<string | null>(null);
   const [startingServer, setStartingServer] = useState(false);
   const [serverCollectionPicker, setServerCollectionPicker] = useState(false);
+  const [activeSession, setActiveSession] = useState<Session | null>(null);
 
   // User collection lineup tracking
   const [userCollectionLineupIds, setUserCollectionLineupIds] = useState<Map<string, Set<string>>>(new Map());
@@ -123,6 +124,23 @@ export default function MapDetailPage() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // Check for active session on mount and poll during provisioning
+  useEffect(() => {
+    let cancelled = false;
+    const check = async () => {
+      try {
+        const s = await sessionsApi.getActive();
+        if (!cancelled) setActiveSession(s ?? null);
+      } catch {
+        if (!cancelled) setActiveSession(null);
+      }
+    };
+    check();
+    // Poll while provisioning
+    const interval = setInterval(check, 3000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, []);
 
   // Auto-select meta_all collection after initial load
   useEffect(() => {
@@ -357,7 +375,8 @@ export default function MapDetailPage() {
     setStartingServer(true);
     setServerCollectionPicker(false);
     try {
-      await sessionsApi.create(mapName, collectionId);
+      const created = await sessionsApi.create(mapName, collectionId);
+      setActiveSession(created);
       toast.success('Server starting...');
       router.push('/dashboard');
     } catch (err: any) {
@@ -461,54 +480,75 @@ export default function MapDetailPage() {
                       )}
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      <button
-                        onClick={() => handleStartServer(currentCollectionId)}
-                        disabled={startingServer}
-                        className="flex items-center gap-2 rounded-lg bg-[#f0a500] px-4 py-2 text-sm font-semibold text-[#0a0a0f] hover:bg-[#ffd700] transition-colors disabled:opacity-50"
-                      >
-                        {startingServer ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
-                        Start Server
-                      </button>
-                      {practiceCollections.length > 0 && (
-                        <div className="relative">
-                          <button
-                            onClick={() => setServerCollectionPicker(!serverCollectionPicker)}
-                            disabled={startingServer}
-                            className="flex items-center gap-1.5 rounded-lg border border-[#2a2a3e] bg-[#12121a] px-3 py-2 text-sm text-[#b8b8cc] hover:border-[#f0a500]/30 hover:text-[#e8e8e8] transition-colors disabled:opacity-50"
-                          >
-                            <ChevronDown className={`h-3.5 w-3.5 transition-transform ${serverCollectionPicker ? 'rotate-180' : ''}`} />
-                            Change
-                          </button>
-                          {serverCollectionPicker && (
+                      {activeSession?.isActive ? (
+                        <Link
+                          href="/dashboard"
+                          className="flex items-center gap-2 rounded-lg border border-[#4a9fd4]/30 bg-[#4a9fd4]/10 px-4 py-2 text-sm font-semibold text-[#4a9fd4] hover:bg-[#4a9fd4]/20 transition-colors"
+                        >
+                          {activeSession.status === 'pending' || activeSession.status === 'provisioning' || activeSession.status === 'queued' ? (
                             <>
-                              <div className="fixed inset-0 z-40" onClick={() => setServerCollectionPicker(false)} />
-                              <div className="absolute right-0 bottom-full z-50 mb-2 w-64 rounded-xl border border-[#2a2a3e] bg-[#12121a] py-2 shadow-2xl shadow-black/50">
-                                <p className="px-4 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#6b6b8a]">
-                                  Choose a collection
-                                </p>
-                                {practiceCollections.map((c) => {
-                                  const isActive = sourceFilter.type === 'collection' && sourceFilter.collectionId === c.id;
-                                  return (
-                                    <button
-                                      key={c.id}
-                                      onClick={() => {
-                                        setSourceFilter({ type: 'collection', collectionId: c.id, collectionName: c.name });
-                                        setServerCollectionPicker(false);
-                                      }}
-                                      className={`flex w-full items-center gap-2 px-4 py-2 text-sm transition-colors ${
-                                        isActive
-                                          ? 'bg-[#f0a500]/10 text-[#f0a500]'
-                                          : 'text-[#b8b8cc] hover:bg-[#1a1a2e] hover:text-[#e8e8e8]'
-                                      }`}
-                                    >
-                                      <span className="truncate">{c.name}</span>
-                                    </button>
-                                  );
-                                })}
-                              </div>
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              {activeSession.status === 'queued' ? 'Queued...' : 'Starting...'}
+                            </>
+                          ) : (
+                            <>
+                              <Monitor className="h-4 w-4" />
+                              Server Active
                             </>
                           )}
-                        </div>
+                        </Link>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => handleStartServer(currentCollectionId)}
+                            disabled={startingServer}
+                            className="flex items-center gap-2 rounded-lg bg-[#f0a500] px-4 py-2 text-sm font-semibold text-[#0a0a0f] hover:bg-[#ffd700] transition-colors disabled:opacity-50"
+                          >
+                            {startingServer ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+                            Start Server
+                          </button>
+                          {practiceCollections.length > 0 && (
+                            <div className="relative">
+                              <button
+                                onClick={() => setServerCollectionPicker(!serverCollectionPicker)}
+                                disabled={startingServer}
+                                className="flex items-center gap-1.5 rounded-lg border border-[#2a2a3e] bg-[#12121a] px-3 py-2 text-sm text-[#b8b8cc] hover:border-[#f0a500]/30 hover:text-[#e8e8e8] transition-colors disabled:opacity-50"
+                              >
+                                <ChevronDown className={`h-3.5 w-3.5 transition-transform ${serverCollectionPicker ? 'rotate-180' : ''}`} />
+                                Change
+                              </button>
+                              {serverCollectionPicker && (
+                                <>
+                                  <div className="fixed inset-0 z-40" onClick={() => setServerCollectionPicker(false)} />
+                                  <div className="absolute right-0 bottom-full z-50 mb-2 w-64 rounded-xl border border-[#2a2a3e] bg-[#12121a] py-2 shadow-2xl shadow-black/50">
+                                    <p className="px-4 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#6b6b8a]">
+                                      Choose a collection
+                                    </p>
+                                    {practiceCollections.map((c) => {
+                                      const isActive = sourceFilter.type === 'collection' && sourceFilter.collectionId === c.id;
+                                      return (
+                                        <button
+                                          key={c.id}
+                                          onClick={() => {
+                                            setSourceFilter({ type: 'collection', collectionId: c.id, collectionName: c.name });
+                                            setServerCollectionPicker(false);
+                                          }}
+                                          className={`flex w-full items-center gap-2 px-4 py-2 text-sm transition-colors ${
+                                            isActive
+                                              ? 'bg-[#f0a500]/10 text-[#f0a500]'
+                                              : 'text-[#b8b8cc] hover:bg-[#1a1a2e] hover:text-[#e8e8e8]'
+                                          }`}
+                                        >
+                                          <span className="truncate">{c.name}</span>
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>
