@@ -246,103 +246,6 @@ export default function FilterSidebar({
                     );
                   })}
 
-                  {archiveQuarters.length > 0 && (
-                    <>
-                      <div className="my-2 h-px bg-[#2a2a3e]/50" />
-                      <button
-                        onClick={() => setArchivesExpanded(!archivesExpanded)}
-                        className="mb-1 flex w-full items-center gap-1 px-2 text-[10px] font-semibold uppercase tracking-wider text-[#6b6b8a]/70 hover:text-[#e8e8e8] transition-colors"
-                      >
-                        {archivesExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
-                        Archives
-                      </button>
-                      <AnimatePresence>
-                        {archivesExpanded && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.2 }}
-                            className="overflow-hidden space-y-0.5"
-                          >
-                            {/* Quarter selector */}
-                            <select
-                              value={activeQuarter ?? ''}
-                              onChange={(e) => setSelectedQuarter(e.target.value)}
-                              className="w-full rounded-lg border border-[#2a2a3e] bg-[#12121a] px-2.5 py-1.5 text-xs text-[#b8b8cc] focus:outline-none focus:border-[#f0a500]/40 mb-1"
-                            >
-                              {archiveQuarters.map((qtr) => (
-                                <option key={qtr} value={qtr}>{qtr}</option>
-                              ))}
-                            </select>
-
-                            {/* Meta archives for selected quarter */}
-                            {filteredQuarterMeta.map((c) => {
-                              const label = c.name.replace(/\s+—\s+.*$/, '');
-                              const grenadeType = !label.startsWith('Pro Nades')
-                                ? (label.toLowerCase().includes('smoke') ? 'smoke' as const
-                                  : label.toLowerCase().includes('flash') ? 'flash' as const
-                                  : label.toLowerCase().includes('he') ? 'he' as const
-                                  : label.toLowerCase().includes('molotov') ? 'molotov' as const
-                                  : undefined)
-                                : undefined;
-                              return (
-                                <SourceButton
-                                  key={c.id}
-                                  active={isSourceActive(c.id)}
-                                  onClick={() => handleProClick(c, label)}
-                                  label={label.replace(` ${activeQuarter}`, '')}
-                                  count={c.lineupCount}
-                                  locked={!isPremium}
-                                  grenadeType={grenadeType}
-                                />
-                              );
-                            })}
-
-                            {/* Team archives for selected quarter */}
-                            {filteredQuarterTeams.length > 0 && (
-                              <>
-                                <button
-                                  onClick={() => setArchiveTeamsExpanded(!archiveTeamsExpanded)}
-                                  className="mt-1 mb-0.5 flex w-full items-center gap-1 px-2 text-[10px] font-semibold uppercase tracking-wider text-[#6b6b8a]/70 hover:text-[#e8e8e8] transition-colors"
-                                >
-                                  {archiveTeamsExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
-                                  Teams
-                                </button>
-                                <AnimatePresence>
-                                  {archiveTeamsExpanded && (
-                                    <motion.div
-                                      initial={{ height: 0, opacity: 0 }}
-                                      animate={{ height: 'auto', opacity: 1 }}
-                                      exit={{ height: 0, opacity: 0 }}
-                                      transition={{ duration: 0.2 }}
-                                      className="overflow-hidden space-y-0.5"
-                                    >
-                                      {filteredQuarterTeams.map((c) => {
-                                        const label = c.name.replace(/\s+—\s+.*$/, '');
-                                        return (
-                                          <SourceButton
-                                            key={c.id}
-                                            active={isSourceActive(c.id)}
-                                            onClick={() => handleProClick(c, label)}
-                                            label={label.replace(` ${activeQuarter}`, '')}
-                                            count={c.lineupCount}
-                                            locked={!isPremium}
-                                            logoUrl={c.coverImage}
-                                          />
-                                        );
-                                      })}
-                                    </motion.div>
-                                  )}
-                                </AnimatePresence>
-                              </>
-                            )}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </>
-                  )}
-
                   {filteredTeams.length > 0 && (
                     <>
                       <div className="my-2 h-px bg-[#2a2a3e]/50" />
@@ -443,6 +346,103 @@ export default function FilterSidebar({
                           />
                         );
                       })}
+                    </>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        )}
+
+        {/* Archives */}
+        {archiveQuarters.length > 0 && (
+          <div>
+            <button
+              onClick={() => setArchivesExpanded(!archivesExpanded)}
+              className="mb-2 flex w-full items-center gap-1 text-xs font-semibold uppercase tracking-wider text-[#6b6b8a] hover:text-[#e8e8e8] transition-colors"
+            >
+              {archivesExpanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+              Archives
+            </button>
+            <AnimatePresence>
+              {archivesExpanded && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden space-y-0.5"
+                >
+                  {/* Quarter selector */}
+                  <select
+                    value={activeQuarter ?? ''}
+                    onChange={(e) => setSelectedQuarter(e.target.value)}
+                    className="w-full rounded-lg border border-[#2a2a3e] bg-[#12121a] px-2.5 py-1.5 text-xs text-[#b8b8cc] focus:outline-none focus:border-[#f0a500]/40 mb-1"
+                  >
+                    {archiveQuarters.map((qtr) => (
+                      <option key={qtr} value={qtr}>{qtr}</option>
+                    ))}
+                  </select>
+
+                  {/* Meta archives for selected quarter */}
+                  {filteredQuarterMeta.map((c) => {
+                    const label = c.name.replace(/\s+—\s+.*$/, '');
+                    const grenadeType = !label.startsWith('Pro Nades')
+                      ? (label.toLowerCase().includes('smoke') ? 'smoke' as const
+                        : label.toLowerCase().includes('flash') ? 'flash' as const
+                        : label.toLowerCase().includes('he') ? 'he' as const
+                        : label.toLowerCase().includes('molotov') ? 'molotov' as const
+                        : undefined)
+                      : undefined;
+                    return (
+                      <SourceButton
+                        key={c.id}
+                        active={isSourceActive(c.id)}
+                        onClick={() => handleProClick(c, label)}
+                        label={label.replace(` ${activeQuarter}`, '')}
+                        count={c.lineupCount}
+                        locked={!isPremium}
+                        grenadeType={grenadeType}
+                      />
+                    );
+                  })}
+
+                  {/* Team archives for selected quarter */}
+                  {filteredQuarterTeams.length > 0 && (
+                    <>
+                      <button
+                        onClick={() => setArchiveTeamsExpanded(!archiveTeamsExpanded)}
+                        className="mt-1 mb-0.5 flex w-full items-center gap-1 px-2 text-[10px] font-semibold uppercase tracking-wider text-[#6b6b8a]/70 hover:text-[#e8e8e8] transition-colors"
+                      >
+                        {archiveTeamsExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                        Teams
+                      </button>
+                      <AnimatePresence>
+                        {archiveTeamsExpanded && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="overflow-hidden space-y-0.5"
+                          >
+                            {filteredQuarterTeams.map((c) => {
+                              const label = c.name.replace(/\s+—\s+.*$/, '');
+                              return (
+                                <SourceButton
+                                  key={c.id}
+                                  active={isSourceActive(c.id)}
+                                  onClick={() => handleProClick(c, label)}
+                                  label={label.replace(` ${activeQuarter}`, '')}
+                                  count={c.lineupCount}
+                                  locked={!isPremium}
+                                  logoUrl={c.coverImage}
+                                />
+                              );
+                            })}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </>
                   )}
                 </motion.div>

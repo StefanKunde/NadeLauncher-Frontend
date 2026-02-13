@@ -19,11 +19,11 @@ import {
   Terminal,
 } from 'lucide-react';
 import Link from 'next/link';
-import { sessionsApi } from '@/lib/api';
+import { sessionsApi, collectionsApi, userCollectionsApi } from '@/lib/api';
 import { MAPS } from '@/lib/constants';
 import { useAuthStore } from '@/store/auth-store';
 import { useSessionSocket } from '@/hooks/useSessionSocket';
-import type { Session, UsageStats } from '@/lib/types';
+import type { Session, UsageStats, LineupCollection } from '@/lib/types';
 
 function formatTime(totalSeconds: number): string {
   const mins = Math.floor(totalSeconds / 60);
@@ -104,6 +104,8 @@ export default function PracticeSessionCard() {
   const [session, setSession] = useState<Session | null>(null);
   const [usage, setUsage] = useState<UsageStats | null>(null);
   const [selectedMap, setSelectedMap] = useState<string>(MAPS[0].name);
+  const [selectedCollection, setSelectedCollection] = useState<string>('');
+  const [collections, setCollections] = useState<LineupCollection[]>([]);
   const [creating, setCreating] = useState(false);
   const [ending, setEnding] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -260,12 +262,41 @@ export default function PracticeSessionCard() {
     }
   }, [session?.queuePosition]);
 
+  // Fetch collections when selected map changes
+  const isPremium = user?.isPremium ?? false;
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const fetches: Promise<LineupCollection[]>[] = [
+          userCollectionsApi.getMy(selectedMap),
+        ];
+        // Only fetch pro collections for premium users
+        if (isPremium) {
+          fetches.push(collectionsApi.getAll(selectedMap));
+        }
+        const results = await Promise.all(fetches);
+        if (cancelled) return;
+        const userColls = results[0];
+        const metaColls = isPremium && results[1]
+          ? results[1].filter((c) => c.proCategory === 'meta' || c.proCategory === 'meta_all')
+          : [];
+        setCollections([...userColls, ...metaColls]);
+        setSelectedCollection('');
+      } catch {
+        if (!cancelled) setCollections([]);
+      }
+    };
+    load();
+    return () => { cancelled = true; };
+  }, [selectedMap, isPremium]);
+
   const handleCreate = async () => {
     setCreating(true);
     setError(null);
     setLastEndReason(null); // Clear any previous end reason
     try {
-      const created = await sessionsApi.create(selectedMap);
+      const created = await sessionsApi.create(selectedMap, selectedCollection || undefined);
       setSession(created);
     } catch (err: unknown) {
       const msg =
@@ -946,6 +977,25 @@ export default function PracticeSessionCard() {
                   </option>
                 ))}
               </select>
+
+              {/* Collection selector */}
+              {collections.length > 0 && (
+                <>
+                  <label className="block text-xs text-[#6b6b8a] mb-2">Collection (optional)</label>
+                  <select
+                    value={selectedCollection}
+                    onChange={(e) => setSelectedCollection(e.target.value)}
+                    className="w-full rounded-lg border border-[#2a2a3e] bg-[#0a0a12] px-3 py-2.5 text-sm text-[#e8e8e8] mb-4 focus:outline-none focus:border-[#4a9fd4] transition-colors"
+                  >
+                    <option value="">No collection</option>
+                    {collections.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name} ({c.lineupCount})
+                      </option>
+                    ))}
+                  </select>
+                </>
+              )}
 
               {error && (
                 <p className="text-xs text-[#ff4444] mb-3">{error}</p>
