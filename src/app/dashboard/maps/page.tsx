@@ -3,12 +3,11 @@
 import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, FolderOpen } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { MAPS, MAP_COLORS, GRENADE_TYPES } from '@/lib/constants';
-import { lineupsApi, collectionsApi } from '@/lib/api';
-import type { Lineup, LineupCollection } from '@/lib/types';
-import GrenadeIcon from '@/components/ui/GrenadeIcon';
+import { MAPS, MAP_COLORS } from '@/lib/constants';
+import { collectionsApi, userCollectionsApi } from '@/lib/api';
+import type { LineupCollection } from '@/lib/types';
 
 const container = {
   hidden: { opacity: 0 },
@@ -23,37 +22,31 @@ const item = {
   show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' as const } },
 };
 
-type GrenadeType = keyof typeof GRENADE_TYPES;
-
 export default function MapsPage() {
-  const [myLineups, setMyLineups] = useState<Lineup[]>([]);
-  const [collections, setCollections] = useState<LineupCollection[]>([]);
+  const [allCollections, setAllCollections] = useState<LineupCollection[]>([]);
+  const [userCollections, setUserCollections] = useState<LineupCollection[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     Promise.all([
-      lineupsApi.getMy().catch(() => []),
       collectionsApi.getAllWithStatus().catch(() => []),
-    ]).then(([lineups, cols]) => {
-      setMyLineups(lineups);
-      setCollections(cols);
+      userCollectionsApi.getMy().catch(() => []),
+    ]).then(([cols, myCols]) => {
+      setAllCollections(cols);
+      setUserCollections(myCols);
       setLoading(false);
     });
   }, []);
 
   const mapData = useMemo(() => {
-    const data: Record<string, { lineups: Lineup[]; subscribedCollections: number; grenades: Record<string, number> }> = {};
+    const data: Record<string, { totalCollections: number }> = {};
     for (const map of MAPS) {
-      const mapLineups = myLineups.filter((l) => l.mapName === map.name);
-      const mapSubscribed = collections.filter((c) => c.mapName === map.name && c.isSubscribed).length;
-      const grenades: Record<string, number> = {};
-      for (const l of mapLineups) {
-        grenades[l.grenadeType] = (grenades[l.grenadeType] || 0) + 1;
-      }
-      data[map.name] = { lineups: mapLineups, subscribedCollections: mapSubscribed, grenades };
+      const proCount = allCollections.filter((c) => c.mapName === map.name && c.isSubscribed).length;
+      const myCount = userCollections.filter((c) => c.mapName === map.name).length;
+      data[map.name] = { totalCollections: proCount + myCount };
     }
     return data;
-  }, [myLineups, collections]);
+  }, [allCollections, userCollections]);
 
   return (
     <div>
@@ -88,9 +81,7 @@ export default function MapsPage() {
           {MAPS.map((map) => {
             const color = MAP_COLORS[map.name] || '#f0a500';
             const stats = mapData[map.name];
-            const lineupCount = stats?.lineups.length ?? 0;
-            const subscribedCount = stats?.subscribedCollections ?? 0;
-            const grenades = stats?.grenades ?? {};
+            const collectionCount = stats?.totalCollections ?? 0;
 
             return (
               <motion.div key={map.name} variants={item}>
@@ -138,34 +129,11 @@ export default function MapsPage() {
 
                   {/* Card Body */}
                   <div className="px-5 py-4">
-                    <div className="flex items-center justify-between">
-                      {/* Lineup count + grenade breakdown */}
-                      <div className="flex items-center gap-3">
-                        <span className="text-sm font-semibold text-[#e8e8e8]">
-                          {lineupCount} {lineupCount === 1 ? 'Lineup' : 'Lineups'}
-                        </span>
-                        {lineupCount > 0 && (
-                          <div className="flex items-center gap-2">
-                            {(['smoke', 'flash', 'molotov', 'he'] as GrenadeType[]).map((type) => {
-                              const count = grenades[type] || 0;
-                              if (count === 0) return null;
-                              return (
-                                <div key={type} className="flex items-center gap-1">
-                                  <GrenadeIcon type={type} size={12} />
-                                  <span className="text-xs text-[#6b6b8a]">{count}</span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Subscribed collections badge */}
-                      {subscribedCount > 0 && (
-                        <span className="text-xs text-[#6b6b8a]">
-                          {subscribedCount} {subscribedCount === 1 ? 'Collection' : 'Collections'}
-                        </span>
-                      )}
+                    <div className="flex items-center gap-2">
+                      <FolderOpen className="h-4 w-4 text-[#6b6b8a]" />
+                      <span className="text-sm font-semibold text-[#e8e8e8]">
+                        {collectionCount} {collectionCount === 1 ? 'Collection' : 'Collections'}
+                      </span>
                     </div>
                   </div>
                 </Link>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Check, Loader2 } from 'lucide-react';
+import { Plus, Check, Loader2, Minus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Lineup, LineupCollection } from '@/lib/types';
 import GrenadeIcon from '@/components/ui/GrenadeIcon';
@@ -14,7 +14,10 @@ interface NadeListProps {
   userCollections: LineupCollection[];
   addingToCollection: string | null;
   onAddToCollection: (lineupId: string, collectionId: string) => void;
+  onRemoveFromCollection: (lineupId: string, collectionId: string) => void;
   userCollectionLineupIds: Map<string, Set<string>>;
+  currentCollectionId?: string;
+  isCurrentCollectionOwned: boolean;
 }
 
 export default function NadeList({
@@ -24,7 +27,10 @@ export default function NadeList({
   userCollections,
   addingToCollection,
   onAddToCollection,
+  onRemoveFromCollection,
   userCollectionLineupIds,
+  currentCollectionId,
+  isCurrentCollectionOwned,
 }: NadeListProps) {
   if (lineups.length === 0) {
     return (
@@ -52,7 +58,10 @@ export default function NadeList({
             userCollections={userCollections}
             addingToCollection={addingToCollection}
             onAddToCollection={onAddToCollection}
+            onRemoveFromCollection={onRemoveFromCollection}
             userCollectionLineupIds={userCollectionLineupIds}
+            currentCollectionId={currentCollectionId}
+            isCurrentCollectionOwned={isCurrentCollectionOwned}
           />
         ))}
       </AnimatePresence>
@@ -67,7 +76,10 @@ function NadeListItem({
   userCollections,
   addingToCollection,
   onAddToCollection,
+  onRemoveFromCollection,
   userCollectionLineupIds,
+  currentCollectionId,
+  isCurrentCollectionOwned,
 }: {
   lineup: Lineup;
   isActive: boolean;
@@ -75,7 +87,10 @@ function NadeListItem({
   userCollections: LineupCollection[];
   addingToCollection: string | null;
   onAddToCollection: (lineupId: string, collectionId: string) => void;
+  onRemoveFromCollection: (lineupId: string, collectionId: string) => void;
   userCollectionLineupIds: Map<string, Set<string>>;
+  currentCollectionId?: string;
+  isCurrentCollectionOwned: boolean;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -100,6 +115,20 @@ function NadeListItem({
           <span className="text-[10px] text-[#6b6b8a] truncate block">{lineup.collectionName}</span>
         )}
       </div>
+
+      {/* Remove from current collection button (only for user-owned collections) */}
+      {isCurrentCollectionOwned && currentCollectionId && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemoveFromCollection(lineup.id, currentCollectionId);
+          }}
+          className="p-1 rounded text-[#6b6b8a] opacity-0 group-hover:opacity-100 hover:text-[#ff4444] hover:bg-[#ff4444]/10 transition-all shrink-0"
+          title="Remove from collection"
+        >
+          <Minus className="h-3.5 w-3.5" />
+        </button>
+      )}
 
       {/* Add to collection button */}
       {userCollections.length > 0 && (

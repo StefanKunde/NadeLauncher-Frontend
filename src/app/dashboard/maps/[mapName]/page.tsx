@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Play, ChevronDown, Loader2, Monitor, X } from 'lucide-react';
+import { ArrowLeft, Play, ChevronDown, Loader2, Monitor, X, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { MAPS, MAP_COLORS } from '@/lib/constants';
@@ -60,6 +60,10 @@ export default function MapDetailPage() {
   const [editingCollection, setEditingCollection] = useState<LineupCollection | null>(null);
   const [editCollectionName, setEditCollectionName] = useState('');
   const editInputRef = useRef<HTMLInputElement>(null);
+
+  // Delete collection modal
+  const [deletingCollection, setDeletingCollection] = useState<LineupCollection | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // ── Data Loading ───────────────────────────────────────────────
   const loadData = useCallback(async () => {
@@ -258,18 +262,25 @@ export default function MapDetailPage() {
     }
   };
 
-  const handleDeleteCollection = async (c: LineupCollection) => {
-    if (!confirm(`Delete "${c.name}"? This cannot be undone.`)) return;
+  const handleDeleteCollection = (c: LineupCollection) => {
+    setDeletingCollection(c);
+  };
 
+  const handleDeleteCollectionConfirm = async () => {
+    if (!deletingCollection) return;
+    setIsDeleting(true);
     try {
-      await userCollectionsApi.delete(c.id);
-      setUserCollections((prev) => prev.filter((x) => x.id !== c.id));
-      if (sourceFilter.type === 'collection' && sourceFilter.collectionId === c.id) {
+      await userCollectionsApi.delete(deletingCollection.id);
+      setUserCollections((prev) => prev.filter((x) => x.id !== deletingCollection.id));
+      if (sourceFilter.type === 'collection' && sourceFilter.collectionId === deletingCollection.id) {
         setSourceFilter({ type: 'all' });
       }
       toast.success('Collection deleted');
+      setDeletingCollection(null);
     } catch {
       toast.error('Failed to delete');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -277,6 +288,10 @@ export default function MapDetailPage() {
     setAddingToCollection(lineupId);
     try {
       await userCollectionsApi.addLineup(collectionId, lineupId);
+
+      // Find the lineup object to add to lineupsByCollection
+      const lineup = filteredLineups.find((l) => l.id === lineupId) ?? allLineups.find((l) => l.id === lineupId);
+
       setUserCollectionLineupIds((prev) => {
         const next = new Map(prev);
         const ids = new Set(next.get(collectionId) ?? []);
@@ -287,12 +302,54 @@ export default function MapDetailPage() {
       setUserCollections((prev) =>
         prev.map((c) => (c.id === collectionId ? { ...c, lineupCount: c.lineupCount + 1 } : c)),
       );
+
+      // Instantly update lineupsByCollection so the nade appears in the collection view
+      if (lineup) {
+        setLineupsByCollection((prev) => {
+          const next = new Map(prev);
+          const existing = next.get(collectionId) ?? [];
+          next.set(collectionId, [...existing, lineup]);
+          return next;
+        });
+      }
+
       toast.success('Added to collection');
     } catch (err: any) {
       const msg = err?.response?.data?.message || 'Failed to add';
       toast.error(msg);
     } finally {
       setAddingToCollection(null);
+    }
+  };
+
+  const handleRemoveFromCollection = async (lineupId: string, collectionId: string) => {
+    try {
+      await userCollectionsApi.removeLineup(collectionId, lineupId);
+
+      // Instantly update lineup tracking
+      setUserCollectionLineupIds((prev) => {
+        const next = new Map(prev);
+        const ids = new Set(next.get(collectionId) ?? []);
+        ids.delete(lineupId);
+        next.set(collectionId, ids);
+        return next;
+      });
+      setUserCollections((prev) =>
+        prev.map((c) => (c.id === collectionId ? { ...c, lineupCount: Math.max(0, c.lineupCount - 1) } : c)),
+      );
+
+      // Instantly remove from lineupsByCollection
+      setLineupsByCollection((prev) => {
+        const next = new Map(prev);
+        const existing = next.get(collectionId) ?? [];
+        next.set(collectionId, existing.filter((l) => l.id !== lineupId));
+        return next;
+      });
+
+      toast.success('Removed from collection');
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || 'Failed to remove';
+      toast.error(msg);
     }
   };
 
@@ -315,17 +372,20 @@ export default function MapDetailPage() {
   const currentCollectionId = sourceFilter.type === 'collection' ? sourceFilter.collectionId : undefined;
   const currentCollectionName = sourceFilter.type === 'collection' ? sourceFilter.collectionName : undefined;
 
-  // All collections for the practice picker
+  // Collections for the practice picker — non-premium only sees user collections
+  const isPremium = user?.isPremium ?? false;
   const practiceCollections = useMemo(() => {
     const result: { id: string; name: string }[] = [];
     for (const c of userCollections) {
       result.push({ id: c.id, name: c.name });
     }
-    for (const c of allCollections.filter((c) => c.isSubscribed && c.autoManaged)) {
-      result.push({ id: c.id, name: c.name });
+    if (isPremium) {
+      for (const c of allCollections.filter((c) => c.isSubscribed && c.autoManaged)) {
+        result.push({ id: c.id, name: c.name });
+      }
     }
     return result;
-  }, [userCollections, allCollections]);
+  }, [userCollections, allCollections, isPremium]);
 
   // ── Render ─────────────────────────────────────────────────────
   if (!map) {
@@ -483,7 +543,14 @@ export default function MapDetailPage() {
                 userCollections={userCollections}
                 addingToCollection={addingToCollection}
                 onAddToCollection={handleAddToCollection}
+                onRemoveFromCollection={handleRemoveFromCollection}
                 userCollectionLineupIds={userCollectionLineupIds}
+                currentCollectionId={sourceFilter.type === 'collection' ? sourceFilter.collectionId : undefined}
+                isCurrentCollectionOwned={
+                  sourceFilter.type === 'collection'
+                    ? userCollections.some((c) => c.id === sourceFilter.collectionId)
+                    : false
+                }
               />
             </div>
           </div>
@@ -548,6 +615,53 @@ export default function MapDetailPage() {
                   className="flex-1 rounded-lg bg-[#f0a500] px-3 py-2 text-sm font-semibold text-[#0a0a0f] hover:bg-[#ffd700] transition-colors disabled:opacity-50"
                 >
                   {creatingCollection ? <Loader2 className="mx-auto h-4 w-4 animate-spin" /> : 'Create'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete Collection Modal */}
+      <AnimatePresence>
+        {deletingCollection && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+            onClick={() => setDeletingCollection(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-96 rounded-xl border border-[#2a2a3e] bg-[#12121a] p-6 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-base font-semibold text-[#e8e8e8]">Delete Collection</h3>
+                <button onClick={() => setDeletingCollection(null)} className="text-[#6b6b8a] hover:text-[#e8e8e8]">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <p className="mb-5 text-sm text-[#6b6b8a]">
+                Are you sure you want to delete <span className="text-[#e8e8e8] font-medium">"{deletingCollection.name}"</span>? This cannot be undone.
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setDeletingCollection(null)}
+                  className="flex-1 rounded-lg border border-[#2a2a3e] px-3 py-2 text-sm text-[#b8b8cc] hover:bg-[#1a1a2e] transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteCollectionConfirm}
+                  disabled={isDeleting}
+                  className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-[#ff4444] px-3 py-2 text-sm font-semibold text-white hover:bg-[#ff5555] transition-colors disabled:opacity-50"
+                >
+                  {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                  Delete
                 </button>
               </div>
             </motion.div>
