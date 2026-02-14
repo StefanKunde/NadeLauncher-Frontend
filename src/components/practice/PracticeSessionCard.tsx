@@ -387,7 +387,7 @@ export default function PracticeSessionCard() {
     ? usage.limitSeconds < 120
       ? `${usage.limitSeconds} seconds`
       : `${Math.round(usage.limitSeconds / 60)} minutes`
-    : '60 minutes';
+    : '30 minutes';
   const usagePercent = usage ? Math.min(100, (usage.usedSeconds / usage.limitSeconds) * 100) : 0;
   const timeExhausted = usage && !usage.isPremium && usage.remainingSeconds <= 30;
 

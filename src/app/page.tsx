@@ -14,10 +14,6 @@ import {
   Play,
   Check,
   Crown,
-  Upload,
-  BarChart3,
-  Crosshair,
-  Layers,
 } from 'lucide-react';
 import Image from 'next/image';
 import GrenadeIcon from '@/components/ui/GrenadeIcon';
@@ -84,26 +80,6 @@ const FEATURES = [
     desc: 'Point at any 3D marker and press E to instantly teleport to the lineup position',
   },
   {
-    icon: Upload,
-    title: 'Demo Import',
-    desc: 'Upload your demos and automatically extract every grenade with pattern detection',
-  },
-  {
-    icon: Crosshair,
-    title: 'Landing Verification',
-    desc: 'Real-time accuracy feedback — see exactly how close your throws land',
-  },
-  {
-    icon: Layers,
-    title: 'Execute Sequences',
-    desc: 'Practice multi-nade executes with timed sequences and accuracy scoring',
-  },
-  {
-    icon: BarChart3,
-    title: 'Coverage Analysis',
-    desc: 'Heatmaps showing your utility coverage and gaps across every map',
-  },
-  {
     icon: Shield,
     title: 'Pro Demo Pipeline',
     desc: 'Lineups auto-extracted from Tier-1 pro matches — always stay up to date',
@@ -138,22 +114,20 @@ const MAPS = [
 const FREE_FEATURES = [
   'Browse community lineups',
   'Practice on CS2 servers',
-  'Save up to 20 lineups',
   '7 competitive maps',
   'In-game markers & teleport',
-  'Community support',
+  '1 collection per map (up to 20 lineups)',
+  '30 min weekly practice time',
 ];
 
 const PRO_FEATURES = [
   'Everything in Free',
-  'Unlimited lineups',
-  'Curated pro lineups',
-  'Demo import & analysis',
-  'Execute sequences',
-  'Landing verification',
-  'Map coverage heatmaps',
-  'Collections & folders',
-  'Priority support',
+  'Unlimited collections & lineups',
+  'Unlimited practice time',
+  'Curated pro lineups & collections',
+  'Pro demo pipeline',
+  'Ghost replay',
+  'In-game collection management',
 ];
 
 const STATS = [
@@ -626,7 +600,7 @@ export default function HomePage() {
                 <h3 className="text-xl font-bold text-[#f0a500]">Pro</h3>
               </div>
               <div className="mb-6">
-                <span className="text-4xl font-extrabold text-gradient-gold">&euro;5</span>
+                <span className="text-4xl font-extrabold text-gradient-gold">&euro;6.99</span>
                 <span className="text-[#6b6b8a] ml-1">/month</span>
               </div>
 

@@ -10,15 +10,14 @@ const COMPARISON_ROWS = [
   { feature: 'Lineup browser & 2D radar maps', free: true, pro: true },
   { feature: 'Community lineups', free: true, pro: true },
   { feature: 'In-game practice (CS2 plugin)', free: true, pro: true },
-  { feature: 'Own lineups', free: 'Up to 20', pro: 'Unlimited' },
-  { feature: 'Practice server time', free: '30 min', pro: 'Unlimited' },
+  { feature: 'Own lineups per collection', free: 'Up to 20', pro: 'Unlimited' },
+  { feature: 'Collections per map', free: '1', pro: 'Unlimited' },
+  { feature: 'Weekly practice time', free: '30 min', pro: 'Unlimited' },
   { feature: 'Curated pro lineups', free: false, pro: true },
   { feature: 'Pro demo pipeline', free: false, pro: true },
   { feature: 'Ghost replay', free: false, pro: true },
-  { feature: 'Landing verification', free: false, pro: true },
   { feature: 'Collections & in-game management', free: false, pro: true },
   { feature: 'Pro team & event collections', free: false, pro: true },
-  { feature: 'Priority support', free: false, pro: true },
 ];
 
 const FAQ_ITEMS = [
@@ -32,32 +31,30 @@ const FAQ_ITEMS = [
   },
   {
     q: 'Do I keep my lineups if I downgrade?',
-    a: 'Your assigned presets are kept. Custom lineups become read-only.',
+    a: 'Your lineups are kept, but collections beyond the free limit become read-only until you upgrade again.',
   },
   {
-    q: 'When does Pro launch?',
-    a: 'Pro is coming soon. Sign up now to be the first to know when it launches.',
+    q: 'What are the free tier limits?',
+    a: 'Free users get 30 minutes of weekly practice time, 1 collection per map with up to 20 lineups each. Upgrade to Pro for unlimited access.',
   },
 ];
 
 const FREE_FEATURES = [
   'Browse community lineups',
-  'In-game practice with markers',
+  'In-game practice with markers & teleport',
   '7 Active Duty maps',
-  'Save up to 20 lineups',
-  'Basic grenade types',
+  '1 collection per map (up to 20 lineups)',
+  '30 min weekly practice time',
 ];
 
 const PRO_FEATURES = [
   'Everything in Free',
-  'Unlimited lineups',
-  'Curated pro lineups',
-  'Demo import & analysis',
-  'Execute sequences',
-  'Landing verification',
-  'Map coverage heatmaps',
-  'Collections & folders',
-  'Priority support',
+  'Unlimited collections & lineups',
+  'Unlimited practice time',
+  'Curated pro lineups & collections',
+  'Pro demo pipeline',
+  'Ghost replay',
+  'In-game collection management',
 ];
 
 const fadeUp = {
@@ -207,7 +204,7 @@ export default function PremiumPage() {
               <h3 className="text-lg font-semibold text-[#f0a500]">Pro</h3>
             </div>
             <p className="mb-5">
-              <span className="text-4xl font-bold text-gradient-gold">&euro;5</span>
+              <span className="text-4xl font-bold text-gradient-gold">&euro;6.99</span>
               <span className="ml-1 text-sm text-[#6b6b8a]">/ month</span>
             </p>
             <ul className="mb-6 space-y-3">
