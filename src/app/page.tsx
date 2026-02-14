@@ -216,7 +216,7 @@ export default function HomePage() {
       >
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
           <Link href="/">
-            <Image src="/logo.png" alt="NadePro" width={140} height={48} className="shrink-0" />
+            <Image src="/logo.png" alt="NadePro" width={500} height={170} className="shrink-0 h-10 w-auto" />
           </Link>
 
           <div className="hidden md:flex items-center gap-8">
