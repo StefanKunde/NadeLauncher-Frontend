@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Crown, Check, X, ChevronDown, ChevronUp, Sparkles, Clock, Loader2 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth-store';
-import { stripeApi } from '@/lib/api';
+import { authApi, stripeApi } from '@/lib/api';
 import toast from 'react-hot-toast';
 
 const COMPARISON_ROWS = [
@@ -98,6 +98,10 @@ function PremiumPageInner() {
   // Handle return from Stripe Checkout
   useEffect(() => {
     if (searchParams.get('session_id')) {
+      // Refresh user data to pick up premium status set by webhook
+      authApi.getMe().then((auth) => {
+        useAuthStore.getState().setTokens(auth.accessToken, auth.refreshToken, auth.user);
+      }).catch(() => {});
       toast.success('Welcome to NadePro Premium!');
       window.history.replaceState({}, '', '/dashboard/premium');
     }
