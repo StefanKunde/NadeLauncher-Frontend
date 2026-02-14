@@ -49,9 +49,9 @@ export default function Sidebar() {
           <Image
             src="/logo.png"
             alt="NadePro"
-            width={120}
-            height={120}
-            className="shrink-0"
+            width={600}
+            height={262}
+            className="shrink-0 w-full h-auto"
           />
         </Link>
       </div>
