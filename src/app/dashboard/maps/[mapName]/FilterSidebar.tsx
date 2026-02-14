@@ -75,6 +75,7 @@ export default function FilterSidebar({
   const [myExpanded, setMyExpanded] = useState(true);
   const [search, setSearch] = useState('');
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [expandedEvents, setExpandedEvents] = useState<Set<string>>(new Set());
 
   const metaCollections = proCollections
     .filter((c) => c.proCategory === 'meta' || c.proCategory === 'meta_all')
@@ -187,7 +188,7 @@ export default function FilterSidebar({
 
   return (
     <>
-      <div className="w-64 shrink-0 space-y-5 overflow-y-auto max-h-[calc(100vh-5rem)] p-1 scrollbar-thin">
+      <div className="w-64 shrink-0 space-y-5 overflow-y-auto max-h-[calc(100vh-5rem)] p-1 scrollbar-thin sticky top-4 self-start">
         {/* Search Collections */}
         <div className="flex items-center gap-2 rounded-lg border border-[#2a2a3e] bg-[#12121a] px-3 transition-colors focus-within:border-[#f0a500] focus-within:shadow-[0_0_0_3px_rgba(240,165,0,0.15)]">
           <Search className="h-4 w-4 shrink-0 text-[#6b6b8a]" />
@@ -392,37 +393,71 @@ export default function FilterSidebar({
                 >
                   {eventGroups.map((group) => {
                     const { eventName, eventCollection, matches } = group;
+                    const isEventExpanded = expandedEvents.has(eventName);
+                    const toggleEvent = () => {
+                      setExpandedEvents((prev) => {
+                        const next = new Set(prev);
+                        if (next.has(eventName)) next.delete(eventName);
+                        else next.add(eventName);
+                        return next;
+                      });
+                    };
                     const dateBadge = eventCollection?.timeWindow?.includes('/')
                       ? eventCollection.timeWindow.split('/').map((d) => d.slice(5)).join(' – ')
                       : undefined;
                     return (
-                      <div key={eventName} className="space-y-0.5">
-                        {eventCollection ? (
-                          <SourceButton
-                            active={isSourceActive(eventCollection.id)}
-                            onClick={() => handleProClick(eventCollection, eventName)}
-                            label={eventName}
-                            count={eventCollection.lineupCount}
-                            locked={!isPremium}
-                            badge={dateBadge}
-                          />
-                        ) : (
-                          <p className="px-2 pt-1 text-[10px] font-semibold uppercase tracking-wider text-[#6b6b8a]/70">
-                            {eventName}
-                          </p>
-                        )}
-                        <div className="pl-2 space-y-0.5">
-                          {matches.map((c) => (
-                            <MatchButton
-                              key={c.id}
-                              collection={c}
-                              active={isSourceActive(c.id)}
-                              onClick={() => handleMatchClick(c)}
-                              locked={!isPremium}
-                              isCrossMap={c.mapName !== currentMapName}
-                            />
-                          ))}
+                      <div key={eventName}>
+                        <div className="flex items-center gap-0.5">
+                          {matches.length > 0 && (
+                            <button
+                              onClick={toggleEvent}
+                              className="shrink-0 p-0.5 text-[#6b6b8a] hover:text-[#e8e8e8] transition-colors"
+                            >
+                              {isEventExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                            </button>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            {eventCollection ? (
+                              <SourceButton
+                                active={isSourceActive(eventCollection.id)}
+                                onClick={() => handleProClick(eventCollection, eventName)}
+                                label={eventName}
+                                count={eventCollection.lineupCount}
+                                locked={!isPremium}
+                                badge={dateBadge}
+                              />
+                            ) : (
+                              <button
+                                onClick={toggleEvent}
+                                className="w-full px-2 py-1.5 text-left text-[10px] font-semibold uppercase tracking-wider text-[#6b6b8a]/70 hover:text-[#e8e8e8] transition-colors"
+                              >
+                                {eventName}
+                              </button>
+                            )}
+                          </div>
                         </div>
+                        <AnimatePresence>
+                          {isEventExpanded && matches.length > 0 && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.15 }}
+                              className="overflow-hidden pl-4 space-y-0.5"
+                            >
+                              {matches.map((c) => (
+                                <MatchButton
+                                  key={c.id}
+                                  collection={c}
+                                  active={isSourceActive(c.id)}
+                                  onClick={() => handleMatchClick(c)}
+                                  locked={!isPremium}
+                                  isCrossMap={c.mapName !== currentMapName}
+                                />
+                              ))}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
                     );
                   })}
