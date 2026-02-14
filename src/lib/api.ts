@@ -78,6 +78,10 @@ export const sessionsApi = {
   getUsage: () =>
     api.get<{ data: UsageStats }>('/api/sessions/usage').then((r) => r.data.data),
   end: (id: string) => api.delete(`/api/sessions/${id}`),
+  updateCollection: (collectionId?: string) =>
+    api.patch<{ data: Session }>('/api/sessions/active/collection', {
+      collectionId: collectionId || undefined,
+    }).then((r) => r.data.data),
 };
 
 // Collections

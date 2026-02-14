@@ -17,6 +17,7 @@ import {
   UserX,
   Users,
   Terminal,
+  RefreshCw,
 } from 'lucide-react';
 import Link from 'next/link';
 import { sessionsApi, collectionsApi, userCollectionsApi } from '@/lib/api';
@@ -120,6 +121,9 @@ export default function PracticeSessionCard() {
   const connectionCountdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [lastEndReason, setLastEndReason] = useState<Session['endReason'] | null>(null);
   const [queuePosition, setQueuePosition] = useState<number | null>(null);
+  const [showCollectionChanger, setShowCollectionChanger] = useState(false);
+  const [changingCollection, setChangingCollection] = useState(false);
+  const [activeCollections, setActiveCollections] = useState<LineupCollection[]>([]);
 
   // WebSocket connection for real-time updates
   const { sendHeartbeat } = useSessionSocket({
@@ -262,6 +266,36 @@ export default function PracticeSessionCard() {
     }
   }, [session?.queuePosition]);
 
+  // Fetch collections for active session's map (for collection switcher)
+  useEffect(() => {
+    if (!session?.isActive || !session.startedAt) {
+      setActiveCollections([]);
+      return;
+    }
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const fetches: Promise<LineupCollection[]>[] = [
+          userCollectionsApi.getMy(session.mapName),
+        ];
+        if (isPremium) {
+          fetches.push(collectionsApi.getAll(session.mapName));
+        }
+        const results = await Promise.all(fetches);
+        if (cancelled) return;
+        const userColls = results[0];
+        const metaColls = isPremium && results[1]
+          ? results[1].filter((c) => c.proCategory === 'meta' || c.proCategory === 'meta_all')
+          : [];
+        setActiveCollections([...userColls, ...metaColls]);
+      } catch {
+        if (!cancelled) setActiveCollections([]);
+      }
+    };
+    load();
+    return () => { cancelled = true; };
+  }, [session?.isActive, session?.startedAt, session?.mapName, isPremium]);
+
   // Fetch collections when selected map changes
   const isPremium = user?.isPremium ?? false;
   useEffect(() => {
@@ -320,6 +354,19 @@ export default function PracticeSessionCard() {
       setError('Failed to end session.');
     } finally {
       setEnding(false);
+    }
+  };
+
+  const handleChangeCollection = async (collectionId: string | null) => {
+    setChangingCollection(true);
+    try {
+      const updated = await sessionsApi.updateCollection(collectionId ?? undefined);
+      setSession(updated);
+      setShowCollectionChanger(false);
+    } catch {
+      // ignore
+    } finally {
+      setChangingCollection(false);
     }
   };
 
@@ -410,6 +457,69 @@ export default function PracticeSessionCard() {
                   {usage?.isPremium ? 'Unlimited' : formatTime(remaining)}
                 </p>
               </div>
+            </div>
+
+            {/* Collection Switcher */}
+            <div className="rounded-lg bg-[#0a0a12] p-4 mb-4">
+              <div className="flex items-center justify-between">
+                <div className="min-w-0">
+                  <p className="text-xs text-[#6b6b8a] mb-1">Collection</p>
+                  <p className="text-sm font-medium text-[#e8e8e8] truncate">
+                    {session.practiceCollectionName ?? 'No collection'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowCollectionChanger((v) => !v)}
+                  disabled={changingCollection}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#2a2a3e] hover:border-[#4a9fd4] transition-colors text-xs text-[#6b6b8a] hover:text-[#e8e8e8] shrink-0 ml-3"
+                >
+                  {changingCollection ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <RefreshCw className="h-3.5 w-3.5" />
+                  )}
+                  Change
+                </button>
+              </div>
+              <AnimatePresence>
+                {showCollectionChanger && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="mt-3 pt-3 border-t border-[#1a1a2e] space-y-1.5">
+                      <button
+                        onClick={() => handleChangeCollection(null)}
+                        disabled={changingCollection}
+                        className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                          !session.practiceCollectionId
+                            ? 'bg-[#4a9fd420] text-[#4a9fd4] border border-[#4a9fd440]'
+                            : 'text-[#6b6b8a] hover:bg-[#1a1a2e] hover:text-[#e8e8e8]'
+                        }`}
+                      >
+                        No collection
+                      </button>
+                      {activeCollections.map((c) => (
+                        <button
+                          key={c.id}
+                          onClick={() => handleChangeCollection(c.id)}
+                          disabled={changingCollection}
+                          className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                            session.practiceCollectionId === c.id
+                              ? 'bg-[#4a9fd420] text-[#4a9fd4] border border-[#4a9fd440]'
+                              : 'text-[#6b6b8a] hover:bg-[#1a1a2e] hover:text-[#e8e8e8]'
+                          }`}
+                        >
+                          {c.name} <span className="text-[#6b6b8a]">({c.lineupCount})</span>
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Connection Details */}
