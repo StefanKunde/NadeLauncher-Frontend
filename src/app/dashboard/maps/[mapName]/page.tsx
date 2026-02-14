@@ -77,14 +77,14 @@ export default function MapDetailPage() {
         collectionsApi.getAllWithStatus(mapName),
         userCollectionsApi.getMy(mapName),
         lineupsApi.getMy(mapName),
-        collectionsApi.getAll(),
+        collectionsApi.getAll(undefined, 'match'),
       ]);
 
       setAllCollections(collections);
       setUserCollections(myColls);
       setMyNades(myLineups);
       setCrossMapMatches(
-        allProColls.filter((c) => c.proCategory === 'match' && c.mapName !== mapName),
+        allProColls.filter((c) => c.mapName !== mapName),
       );
 
       // Load lineups for subscribed collections and user collections

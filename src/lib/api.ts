@@ -82,10 +82,10 @@ export const sessionsApi = {
 
 // Collections
 export const collectionsApi = {
-  getAll: (map?: string) =>
-    api.get<{ data: LineupCollection[] }>('/api/collections', { params: { map } }).then((r) => r.data.data),
-  getAllWithStatus: (map?: string) =>
-    api.get<{ data: LineupCollection[] }>('/api/collections/user/all', { params: { map } }).then((r) => r.data.data),
+  getAll: (map?: string, proCategory?: string) =>
+    api.get<{ data: LineupCollection[] }>('/api/collections', { params: { map, proCategory } }).then((r) => r.data.data),
+  getAllWithStatus: (map?: string, proCategory?: string) =>
+    api.get<{ data: LineupCollection[] }>('/api/collections/user/all', { params: { map, proCategory } }).then((r) => r.data.data),
   getById: (id: string) =>
     api.get<{ data: CollectionWithLineups }>(`/api/collections/${id}`).then((r) => r.data.data),
   getByIdWithUserState: (id: string) =>
