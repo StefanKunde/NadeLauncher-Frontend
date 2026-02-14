@@ -101,6 +101,15 @@ export interface LineupCollection {
   autoManaged?: boolean;
   proCategory?: string;
   timeWindow?: string;
+  metadata?: {
+    team1Logo?: string;
+    team2Logo?: string;
+    score?: string;
+    format?: string;
+    seriesResult?: string;
+    eventName?: string;
+    hltvEventId?: number;
+  };
   ownerId?: string;
   createdAt: string;
   updatedAt: string;

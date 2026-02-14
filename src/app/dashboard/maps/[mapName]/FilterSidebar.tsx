@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Search, Plus, Lock, ChevronDown, ChevronRight, Pencil, Trash2, Loader2, X, Calendar, Crown } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { LineupCollection } from '@/lib/types';
 import GrenadeIcon from '@/components/ui/GrenadeIcon';
@@ -21,11 +22,18 @@ interface FilterSidebarProps {
   onSourceFilterChange: (f: SourceFilter) => void;
   proCollections: LineupCollection[];
   userCollections: LineupCollection[];
+  crossMapMatches: LineupCollection[];
+  currentMapName: string;
   onCreateCollection: () => void;
   onEditCollection: (c: LineupCollection) => void;
   onDeleteCollection: (c: LineupCollection) => void;
   creatingCollection: boolean;
 }
+
+const MAP_SHORT: Record<string, string> = {
+  de_mirage: 'Mir.', de_inferno: 'Inf.', de_ancient: 'Anc.',
+  de_nuke: 'Nuk.', de_anubis: 'Anu.', de_vertigo: 'Vert.', de_dust2: 'Dust2',
+};
 
 const GRENADES: { key: GrenadeFilter; label: string }[] = [
   { key: 'all', label: 'All' },
@@ -48,6 +56,8 @@ export default function FilterSidebar({
   onSourceFilterChange,
   proCollections,
   userCollections,
+  crossMapMatches,
+  currentMapName,
   onCreateCollection,
   onEditCollection,
   onDeleteCollection,
@@ -55,6 +65,7 @@ export default function FilterSidebar({
 }: FilterSidebarProps) {
   const user = useAuthStore((s) => s.user);
   const isPremium = user?.isPremium ?? false;
+  const router = useRouter();
   const [proExpanded, setProExpanded] = useState(true);
   const [teamsExpanded, setTeamsExpanded] = useState(false);
   const [eventsExpanded, setEventsExpanded] = useState(false);
@@ -93,6 +104,62 @@ export default function FilterSidebar({
   const filteredEvents = q ? eventCollections.filter((c) => c.name.replace(/\s+—\s+.*$/, '').toLowerCase().includes(q)) : eventCollections;
   const filteredMatches = q ? matchCollections.filter((c) => c.name.replace(/\s+—\s+.*$/, '').toLowerCase().includes(q)) : matchCollections;
   const filteredUser = q ? userCollections.filter((c) => c.name.toLowerCase().includes(q)) : userCollections;
+  const filteredCrossMapMatches = q
+    ? crossMapMatches.filter((c) => c.name.replace(/\s+—\s+.*$/, '').toLowerCase().includes(q))
+    : crossMapMatches;
+
+  // Group all matches (current map + cross-map) by event name
+  const matchesByEvent = useMemo(() => {
+    const allMatches = [...filteredMatches, ...filteredCrossMapMatches];
+    const grouped = new Map<string, LineupCollection[]>();
+    const ungrouped: LineupCollection[] = [];
+
+    for (const m of allMatches) {
+      const eventName = (m.metadata?.eventName as string) ?? null;
+      if (eventName) {
+        const list = grouped.get(eventName) ?? [];
+        list.push(m);
+        grouped.set(eventName, list);
+      } else {
+        ungrouped.push(m);
+      }
+    }
+
+    // Sort matches within each event: latest first
+    for (const list of grouped.values()) {
+      list.sort((a, b) => (b.timeWindow ?? '').localeCompare(a.timeWindow ?? ''));
+    }
+    ungrouped.sort((a, b) => (b.timeWindow ?? '').localeCompare(a.timeWindow ?? ''));
+
+    return { grouped, ungrouped };
+  }, [filteredMatches, filteredCrossMapMatches]);
+
+  const eventGroups = useMemo(() => {
+    const eventCollByName = new Map<string, LineupCollection>();
+    for (const c of filteredEvents) {
+      const label = c.name.replace(/\s+—\s+.*$/, '');
+      eventCollByName.set(label, c);
+    }
+
+    const allEventNames = new Set<string>([
+      ...eventCollByName.keys(),
+      ...matchesByEvent.grouped.keys(),
+    ]);
+
+    const groups = [...allEventNames].map((eventName) => ({
+      eventName,
+      eventCollection: eventCollByName.get(eventName) ?? null,
+      matches: matchesByEvent.grouped.get(eventName) ?? [],
+    }));
+
+    groups.sort((a, b) => {
+      const aTime = a.matches[0]?.timeWindow ?? a.eventCollection?.timeWindow ?? '';
+      const bTime = b.matches[0]?.timeWindow ?? b.eventCollection?.timeWindow ?? '';
+      return bTime.localeCompare(aTime);
+    });
+
+    return groups;
+  }, [filteredEvents, matchesByEvent]);
 
   const isSourceActive = (id: string) =>
     sourceFilter.type === 'collection' && sourceFilter.collectionId === id;
@@ -103,6 +170,19 @@ export default function FilterSidebar({
       return;
     }
     onSourceFilterChange({ type: 'collection', collectionId: c.id, collectionName: label });
+  };
+
+  const handleMatchClick = (c: LineupCollection) => {
+    if (!isPremium) {
+      setShowPremiumModal(true);
+      return;
+    }
+    const matchLabel = c.name.replace(/\s+—\s+.*$/, '');
+    if (c.mapName === currentMapName) {
+      onSourceFilterChange({ type: 'collection', collectionId: c.id, collectionName: matchLabel });
+    } else {
+      router.push(`/dashboard/maps/${c.mapName}?collection=${c.id}`);
+    }
   };
 
   return (
@@ -291,7 +371,7 @@ export default function FilterSidebar({
         )}
 
         {/* Event & Match Collections */}
-        {(eventCollections.length > 0 || matchCollections.length > 0) && (
+        {(eventGroups.length > 0 || matchesByEvent.ungrouped.length > 0) && (
           <div>
             <button
               onClick={() => setEventsExpanded(!eventsExpanded)}
@@ -308,44 +388,61 @@ export default function FilterSidebar({
                   animate={{ height: 'auto', opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
                   transition={{ duration: 0.2 }}
-                  className="overflow-hidden space-y-0.5"
+                  className="overflow-hidden space-y-1"
                 >
-                  {filteredEvents.map((c) => {
-                    const eventLabel = c.name.replace(/\s+—\s+.*$/, '');
-                    const dateBadge = c.timeWindow?.includes('/') ? c.timeWindow.split('/').map((d) => d.slice(5)).join(' – ') : undefined;
+                  {eventGroups.map((group) => {
+                    const { eventName, eventCollection, matches } = group;
+                    const dateBadge = eventCollection?.timeWindow?.includes('/')
+                      ? eventCollection.timeWindow.split('/').map((d) => d.slice(5)).join(' – ')
+                      : undefined;
                     return (
-                      <SourceButton
-                        key={c.id}
-                        active={isSourceActive(c.id)}
-                        onClick={() => handleProClick(c, eventLabel)}
-                        label={eventLabel}
-                        count={c.lineupCount}
-                        locked={!isPremium}
-                        badge={dateBadge}
-                      />
+                      <div key={eventName} className="space-y-0.5">
+                        {eventCollection ? (
+                          <SourceButton
+                            active={isSourceActive(eventCollection.id)}
+                            onClick={() => handleProClick(eventCollection, eventName)}
+                            label={eventName}
+                            count={eventCollection.lineupCount}
+                            locked={!isPremium}
+                            badge={dateBadge}
+                          />
+                        ) : (
+                          <p className="px-2 pt-1 text-[10px] font-semibold uppercase tracking-wider text-[#6b6b8a]/70">
+                            {eventName}
+                          </p>
+                        )}
+                        <div className="pl-2 space-y-0.5">
+                          {matches.map((c) => (
+                            <MatchButton
+                              key={c.id}
+                              collection={c}
+                              active={isSourceActive(c.id)}
+                              onClick={() => handleMatchClick(c)}
+                              locked={!isPremium}
+                              isCrossMap={c.mapName !== currentMapName}
+                            />
+                          ))}
+                        </div>
+                      </div>
                     );
                   })}
 
-                  {filteredMatches.length > 0 && (
+                  {matchesByEvent.ungrouped.length > 0 && (
                     <>
                       <div className="my-1.5 h-px bg-[#2a2a3e]/50" />
                       <p className="px-2 text-[10px] font-semibold uppercase tracking-wider text-[#6b6b8a]/70 mb-0.5">
-                        Recent Matches
+                        Other Matches
                       </p>
-                      {filteredMatches.map((c) => {
-                        const matchLabel = c.name.replace(/\s+—\s+.*$/, '');
-                        return (
-                          <SourceButton
-                            key={c.id}
-                            active={isSourceActive(c.id)}
-                            onClick={() => handleProClick(c, matchLabel)}
-                            label={matchLabel}
-                            count={c.lineupCount}
-                            locked={!isPremium}
-                            badge={c.timeWindow ?? undefined}
-                          />
-                        );
-                      })}
+                      {matchesByEvent.ungrouped.map((c) => (
+                        <MatchButton
+                          key={c.id}
+                          collection={c}
+                          active={isSourceActive(c.id)}
+                          onClick={() => handleMatchClick(c)}
+                          locked={!isPremium}
+                          isCrossMap={c.mapName !== currentMapName}
+                        />
+                      ))}
                     </>
                   )}
                 </motion.div>
@@ -548,6 +645,60 @@ function SourceButton({
       {count !== undefined && !locked && (
         <span className={`text-[10px] ${active ? 'text-[#f0a500]/70' : 'text-[#6b6b8a]'}`}>{count}</span>
       )}
+    </button>
+  );
+}
+
+function MatchButton({
+  collection,
+  active,
+  onClick,
+  locked,
+  isCrossMap,
+}: {
+  collection: LineupCollection;
+  active: boolean;
+  onClick: () => void;
+  locked?: boolean;
+  isCrossMap?: boolean;
+}) {
+  const matchLabel = collection.name.replace(/\s+—\s+.*$/, '');
+  const team1Logo = collection.metadata?.team1Logo as string | undefined;
+  const team2Logo = collection.metadata?.team2Logo as string | undefined;
+  const score = collection.metadata?.score as string | undefined;
+  const mapShort = isCrossMap
+    ? (MAP_SHORT[collection.mapName] ?? collection.mapName.replace('de_', ''))
+    : undefined;
+
+  return (
+    <button
+      onClick={onClick}
+      className={`flex w-full items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium transition-colors ${
+        active
+          ? 'bg-[#f0a500]/10 text-[#f0a500] border border-[#f0a500]/20'
+          : locked
+            ? 'text-[#6b6b8a]/50 border border-transparent cursor-not-allowed hover:bg-[#1a1a2e]/50'
+            : 'text-[#b8b8cc] border border-transparent hover:bg-[#1a1a2e] hover:text-[#e8e8e8]'
+      }`}
+    >
+      {team1Logo ? (
+        <img src={team1Logo} alt="" className={`h-3.5 w-3.5 shrink-0 object-contain ${locked ? 'opacity-40 grayscale' : ''}`} />
+      ) : (
+        <span className="h-3.5 w-3.5 shrink-0" />
+      )}
+      <span className="truncate flex-1 text-left">{matchLabel}</span>
+      {team2Logo ? (
+        <img src={team2Logo} alt="" className={`h-3.5 w-3.5 shrink-0 object-contain ${locked ? 'opacity-40 grayscale' : ''}`} />
+      ) : (
+        <span className="h-3.5 w-3.5 shrink-0" />
+      )}
+      {score && (
+        <span className={`shrink-0 font-mono text-[9px] ${active ? 'text-[#f0a500]/60' : 'text-[#6b6b8a]'}`}>{score}</span>
+      )}
+      {mapShort && (
+        <span className="shrink-0 rounded bg-[#2a2a3e] px-1 py-0.5 text-[8px] font-semibold text-[#6b6b8a]">{mapShort}</span>
+      )}
+      {locked && <Lock className="h-2.5 w-2.5 shrink-0 text-[#6b6b8a]/40" />}
     </button>
   );
 }

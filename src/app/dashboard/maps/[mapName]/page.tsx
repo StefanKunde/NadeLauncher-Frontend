@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Play, ChevronDown, Loader2, Monitor, X, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -19,6 +19,7 @@ import { fadeIn } from './types';
 export default function MapDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const mapName = params.mapName as string;
   const user = useAuthStore((s) => s.user);
 
@@ -31,6 +32,7 @@ export default function MapDetailPage() {
   const [userCollections, setUserCollections] = useState<LineupCollection[]>([]);
   const [lineupsByCollection, setLineupsByCollection] = useState<Map<string, Lineup[]>>(new Map());
   const [myNades, setMyNades] = useState<Lineup[]>([]);
+  const [crossMapMatches, setCrossMapMatches] = useState<LineupCollection[]>([]);
 
   // Filters
   const [grenadeFilter, setGrenadeFilter] = useState<GrenadeFilter>('all');
@@ -71,15 +73,19 @@ export default function MapDetailPage() {
     try {
       setLoading(true);
 
-      const [collections, myColls, myLineups] = await Promise.all([
+      const [collections, myColls, myLineups, allProColls] = await Promise.all([
         collectionsApi.getAllWithStatus(mapName),
         userCollectionsApi.getMy(mapName),
         lineupsApi.getMy(mapName),
+        collectionsApi.getAll(),
       ]);
 
       setAllCollections(collections);
       setUserCollections(myColls);
       setMyNades(myLineups);
+      setCrossMapMatches(
+        allProColls.filter((c) => c.proCategory === 'match' && c.mapName !== mapName),
+      );
 
       // Load lineups for subscribed collections and user collections
       const collectionsToLoad = [
@@ -142,10 +148,20 @@ export default function MapDetailPage() {
     return () => { cancelled = true; clearInterval(interval); };
   }, []);
 
-  // Auto-select meta_all collection after initial load
+  // Auto-select collection after initial load (URL param takes priority)
   useEffect(() => {
     if (loading) return;
     if (sourceFilter.type === 'collection') return;
+
+    // URL query param pre-selection (e.g. from cross-map match navigation)
+    const collectionParam = searchParams.get('collection');
+    if (collectionParam) {
+      const target = allCollections.find((c) => c.id === collectionParam);
+      if (target) {
+        setSourceFilter({ type: 'collection', collectionId: target.id, collectionName: target.name });
+        return;
+      }
+    }
 
     const isPremium = user?.isPremium ?? false;
     if (isPremium) {
@@ -161,7 +177,7 @@ export default function MapDetailPage() {
       const first = userCollections[0];
       setSourceFilter({ type: 'collection', collectionId: first.id, collectionName: first.name });
     }
-  }, [loading, allCollections, userCollections, sourceFilter.type, user]);
+  }, [loading, allCollections, userCollections, sourceFilter.type, user, searchParams]);
 
   // On-demand loading when selecting a collection not yet loaded
   useEffect(() => {
@@ -453,6 +469,8 @@ export default function MapDetailPage() {
             onSourceFilterChange={setSourceFilter}
             proCollections={proCollections}
             userCollections={userCollections}
+            crossMapMatches={crossMapMatches}
+            currentMapName={mapName}
             onCreateCollection={handleCreateCollection}
             onEditCollection={handleEditCollection}
             onDeleteCollection={handleDeleteCollection}
