@@ -1,9 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Crown, Check, X, ChevronDown, ChevronUp, Lock, Sparkles, Clock } from 'lucide-react';
+import { Crown, Check, X, ChevronDown, ChevronUp, Sparkles, Clock, Loader2 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth-store';
+import { stripeApi } from '@/lib/api';
 import toast from 'react-hot-toast';
 
 const COMPARISON_ROWS = [
@@ -23,11 +25,11 @@ const COMPARISON_ROWS = [
 const FAQ_ITEMS = [
   {
     q: 'What payment methods do you accept?',
-    a: "We'll support credit cards, PayPal, and more at launch.",
+    a: 'We accept all major credit and debit cards through Stripe, including Visa, Mastercard, and American Express.',
   },
   {
     q: 'Can I cancel anytime?',
-    a: 'Yes, cancel anytime. No lock-in or hidden fees.',
+    a: 'Yes, cancel anytime from the subscription portal. You keep premium access until the end of your billing period.',
   },
   {
     q: 'Do I keep my lineups if I downgrade?',
@@ -81,15 +83,49 @@ function CellValue({ value, color = '#00c850' }: { value: boolean | string; colo
   );
 }
 
-export default function PremiumPage() {
+function PremiumPageInner() {
   const user = useAuthStore((s) => s.user);
+  const searchParams = useSearchParams();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [upgradeLoading, setUpgradeLoading] = useState(false);
 
   const isPremium = user?.isPremium ?? false;
   const premiumExpiresAt = user?.premiumExpiresAt ? new Date(user.premiumExpiresAt) : null;
   const daysRemaining = premiumExpiresAt
     ? Math.max(0, Math.ceil((premiumExpiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
     : null;
+
+  // Handle return from Stripe Checkout
+  useEffect(() => {
+    if (searchParams.get('session_id')) {
+      toast.success('Welcome to NadePro Premium!');
+      window.history.replaceState({}, '', '/dashboard/premium');
+    }
+    if (searchParams.get('cancelled')) {
+      toast('Checkout cancelled. No charges were made.');
+      window.history.replaceState({}, '', '/dashboard/premium');
+    }
+  }, [searchParams]);
+
+  const handleUpgrade = async () => {
+    setUpgradeLoading(true);
+    try {
+      const { url } = await stripeApi.createCheckout();
+      window.location.href = url;
+    } catch {
+      toast.error('Failed to start checkout. Please try again.');
+      setUpgradeLoading(false);
+    }
+  };
+
+  const handleManageSubscription = async () => {
+    try {
+      const { url } = await stripeApi.createPortal();
+      window.location.href = url;
+    } catch {
+      toast.error('Failed to open subscription portal.');
+    }
+  };
 
   return (
     <motion.div
@@ -226,15 +262,39 @@ export default function PremiumPage() {
                 </li>
               ))}
             </ul>
-            <button
-              onClick={() => toast('Pro is coming soon. Stay tuned!')}
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#f0a500]/20 py-2.5 text-sm font-semibold text-[#f0a500] cursor-not-allowed"
-              disabled
-            >
-              <Lock className="h-4 w-4" />
-              Coming Soon
-            </button>
-            <p className="mt-3 text-center text-xs text-[#6b6b8a]">Coming Soon</p>
+            {isPremium && !premiumExpiresAt ? (
+              <>
+                <button
+                  onClick={handleManageSubscription}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#2a2a3e] py-2.5 text-sm font-semibold text-[#e8e8e8] hover:bg-[#3a3a4e] transition-colors"
+                >
+                  Manage Subscription
+                </button>
+                <p className="mt-3 text-center text-xs text-[#6b6b8a]">
+                  Update payment method or cancel
+                </p>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={handleUpgrade}
+                  disabled={upgradeLoading}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#f0a500] to-[#d4920a] py-2.5 text-sm font-bold text-[#0a0a0f] hover:brightness-110 transition-all disabled:opacity-50"
+                >
+                  {upgradeLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Crown className="h-4 w-4" />
+                      Upgrade to Pro
+                    </>
+                  )}
+                </button>
+                <p className="mt-3 text-center text-xs text-[#6b6b8a]">
+                  Cancel anytime &bull; Billed monthly
+                </p>
+              </>
+            )}
           </div>
         </div>
       </motion.div>
@@ -272,5 +332,13 @@ export default function PremiumPage() {
         </div>
       </motion.div>
     </motion.div>
+  );
+}
+
+export default function PremiumPage() {
+  return (
+    <Suspense>
+      <PremiumPageInner />
+    </Suspense>
   );
 }

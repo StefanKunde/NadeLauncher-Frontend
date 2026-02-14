@@ -622,14 +622,14 @@ export default function HomePage() {
                 ))}
               </ul>
 
-              <button
-                disabled
-                className="btn-primary w-full text-center py-3 font-semibold opacity-60 cursor-not-allowed"
+              <a
+                href={steamLoginUrl}
+                className="btn-primary w-full text-center py-3 font-semibold block"
               >
-                Coming Soon
-              </button>
+                Upgrade to Pro
+              </a>
               <p className="text-[#6b6b8a] text-xs text-center mt-3">
-                Coming Soon
+                Login with Steam to subscribe
               </p>
             </motion.div>
           </div>

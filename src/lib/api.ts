@@ -160,4 +160,12 @@ export const referralsApi = {
     api.get<{ data: ReferralEntry[] }>('/api/referrals').then((r) => r.data.data),
 };
 
+// Stripe
+export const stripeApi = {
+  createCheckout: () =>
+    api.post<{ data: { url: string } }>('/api/stripe/checkout').then((r) => r.data.data),
+  createPortal: () =>
+    api.post<{ data: { url: string } }>('/api/stripe/portal').then((r) => r.data.data),
+};
+
 export default api;
