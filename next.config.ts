@@ -11,8 +11,32 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "steamcdn-a.akamaihd.net",
       },
+      {
+        protocol: "https",
+        hostname: "img-cdn.hltv.org",
+      },
     ],
   },
+  headers: async () => [
+    {
+      source: "/maps/:path*",
+      headers: [
+        {
+          key: "Cache-Control",
+          value: "public, max-age=31536000, immutable",
+        },
+      ],
+    },
+    {
+      source: "/images/:path*",
+      headers: [
+        {
+          key: "Cache-Control",
+          value: "public, max-age=31536000, immutable",
+        },
+      ],
+    },
+  ],
 };
 
 export default nextConfig;
