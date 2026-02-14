@@ -407,37 +407,18 @@ export default function FilterSidebar({
                       : undefined;
                     return (
                       <div key={eventName}>
-                        <div className="flex items-center gap-0.5">
-                          {matches.length > 0 && (
-                            <button
-                              onClick={toggleEvent}
-                              className="shrink-0 p-0.5 text-[#6b6b8a] hover:text-[#e8e8e8] transition-colors"
-                            >
-                              {isEventExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
-                            </button>
+                        <button
+                          onClick={toggleEvent}
+                          className="flex w-full items-center gap-1 rounded-lg px-2 py-1.5 text-[11px] font-semibold text-[#6b6b8a]/80 hover:text-[#e8e8e8] transition-colors"
+                        >
+                          {isEventExpanded ? <ChevronDown className="h-3 w-3 shrink-0" /> : <ChevronRight className="h-3 w-3 shrink-0" />}
+                          <span className="truncate flex-1 text-left">{eventName}</span>
+                          {dateBadge && (
+                            <span className="shrink-0 text-[9px] font-normal text-[#6b6b8a]/50">{dateBadge}</span>
                           )}
-                          <div className="flex-1 min-w-0">
-                            {eventCollection ? (
-                              <SourceButton
-                                active={isSourceActive(eventCollection.id)}
-                                onClick={() => handleProClick(eventCollection, eventName)}
-                                label={eventName}
-                                count={eventCollection.lineupCount}
-                                locked={!isPremium}
-                                badge={dateBadge}
-                              />
-                            ) : (
-                              <button
-                                onClick={toggleEvent}
-                                className="w-full px-2 py-1.5 text-left text-[10px] font-semibold uppercase tracking-wider text-[#6b6b8a]/70 hover:text-[#e8e8e8] transition-colors"
-                              >
-                                {eventName}
-                              </button>
-                            )}
-                          </div>
-                        </div>
+                        </button>
                         <AnimatePresence>
-                          {isEventExpanded && matches.length > 0 && (
+                          {isEventExpanded && (
                             <motion.div
                               initial={{ height: 0, opacity: 0 }}
                               animate={{ height: 'auto', opacity: 1 }}
@@ -445,6 +426,15 @@ export default function FilterSidebar({
                               transition={{ duration: 0.15 }}
                               className="overflow-hidden pl-4 space-y-0.5"
                             >
+                              {eventCollection && (
+                                <SourceButton
+                                  active={isSourceActive(eventCollection.id)}
+                                  onClick={() => handleProClick(eventCollection, eventName)}
+                                  label="All Event Nades"
+                                  count={eventCollection.lineupCount}
+                                  locked={!isPremium}
+                                />
+                              )}
                               {matches.map((c) => (
                                 <MatchButton
                                   key={c.id}
