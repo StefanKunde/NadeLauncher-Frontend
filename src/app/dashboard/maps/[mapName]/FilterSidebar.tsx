@@ -142,8 +142,9 @@ export default function FilterSidebar({
       eventCollByName.set(label, c);
     }
 
+    // Only create groups for events that have actual matches
+    // (event-only groups with just "All Event Nades" are too cluttered)
     const allEventNames = new Set<string>([
-      ...eventCollByName.keys(),
       ...matchesByEvent.grouped.keys(),
     ]);
 
