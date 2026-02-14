@@ -267,6 +267,7 @@ export default function PracticeSessionCard() {
   }, [session?.queuePosition]);
 
   // Fetch collections for active session's map (for collection switcher)
+  const isPremium = user?.isPremium ?? false;
   useEffect(() => {
     if (!session?.isActive || !session.startedAt) {
       setActiveCollections([]);
@@ -297,7 +298,6 @@ export default function PracticeSessionCard() {
   }, [session?.isActive, session?.startedAt, session?.mapName, isPremium]);
 
   // Fetch collections when selected map changes
-  const isPremium = user?.isPremium ?? false;
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
