@@ -336,7 +336,7 @@ export default function FilterSidebar({
                         className="mb-1 flex w-full items-center gap-1 px-2 text-[10px] font-semibold uppercase tracking-wider text-[#6b6b8a]/70 hover:text-[#e8e8e8] transition-colors"
                       >
                         {teamsExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
-                        Teams
+                        Teams (Current Meta)
                       </button>
                       <AnimatePresence>
                         {teamsExpanded && (
