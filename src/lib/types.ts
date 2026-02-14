@@ -5,6 +5,25 @@ export interface User {
   avatar?: string;
   profileUrl?: string;
   isPremium: boolean;
+  premiumExpiresAt?: string | null;
+  createdAt: string;
+}
+
+export interface ReferralStats {
+  referralCode: string;
+  referralLink: string;
+  totalReferrals: number;
+  convertedReferrals: number;
+  premiumDaysEarned: number;
+  premiumExpiresAt: string | null;
+}
+
+export interface ReferralEntry {
+  id: string;
+  referredUsername: string;
+  referredAvatar?: string;
+  converted: boolean;
+  convertedAt: string | null;
   createdAt: string;
 }
 

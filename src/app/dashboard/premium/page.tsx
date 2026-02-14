@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Crown, Check, X, ChevronDown, ChevronUp, Lock, Sparkles } from 'lucide-react';
+import { Crown, Check, X, ChevronDown, ChevronUp, Lock, Sparkles, Clock } from 'lucide-react';
 import { useAuthStore } from '@/store/auth-store';
 import toast from 'react-hot-toast';
 
@@ -86,6 +86,10 @@ export default function PremiumPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   const isPremium = user?.isPremium ?? false;
+  const premiumExpiresAt = user?.premiumExpiresAt ? new Date(user.premiumExpiresAt) : null;
+  const daysRemaining = premiumExpiresAt
+    ? Math.max(0, Math.ceil((premiumExpiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+    : null;
 
   return (
     <motion.div
@@ -116,7 +120,14 @@ export default function PremiumPage() {
             </div>
             <div>
               <p className="text-lg font-semibold text-[#e8e8e8]">You&apos;re on Premium</p>
-              <p className="text-sm text-[#6b6b8a]">Thank you for supporting NadePro</p>
+              {daysRemaining !== null ? (
+                <p className="text-sm text-[#6b6b8a]">
+                  <Clock className="inline h-3.5 w-3.5 mr-1 -mt-0.5 text-[#6b6b8a]" />
+                  <span className="text-[#00c850] font-medium">{daysRemaining} day{daysRemaining !== 1 ? 's' : ''}</span> remaining &middot; expires {premiumExpiresAt!.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                </p>
+              ) : (
+                <p className="text-sm text-[#6b6b8a]">Thank you for supporting NadePro</p>
+              )}
             </div>
             <div className="ml-auto">
               <span className="rounded-full bg-[#00c850]/15 px-3 py-1 text-xs font-bold text-[#00c850]">

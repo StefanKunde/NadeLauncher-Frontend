@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   Map,
   Crown,
+  Gift,
   Settings,
   LogOut,
 } from 'lucide-react';
@@ -19,6 +20,7 @@ const NAV_ITEMS = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { href: '/dashboard/maps', icon: Map, label: 'Nades' },
   { href: '/dashboard/premium', icon: Crown, label: 'Premium', badge: 'PRO' },
+  { href: '/dashboard/referrals', icon: Gift, label: 'Referrals' },
   { href: '/dashboard/settings', icon: Settings, label: 'Settings' },
 ];
 

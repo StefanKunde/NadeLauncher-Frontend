@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { useAuthStore } from '@/store/auth-store';
-import type { AuthResponse, Lineup, MapInfo, Session, UsageStats, LineupCollection, UserSubscription, CollectionWithLineups, ProCollection, ProTeam, ProPlayer, ProMatch, Notification } from './types';
+import type { AuthResponse, Lineup, MapInfo, Session, UsageStats, LineupCollection, UserSubscription, CollectionWithLineups, ProCollection, ProTeam, ProPlayer, ProMatch, Notification, ReferralStats, ReferralEntry } from './types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://nadelauncher-backend-a99d397c.apps.deploypilot.stefankunde.dev';
 
@@ -148,6 +148,16 @@ export const notificationsApi = {
     api.patch(`/api/notifications/${id}/read`),
   markAllAsRead: () =>
     api.post('/api/notifications/read-all'),
+};
+
+// Referrals
+export const referralsApi = {
+  getMyCode: () =>
+    api.get<{ data: { code: string; link: string } }>('/api/referrals/my-code').then((r) => r.data.data),
+  getStats: () =>
+    api.get<{ data: ReferralStats }>('/api/referrals/stats').then((r) => r.data.data),
+  getReferrals: () =>
+    api.get<{ data: ReferralEntry[] }>('/api/referrals').then((r) => r.data.data),
 };
 
 export default api;

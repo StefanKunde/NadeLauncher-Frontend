@@ -166,15 +166,24 @@ const FLOATING_GRENADES: {
 
 export default function HomePage() {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://nadelauncher-backend-a99d397c.apps.deploypilot.stefankunde.dev';
-  const steamLoginUrl = `${apiUrl}/auth/steam`;
 
   const [scrolled, setScrolled] = useState(false);
+  const [steamLoginUrl, setSteamLoginUrl] = useState(`${apiUrl}/auth/steam`);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
+  // Pass referral code to Steam login if stored
+  useEffect(() => {
+    const ref = localStorage.getItem('nl_referral');
+    if (ref) {
+      setSteamLoginUrl(`${apiUrl}/auth/steam?ref=${encodeURIComponent(ref)}`);
+      localStorage.removeItem('nl_referral');
+    }
+  }, [apiUrl]);
 
   return (
     <div className="min-h-screen flex flex-col bg-[#0a0a0f]">
