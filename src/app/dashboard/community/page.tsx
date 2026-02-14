@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Search, Users, ChevronDown, Loader2 } from 'lucide-react';
+import { Search, Users, Loader2 } from 'lucide-react';
 import { communityApi, collectionsApi } from '@/lib/api';
 import { useAuthStore } from '@/store/auth-store';
 import { MAPS, MAP_COLORS } from '@/lib/constants';
@@ -128,49 +128,43 @@ export default function CommunityPage() {
       {/* Filters */}
       <div className="flex flex-wrap gap-3">
         {/* Search */}
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6668888]" />
+        <div className="flex items-center gap-2 flex-1 min-w-[200px] bg-[#1a1a2e] border border-[#2a2a3e] rounded-lg px-3 focus-within:border-[#6c5ce7]">
+          <Search className="h-4 w-4 shrink-0 text-[#555577]" />
           <input
             type="text"
             placeholder="Search collections..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-[#1a1a2e] border border-[#2a2a3e] rounded-lg text-white text-sm placeholder-[#555577] focus:border-[#6c5ce7] focus:outline-none"
+            className="w-full bg-transparent py-2 text-white text-sm placeholder-[#555577] focus:outline-none border-none"
           />
         </div>
 
         {/* Map Filter */}
-        <div className="relative">
-          <select
-            value={mapFilter}
-            onChange={(e) => setMapFilter(e.target.value)}
-            className="appearance-none pl-3 pr-8 py-2 bg-[#1a1a2e] border border-[#2a2a3e] rounded-lg text-white text-sm focus:border-[#6c5ce7] focus:outline-none cursor-pointer"
-          >
-            <option value="">All Maps</option>
-            {MAPS.map((m) => (
-              <option key={m.name} value={m.name}>
-                {m.displayName}
-              </option>
-            ))}
-          </select>
-          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6668888] pointer-events-none" />
-        </div>
+        <select
+          value={mapFilter}
+          onChange={(e) => setMapFilter(e.target.value)}
+          className="pl-3 pr-3 py-2 bg-[#1a1a2e] border border-[#2a2a3e] rounded-lg text-white text-sm focus:border-[#6c5ce7] focus:outline-none cursor-pointer"
+        >
+          <option value="">All Maps</option>
+          {MAPS.map((m) => (
+            <option key={m.name} value={m.name}>
+              {m.displayName}
+            </option>
+          ))}
+        </select>
 
         {/* Sort */}
-        <div className="relative">
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value as SortOption)}
-            className="appearance-none pl-3 pr-8 py-2 bg-[#1a1a2e] border border-[#2a2a3e] rounded-lg text-white text-sm focus:border-[#6c5ce7] focus:outline-none cursor-pointer"
-          >
-            {SORT_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6668888] pointer-events-none" />
-        </div>
+        <select
+          value={sort}
+          onChange={(e) => setSort(e.target.value as SortOption)}
+          className="pl-3 pr-3 py-2 bg-[#1a1a2e] border border-[#2a2a3e] rounded-lg text-white text-sm focus:border-[#6c5ce7] focus:outline-none cursor-pointer"
+        >
+          {SORT_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Results */}
