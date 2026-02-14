@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { useAuthStore } from '@/store/auth-store';
-import type { AuthResponse, Lineup, MapInfo, Session, UsageStats, LineupCollection, UserSubscription, CollectionWithLineups, ProCollection, ProTeam, ProPlayer, ProMatch, Notification, ReferralStats, ReferralEntry } from './types';
+import type { AuthResponse, Lineup, MapInfo, Session, UsageStats, LineupCollection, UserSubscription, CollectionWithLineups, ProCollection, ProTeam, ProPlayer, ProMatch, Notification, ReferralStats, ReferralEntry, CommunityCollection } from './types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://nadelauncher-backend-a99d397c.apps.deploypilot.stefankunde.dev';
 
@@ -104,6 +104,20 @@ export const collectionsApi = {
     api.post(`/api/collections/${collectionId}/lineups/${lineupId}/hide`),
   unhideLineup: (collectionId: string, lineupId: string) =>
     api.delete(`/api/collections/${collectionId}/lineups/${lineupId}/hide`),
+};
+
+// Community Collections
+export const communityApi = {
+  browse: (params: { map?: string; search?: string; sort?: string; page?: number; limit?: number }) =>
+    api.get<{ data: { items: CommunityCollection[]; total: number; page: number } }>('/api/collections/community', { params }).then((r) => r.data.data),
+  browseWithStatus: (params: { map?: string; search?: string; sort?: string; page?: number; limit?: number }) =>
+    api.get<{ data: { items: CommunityCollection[]; total: number; page: number } }>('/api/collections/community/user', { params }).then((r) => r.data.data),
+  publish: (id: string, isPublished: boolean) =>
+    api.put<{ data: LineupCollection }>(`/api/collections/my/${id}/publish`, { isPublished }).then((r) => r.data.data),
+  rate: (id: string, rating: number) =>
+    api.post<{ data: { averageRating: number; ratingCount: number; userRating: number } }>(`/api/collections/${id}/rate`, { rating }).then((r) => r.data.data),
+  deleteRating: (id: string) =>
+    api.delete<{ data: { averageRating: number; ratingCount: number } }>(`/api/collections/${id}/rate`).then((r) => r.data.data),
 };
 
 // User Collections

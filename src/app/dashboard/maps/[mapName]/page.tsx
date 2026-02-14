@@ -7,7 +7,7 @@ import { ArrowLeft, Play, ChevronDown, Loader2, Monitor, X, Trash2 } from 'lucid
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { MAPS, MAP_COLORS } from '@/lib/constants';
-import { collectionsApi, userCollectionsApi, sessionsApi, lineupsApi } from '@/lib/api';
+import { collectionsApi, userCollectionsApi, sessionsApi, lineupsApi, communityApi } from '@/lib/api';
 import { useAuthStore } from '@/store/auth-store';
 import type { Lineup, LineupCollection, Session } from '@/lib/types';
 import MapRadar from '@/components/ui/MapRadar';
@@ -216,6 +216,11 @@ export default function MapDetailPage() {
   const proCollections = useMemo(
     () => allCollections.filter((c) => c.autoManaged && !c.ownerId),
     [allCollections],
+  );
+
+  const communityCollections = useMemo(
+    () => allCollections.filter((c) => c.isPublished && c.isSubscribed && c.ownerId && c.ownerId !== user?.id),
+    [allCollections, user],
   );
 
   const allLineups = useMemo(() => {
@@ -469,6 +474,7 @@ export default function MapDetailPage() {
             onSourceFilterChange={setSourceFilter}
             proCollections={proCollections}
             userCollections={userCollections}
+            communityCollections={communityCollections}
             crossMapMatches={crossMapMatches}
             currentMapName={mapName}
             onCreateCollection={handleCreateCollection}
@@ -768,6 +774,46 @@ export default function MapDetailPage() {
                 placeholder="New name..."
                 className="mb-4 w-full rounded-lg border border-[#2a2a3e] bg-[#0a0a0f] px-4 py-2.5 text-sm text-[#e8e8e8] placeholder:text-[#6b6b8a] focus:border-[#f0a500]/50 focus:outline-none"
               />
+              {/* Publish to Community toggle */}
+              {user?.isPremium && editingCollection && (
+                <div className="mb-4 flex items-center justify-between rounded-lg border border-[#2a2a3e] bg-[#0a0a0f] px-4 py-3">
+                  <div>
+                    <p className="text-sm text-[#e8e8e8]">Publish to Community</p>
+                    <p className="text-xs text-[#6b6b8a]">
+                      {editingCollection.lineupCount < 5
+                        ? 'Needs at least 5 lineups'
+                        : 'Let others browse and subscribe'}
+                    </p>
+                  </div>
+                  <button
+                    disabled={!editingCollection.isPublished && editingCollection.lineupCount < 5}
+                    onClick={async () => {
+                      try {
+                        const newState = !editingCollection.isPublished;
+                        await communityApi.publish(editingCollection.id, newState);
+                        setEditingCollection({ ...editingCollection, isPublished: newState });
+                        setUserCollections((prev) =>
+                          prev.map((x) =>
+                            x.id === editingCollection.id ? { ...x, isPublished: newState } : x,
+                          ),
+                        );
+                        toast.success(newState ? 'Published to Community!' : 'Unpublished');
+                      } catch (err: any) {
+                        toast.error(err?.response?.data?.message || 'Failed');
+                      }
+                    }}
+                    className={`relative h-6 w-11 rounded-full transition-colors disabled:opacity-30 ${
+                      editingCollection.isPublished ? 'bg-[#6c5ce7]' : 'bg-[#2a2a3e]'
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
+                        editingCollection.isPublished ? 'translate-x-5' : ''
+                      }`}
+                    />
+                  </button>
+                </div>
+              )}
               <div className="flex gap-2">
                 <button
                   onClick={() => setEditingCollection(null)}

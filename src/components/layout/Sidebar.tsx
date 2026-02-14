@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import {
   LayoutDashboard,
   Map,
+  Users,
   Crown,
   Gift,
   Settings,
@@ -19,6 +20,7 @@ import NotificationBell from '@/components/notifications/NotificationBell';
 const NAV_ITEMS = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { href: '/dashboard/maps', icon: Map, label: 'Nades' },
+  { href: '/dashboard/community', icon: Users, label: 'Community' },
   { href: '/dashboard/premium', icon: Crown, label: 'Premium', badge: 'PRO' },
   { href: '/dashboard/referrals', icon: Gift, label: 'Referrals' },
   { href: '/dashboard/settings', icon: Settings, label: 'Settings' },

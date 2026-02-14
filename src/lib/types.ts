@@ -130,8 +130,31 @@ export interface LineupCollection {
     hltvEventId?: number;
   };
   ownerId?: string;
+  isPublished?: boolean;
+  publishedAt?: string;
+  averageRating?: number;
+  ratingCount?: number;
+  subscriberCount?: number;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface CommunityCollection {
+  id: string;
+  name: string;
+  description?: string;
+  mapName: string;
+  coverImage?: string;
+  lineupCount: number;
+  ownerId: string;
+  ownerName: string;
+  ownerAvatar?: string;
+  averageRating: number;
+  ratingCount: number;
+  subscriberCount: number;
+  publishedAt: string;
+  isSubscribed?: boolean;
+  userRating?: number;
 }
 
 export interface UserSubscription {
