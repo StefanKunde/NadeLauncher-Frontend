@@ -90,7 +90,7 @@ export interface Session {
   provisioningError?: string;
   startedAt?: string;
   endedAt?: string;
-  endReason?: 'connection_timeout' | 'afk_timeout' | 'user_ended' | 'time_expired' | 'disconnected' | 'provisioning_failed' | 'expired' | 'queue_stale';
+  endReason?: 'connection_timeout' | 'afk_timeout' | 'user_ended' | 'time_expired' | 'disconnected' | 'provisioning_failed' | 'expired' | 'queue_stale' | 'server_preempted';
   expiresAt: string;
   connectionTimeoutAt?: string;
   createdAt: string;

@@ -257,18 +257,21 @@ export default function FilterSidebar({
                       onClick={() => onSourceFilterChange({ type: 'collection', collectionId: c.id, collectionName: c.name })}
                       label={c.name}
                     />
-                    {/* Published icon + Count — hidden on hover, replaced by action buttons */}
+                    {/* Count — hidden on hover, replaced by action buttons */}
                     <span className={`absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5 group-hover/item:hidden`}>
                       {c.isPublished && (
-                        <span title="Published to Community">
-                          <Users className="h-3 w-3 shrink-0 text-[#6c5ce7]" />
-                        </span>
+                        <Users className="h-3 w-3 shrink-0 text-[#6c5ce7]" />
                       )}
                       <span className={`text-[10px] ${isSourceActive(c.id) ? 'text-[#f0a500]/70' : 'text-[#6b6b8a]'}`}>
                         {c.lineupCount}
                       </span>
                     </span>
                     <div className="absolute right-1 top-1/2 -translate-y-1/2 hidden group-hover/item:flex items-center gap-0.5">
+                      {c.isPublished && (
+                        <span title="Published to Community" className="p-1">
+                          <Users className="h-3 w-3 shrink-0 text-[#6c5ce7]" />
+                        </span>
+                      )}
                       <button
                         onClick={(e) => { e.stopPropagation(); onEditCollection(c); }}
                         className="p-1 rounded text-[#6b6b8a] hover:text-[#e8e8e8] hover:bg-[#1a1a2e]"

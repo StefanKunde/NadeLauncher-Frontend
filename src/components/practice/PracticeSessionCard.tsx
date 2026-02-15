@@ -666,7 +666,7 @@ export default function PracticeSessionCard() {
             <p className="text-sm text-[#6b6b8a] mb-4">
               {session.status === 'pending'
                 ? 'Preparing resources...'
-                : 'Provisioning server (30-90 seconds)...'}
+                : 'Provisioning server (usually around 2 minutes)...'}
             </p>
             <div className="rounded-lg bg-[#0a0a12] p-3">
               <p className="text-xs text-[#6b6b8a]">
@@ -976,6 +976,39 @@ export default function PracticeSessionCard() {
           >
             {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
             Try Again
+          </button>
+        </div>
+      </motion.div>
+    );
+  }
+
+  // State: Server was preempted (Spot VM reclaimed by cloud provider)
+  if (!session && lastEndReason === 'server_preempted') {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="glass rounded-xl overflow-hidden"
+        style={{ borderTop: '2px solid #f59e0b' }}
+      >
+        <div className="p-6 text-center">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#f59e0b15]">
+            <AlertTriangle className="h-6 w-6 text-[#f59e0b]" />
+          </div>
+          <p className="text-sm text-[#e8e8e8] mb-1 font-medium">Server Shut Down Unexpectedly</p>
+          <p className="text-xs text-[#6b6b8a] mb-4">
+            Your server shut down unexpectedly. This is rare — sorry for the interruption.
+          </p>
+          <button
+            onClick={() => {
+              setLastEndReason(null);
+              handleCreate();
+            }}
+            disabled={creating}
+            className="w-full flex items-center justify-center gap-2 rounded-lg bg-[#4a9fd4] px-4 py-3 text-sm font-semibold text-white transition-all hover:bg-[#3a8fc4] disabled:opacity-50"
+          >
+            {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+            Start New Server
           </button>
         </div>
       </motion.div>
