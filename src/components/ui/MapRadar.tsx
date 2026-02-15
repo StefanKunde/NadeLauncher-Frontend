@@ -78,9 +78,7 @@ export default function MapRadar({
       e.preventDefault();
       setZoom((prev) => {
         const delta = e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP;
-        const next = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, prev + delta));
-        if (next <= 1) setPan({ x: 0, y: 0 });
-        return next;
+        return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, prev + delta));
       });
     };
     el.addEventListener('wheel', onWheel, { passive: false });
@@ -88,7 +86,7 @@ export default function MapRadar({
   }, [mini]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    if (mini || zoom <= 1) return;
+    if (mini) return;
     isDragging.current = true;
     dragStart.current = { x: e.clientX, y: e.clientY };
     panStart.current = { ...pan };
@@ -113,11 +111,7 @@ export default function MapRadar({
   }, []);
 
   const handleZoomOut = useCallback(() => {
-    setZoom((prev) => {
-      const next = Math.max(MIN_ZOOM, prev - ZOOM_STEP);
-      if (next <= 1) setPan({ x: 0, y: 0 });
-      return next;
-    });
+    setZoom((prev) => Math.max(MIN_ZOOM, prev - ZOOM_STEP));
   }, []);
 
   const handleResetZoom = useCallback(() => {
@@ -142,7 +136,7 @@ export default function MapRadar({
     <div
       ref={containerRef}
       className={`relative aspect-square w-full overflow-hidden rounded-xl bg-[#0a0a0f] ${
-        !mini && zoom > 1 ? 'cursor-grab active:cursor-grabbing' : ''
+        !mini ? 'cursor-grab active:cursor-grabbing' : ''
       }`}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
