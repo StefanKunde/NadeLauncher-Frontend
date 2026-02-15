@@ -2,8 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
-import { Search, Users, Loader2 } from 'lucide-react';
+import { Search, Users, Loader2, Star } from 'lucide-react';
 import { communityApi, collectionsApi } from '@/lib/api';
 import { useAuthStore } from '@/store/auth-store';
 import { MAPS, MAP_COLORS } from '@/lib/constants';
@@ -20,14 +19,7 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: 'most_lineups', label: 'Most Lineups' },
 ];
 
-const container = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.05 } },
-};
-const item = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.3 } },
-};
+const LIMIT = 25;
 
 export default function CommunityPage() {
   const user = useAuthStore((s) => s.user);
@@ -54,7 +46,7 @@ export default function CommunityPage() {
         search: debouncedSearch || undefined,
         sort,
         page,
-        limit: 18,
+        limit: LIMIT,
       };
       const result = user
         ? await communityApi.browseWithStatus(params)
@@ -107,13 +99,13 @@ export default function CommunityPage() {
     }
   };
 
-  const totalPages = Math.ceil(total / 18);
+  const totalPages = Math.ceil(total / LIMIT);
 
   const getMapDisplayName = (name: string) =>
     MAPS.find((m) => m.name === name)?.displayName ?? name;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-white flex items-center gap-2">
@@ -127,7 +119,6 @@ export default function CommunityPage() {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3">
-        {/* Search */}
         <div className="flex items-center gap-2 flex-1 min-w-[200px] bg-[#1a1a2e] border border-[#2a2a3e] rounded-lg px-3 focus-within:border-[#6c5ce7]">
           <Search className="h-4 w-4 shrink-0 text-[#555577]" />
           <input
@@ -139,7 +130,6 @@ export default function CommunityPage() {
           />
         </div>
 
-        {/* Map Filter */}
         <select
           value={mapFilter}
           onChange={(e) => setMapFilter(e.target.value)}
@@ -153,7 +143,6 @@ export default function CommunityPage() {
           ))}
         </select>
 
-        {/* Sort */}
         <select
           value={sort}
           onChange={(e) => setSort(e.target.value as SortOption)}
@@ -180,103 +169,115 @@ export default function CommunityPage() {
         </div>
       ) : (
         <>
-          <motion.div
-            variants={container}
-            initial="hidden"
-            animate="show"
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-          >
+          {/* Table header */}
+          <div className="flex items-center gap-3 px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-[#6b6b8a]">
+            <span className="w-16">Map</span>
+            <span className="flex-1">Collection</span>
+            <span className="w-20 text-center">Nades</span>
+            <span className="w-20 text-center">Subs</span>
+            <span className="w-24 text-center">Rating</span>
+            <span className="w-32">By</span>
+            <span className="w-24" />
+          </div>
+
+          {/* List */}
+          <div className="space-y-1">
             {collections.map((col) => (
-              <motion.div key={col.id} variants={item}>
-                <Link href={`/dashboard/community/${col.id}`}>
-                  <div className="group bg-[#1a1a2e] border border-[#2a2a3e] rounded-xl p-4 hover:border-[#6c5ce7]/50 transition-all cursor-pointer">
-                    {/* Map Badge + Name */}
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex-1 min-w-0">
-                        <span
-                          className="inline-block text-[10px] font-bold uppercase px-1.5 py-0.5 rounded mb-1.5"
-                          style={{
-                            backgroundColor: `${MAP_COLORS[col.mapName] || '#6c5ce7'}20`,
-                            color: MAP_COLORS[col.mapName] || '#6c5ce7',
-                          }}
-                        >
-                          {getMapDisplayName(col.mapName)}
-                        </span>
-                        <h3 className="text-sm font-semibold text-white truncate group-hover:text-[#6c5ce7] transition-colors">
-                          {col.name}
-                        </h3>
-                      </div>
-                      <button
-                        onClick={(e) => handleSubscribe(e, col.id)}
-                        className={`shrink-0 ml-2 px-3 py-1 rounded-lg text-xs font-medium transition-all ${
-                          col.isSubscribed
-                            ? 'bg-[#6c5ce7]/20 text-[#6c5ce7] hover:bg-red-500/20 hover:text-red-400'
-                            : 'bg-[#6c5ce7] text-white hover:bg-[#5a4bd6]'
-                        }`}
-                      >
-                        {col.isSubscribed ? 'Subscribed' : 'Subscribe'}
-                      </button>
-                    </div>
+              <Link key={col.id} href={`/dashboard/community/${col.id}`}>
+                <div className="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-[#12121a] border border-transparent hover:border-[#6c5ce7]/40 hover:bg-[#1a1a2e] transition-all cursor-pointer group">
+                  {/* Map badge */}
+                  <span
+                    className="w-16 shrink-0 text-[10px] font-bold uppercase text-center px-1.5 py-0.5 rounded"
+                    style={{
+                      backgroundColor: `${MAP_COLORS[col.mapName] || '#6c5ce7'}15`,
+                      color: MAP_COLORS[col.mapName] || '#6c5ce7',
+                    }}
+                  >
+                    {getMapDisplayName(col.mapName)}
+                  </span>
 
-                    {/* Description */}
+                  {/* Name + description */}
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm font-medium text-[#e8e8e8] group-hover:text-[#6c5ce7] transition-colors truncate block">
+                      {col.name}
+                    </span>
                     {col.description && (
-                      <p className="text-xs text-[#8888aa] mb-3 line-clamp-2">
+                      <span className="text-[11px] text-[#6b6b8a] truncate block">
                         {col.description}
-                      </p>
-                    )}
-
-                    {/* Stats */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3 text-xs text-[#8888aa]">
-                        <span>{col.lineupCount} nades</span>
-                        <span>{col.subscriberCount} subs</span>
-                      </div>
-                      <StarRating value={Math.round(col.averageRating)} count={col.ratingCount} />
-                    </div>
-
-                    {/* Owner */}
-                    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-[#2a2a3e]">
-                      {col.ownerAvatar ? (
-                        <img
-                          src={col.ownerAvatar}
-                          alt=""
-                          className="h-5 w-5 rounded-full"
-                        />
-                      ) : (
-                        <div className="h-5 w-5 rounded-full bg-[#2a2a3e]" />
-                      )}
-                      <span className="text-xs text-[#8888aa]">
-                        {col.ownerName}
                       </span>
-                    </div>
+                    )}
                   </div>
-                </Link>
-              </motion.div>
+
+                  {/* Nades count */}
+                  <span className="w-20 text-center text-xs text-[#8888aa]">
+                    {col.lineupCount}
+                  </span>
+
+                  {/* Subscribers */}
+                  <span className="w-20 text-center text-xs text-[#8888aa]">
+                    {col.subscriberCount}
+                  </span>
+
+                  {/* Rating */}
+                  <div className="w-24 flex justify-center">
+                    <StarRating value={Math.round(col.averageRating)} count={col.ratingCount} />
+                  </div>
+
+                  {/* Owner */}
+                  <div className="w-32 flex items-center gap-1.5 min-w-0">
+                    {col.ownerAvatar ? (
+                      <img src={col.ownerAvatar} alt="" className="h-4 w-4 rounded-full shrink-0" />
+                    ) : (
+                      <div className="h-4 w-4 rounded-full bg-[#2a2a3e] shrink-0" />
+                    )}
+                    <span className="text-xs text-[#8888aa] truncate">{col.ownerName}</span>
+                  </div>
+
+                  {/* Subscribe button */}
+                  <div className="w-24 flex justify-end">
+                    <button
+                      onClick={(e) => handleSubscribe(e, col.id)}
+                      className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+                        col.isSubscribed
+                          ? 'bg-[#6c5ce7]/20 text-[#6c5ce7] hover:bg-red-500/20 hover:text-red-400'
+                          : 'bg-[#6c5ce7] text-white hover:bg-[#5a4bd6]'
+                      }`}
+                    >
+                      {col.isSubscribed ? 'Subscribed' : 'Subscribe'}
+                    </button>
+                  </div>
+                </div>
+              </Link>
             ))}
-          </motion.div>
+          </div>
 
           {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 pt-4">
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="px-3 py-1.5 bg-[#1a1a2e] border border-[#2a2a3e] rounded-lg text-sm text-white disabled:opacity-30"
-              >
-                Previous
-              </button>
-              <span className="text-sm text-[#8888aa]">
-                Page {page} of {totalPages}
-              </span>
-              <button
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-                className="px-3 py-1.5 bg-[#1a1a2e] border border-[#2a2a3e] rounded-lg text-sm text-white disabled:opacity-30"
-              >
-                Next
-              </button>
-            </div>
-          )}
+          <div className="flex items-center justify-between pt-2">
+            <span className="text-xs text-[#6b6b8a]">
+              {total} collection{total !== 1 ? 's' : ''}
+            </span>
+            {totalPages > 1 && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="px-3 py-1.5 bg-[#1a1a2e] border border-[#2a2a3e] rounded-lg text-sm text-white disabled:opacity-30"
+                >
+                  Previous
+                </button>
+                <span className="text-sm text-[#8888aa]">
+                  {page} / {totalPages}
+                </span>
+                <button
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="px-3 py-1.5 bg-[#1a1a2e] border border-[#2a2a3e] rounded-lg text-sm text-white disabled:opacity-30"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </div>
         </>
       )}
     </div>

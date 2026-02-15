@@ -2,17 +2,18 @@
 
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Users, Loader2 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import Link from 'next/link';
+import { ArrowLeft, Users, Loader2, Play, Monitor } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { MAPS, MAP_COLORS, GRENADE_TYPES } from '@/lib/constants';
-import { collectionsApi, userCollectionsApi, communityApi } from '@/lib/api';
+import { collectionsApi, userCollectionsApi, communityApi, sessionsApi } from '@/lib/api';
 import { useAuthStore } from '@/store/auth-store';
-import type { Lineup, LineupCollection, CollectionWithLineups } from '@/lib/types';
+import type { Lineup, LineupCollection, Session } from '@/lib/types';
 import MapRadar from '@/components/ui/MapRadar';
 import GrenadeIcon from '@/components/ui/GrenadeIcon';
 import StarRating from '@/components/ui/StarRating';
 import NadeDetail from '../../maps/[mapName]/NadeDetail';
+import NadeList from '../../maps/[mapName]/NadeList';
 
 type GrenadeFilter = 'all' | 'smoke' | 'flash' | 'molotov' | 'he';
 
@@ -38,6 +39,11 @@ export default function CommunityDetailPage() {
   // User collections for "Add to my collection" feature
   const [userCollections, setUserCollections] = useState<LineupCollection[]>([]);
   const [addingToCollection, setAddingToCollection] = useState<string | null>(null);
+  const [userCollectionLineupIds, setUserCollectionLineupIds] = useState<Map<string, Set<string>>>(new Map());
+
+  // Practice server
+  const [startingServer, setStartingServer] = useState(false);
+  const [activeSession, setActiveSession] = useState<Session | null>(null);
 
   const map = collection ? MAPS.find((m) => m.name === collection.mapName) : null;
   const color = collection ? (MAP_COLORS[collection.mapName] || '#6c5ce7') : '#6c5ce7';
@@ -59,6 +65,20 @@ export default function CommunityDetailPage() {
         setAverageRating(data.collection.averageRating ?? 0);
         setRatingCount(data.collection.ratingCount ?? 0);
         setUserCollections(myCols);
+
+        // Build lineup ID map for user collections
+        const idMap = new Map<string, Set<string>>();
+        await Promise.all(
+          myCols.map(async (c) => {
+            try {
+              const d = await collectionsApi.getById(c.id);
+              idMap.set(c.id, new Set(d.lineups.map((l: Lineup) => l.id)));
+            } catch {
+              idMap.set(c.id, new Set());
+            }
+          }),
+        );
+        setUserCollectionLineupIds(idMap);
 
         // Load community info for owner and rating
         if (user) {
@@ -82,6 +102,23 @@ export default function CommunityDetailPage() {
     };
     load();
   }, [collectionId, user, router]);
+
+  // Check for active session
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    const check = async () => {
+      try {
+        const s = await sessionsApi.getActive();
+        if (!cancelled) setActiveSession(s ?? null);
+      } catch {
+        if (!cancelled) setActiveSession(null);
+      }
+    };
+    check();
+    const interval = setInterval(check, 3000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, [user]);
 
   const filteredLineups = useMemo(() => {
     if (grenadeFilter === 'all') return lineups;
@@ -124,12 +161,39 @@ export default function CommunityDetailPage() {
     setAddingToCollection(lineupId);
     try {
       await userCollectionsApi.addLineup(targetCollectionId, lineupId);
+      setUserCollectionLineupIds((prev) => {
+        const next = new Map(prev);
+        const ids = new Set(next.get(targetCollectionId) ?? []);
+        ids.add(lineupId);
+        next.set(targetCollectionId, ids);
+        return next;
+      });
       toast.success('Added to collection');
     } catch (err: any) {
       const msg = err?.response?.data?.message || 'Failed to add';
       toast.error(msg);
     } finally {
       setAddingToCollection(null);
+    }
+  };
+
+  const handleRemoveFromCollection = async () => {
+    // No-op for community detail — users can't remove from community collections
+  };
+
+  const handleStartServer = async () => {
+    if (!collection) return;
+    setStartingServer(true);
+    try {
+      const created = await sessionsApi.create(collection.mapName, collectionId);
+      setActiveSession(created);
+      toast.success('Server starting...');
+      router.push('/dashboard');
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || 'Failed to start server';
+      toast.error(msg);
+    } finally {
+      setStartingServer(false);
     }
   };
 
@@ -144,9 +208,9 @@ export default function CommunityDetailPage() {
   if (!collection) return null;
 
   return (
-    <div className="flex flex-col h-[calc(100vh-2rem)]">
+    <div className="space-y-4">
       {/* Header */}
-      <div className="shrink-0 pb-4 space-y-3">
+      <div className="space-y-3">
         <button
           onClick={() => router.push('/dashboard/community')}
           className="flex items-center gap-1.5 text-sm text-[#8888aa] hover:text-white transition-colors"
@@ -160,10 +224,7 @@ export default function CommunityDetailPage() {
             <div className="flex items-center gap-2 mb-1">
               <span
                 className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded"
-                style={{
-                  backgroundColor: `${color}20`,
-                  color,
-                }}
+                style={{ backgroundColor: `${color}20`, color }}
               >
                 {map?.displayName ?? collection.mapName}
               </span>
@@ -220,98 +281,130 @@ export default function CommunityDetailPage() {
         </div>
       </div>
 
-      {/* Grenade Filter */}
-      <div className="shrink-0 flex gap-1.5 pb-3">
-        <button
-          onClick={() => setGrenadeFilter('all')}
-          className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
-            grenadeFilter === 'all'
-              ? 'bg-white/10 text-white'
-              : 'text-[#8888aa] hover:text-white'
-          }`}
-        >
-          All
-        </button>
-        {(Object.keys(GRENADE_TYPES) as Array<keyof typeof GRENADE_TYPES>).map((type) => (
-          <button
-            key={type}
-            onClick={() => setGrenadeFilter(type)}
-            className={`flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-medium transition-all ${
-              grenadeFilter === type
-                ? 'bg-white/10 text-white'
-                : 'text-[#8888aa] hover:text-white'
-            }`}
-          >
-            <GrenadeIcon type={type} size={12} />
-            {GRENADE_TYPES[type].label}
-          </button>
-        ))}
-      </div>
-
-      {/* Main Content: Map + Nade List + Detail */}
-      <div className="flex-1 flex gap-4 min-h-0">
-        {/* Map Radar */}
-        <div className="flex-1 min-w-0">
-          {map && (
-            <MapRadar
-              mapName={collection.mapName}
-              lineups={filteredLineups}
-              selectedLineupId={selectedLineup?.id ?? null}
-              onLineupClick={setSelectedLineup}
-            />
-          )}
-        </div>
-
-        {/* Nade List + Detail Panel */}
-        <div className="w-80 shrink-0 flex flex-col gap-3 min-h-0">
-          {/* Nade List */}
-          <div className="flex-1 overflow-y-auto space-y-1 min-h-0">
-            {filteredLineups.length === 0 ? (
-              <p className="text-sm text-[#8888aa] text-center py-8">No nades found</p>
-            ) : (
-              filteredLineups.map((lineup) => (
-                <div
-                  key={lineup.id}
-                  onClick={() => setSelectedLineup(lineup)}
-                  className={`group flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-all ${
-                    selectedLineup?.id === lineup.id
-                      ? 'bg-[#6c5ce7]/20 border border-[#6c5ce7]/40'
-                      : 'bg-[#1a1a2e] border border-transparent hover:border-[#2a2a3e]'
-                  }`}
-                >
-                  <GrenadeIcon type={lineup.grenadeType} size={16} />
-                  <span className="flex-1 text-sm text-white truncate">
-                    {lineup.name}
-                  </span>
-                  {/* Add to collection dropdown */}
-                  {user && userCollections.length > 0 && (
-                    <div className="relative opacity-0 group-hover:opacity-100 transition-opacity">
-                      <select
-                        className="appearance-none bg-[#6c5ce7] text-white text-[10px] font-medium px-1.5 py-0.5 rounded cursor-pointer"
-                        value=""
-                        onChange={(e) => {
-                          if (e.target.value) handleAddToCollection(lineup.id, e.target.value);
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <option value="">+ Add</option>
-                        {userCollections.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
+      {/* 3-column layout like maps page */}
+      <div className="flex gap-6">
+        {/* Center: Practice Server + Radar + Nade List */}
+        <div className="flex-1 min-w-0 space-y-4">
+          {/* Practice Server Card */}
+          {user && isSubscribed && (
+            <div className="max-w-[700px] rounded-xl border border-[#f0a500]/20 bg-gradient-to-r from-[#12121a] to-[#1a1a2e] p-4">
+              <div className="flex items-center gap-4">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#f0a500]/10">
+                  <Monitor className="h-5 w-5 text-[#f0a500]" />
                 </div>
-              ))
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <h3 className="text-sm font-semibold text-[#e8e8e8]">Practice Server</h3>
+                      <p className="mt-0.5 text-xs text-[#6b6b8a] truncate">
+                        Collection: <span className="text-[#f0a500]">{collection.name}</span>
+                      </p>
+                    </div>
+                    <div className="shrink-0">
+                      {activeSession?.isActive ? (
+                        <Link
+                          href="/dashboard"
+                          className="flex items-center gap-2 rounded-lg border border-[#4a9fd4]/30 bg-[#4a9fd4]/10 px-4 py-2 text-sm font-semibold text-[#4a9fd4] hover:bg-[#4a9fd4]/20 transition-colors"
+                        >
+                          {activeSession.status === 'pending' || activeSession.status === 'provisioning' || activeSession.status === 'queued' ? (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              {activeSession.status === 'queued' ? 'Queued...' : 'Starting...'}
+                            </>
+                          ) : (
+                            <>
+                              <Monitor className="h-4 w-4" />
+                              Server Active
+                            </>
+                          )}
+                        </Link>
+                      ) : (
+                        <button
+                          onClick={handleStartServer}
+                          disabled={startingServer}
+                          className="flex items-center gap-2 rounded-lg bg-[#f0a500] px-4 py-2 text-sm font-semibold text-[#0a0a0f] hover:bg-[#ffd700] transition-colors disabled:opacity-50"
+                        >
+                          {startingServer ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+                          Start Server
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Map Radar */}
+          <div className="max-w-[700px] rounded-xl border border-[#2a2a3e]/50 bg-[#12121a] overflow-hidden">
+            {map && (
+              <MapRadar
+                mapName={collection.mapName}
+                lineups={filteredLineups}
+                selectedLineupId={selectedLineup?.id ?? null}
+                onLineupClick={setSelectedLineup}
+              />
             )}
           </div>
 
-          {/* Nade Detail */}
-          {selectedLineup && (
-            <div className="shrink-0 max-h-[40%] overflow-y-auto">
+          {/* Grenade Filter + Count */}
+          <div className="flex items-center justify-between max-w-[700px]">
+            <div className="flex gap-1.5">
+              <button
+                onClick={() => setGrenadeFilter('all')}
+                className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                  grenadeFilter === 'all'
+                    ? 'bg-[#f0a500]/15 text-[#f0a500] border border-[#f0a500]/30'
+                    : 'bg-[#12121a] text-[#6b6b8a] border border-[#2a2a3e]/50 hover:text-[#e8e8e8]'
+                }`}
+              >
+                All
+              </button>
+              {(Object.keys(GRENADE_TYPES) as Array<keyof typeof GRENADE_TYPES>).map((type) => (
+                <button
+                  key={type}
+                  onClick={() => setGrenadeFilter(type)}
+                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                    grenadeFilter === type
+                      ? 'bg-[#f0a500]/15 text-[#f0a500] border border-[#f0a500]/30'
+                      : 'bg-[#12121a] text-[#6b6b8a] border border-[#2a2a3e]/50 hover:text-[#e8e8e8]'
+                  }`}
+                >
+                  <GrenadeIcon type={type} size={14} />
+                  {GRENADE_TYPES[type].label}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-[#6b6b8a]">
+              {filteredLineups.length} nade{filteredLineups.length !== 1 ? 's' : ''}
+            </p>
+          </div>
+
+          {/* Nade List */}
+          <div className="max-w-[700px] max-h-[400px] overflow-y-auto scrollbar-thin pr-1">
+            <NadeList
+              lineups={filteredLineups}
+              selectedLineupId={selectedLineup?.id ?? null}
+              onSelectLineup={setSelectedLineup}
+              userCollections={userCollections}
+              addingToCollection={addingToCollection}
+              onAddToCollection={handleAddToCollection}
+              onRemoveFromCollection={handleRemoveFromCollection}
+              userCollectionLineupIds={userCollectionLineupIds}
+              isCurrentCollectionOwned={false}
+            />
+          </div>
+        </div>
+
+        {/* Right: Selected Nade Detail */}
+        <div className="w-72 shrink-0">
+          {selectedLineup ? (
+            <div className="sticky top-4">
               <NadeDetail lineup={selectedLineup} />
+            </div>
+          ) : (
+            <div className="rounded-xl border border-[#2a2a3e]/30 bg-[#12121a]/50 px-6 py-12 text-center">
+              <p className="text-sm text-[#6b6b8a]">Select a nade to see details</p>
             </div>
           )}
         </div>
