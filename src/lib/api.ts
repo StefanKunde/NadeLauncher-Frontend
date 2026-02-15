@@ -72,7 +72,11 @@ export const lineupsApi = {
 // Sessions
 export const sessionsApi = {
   create: (mapName: string, collectionId?: string) =>
-    api.post<{ data: Session }>('/api/sessions', { mapName, collectionId }).then((r) => r.data.data),
+    api.post<{ data: Session }>('/api/sessions', {
+      mapName,
+      collectionId,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    }).then((r) => r.data.data),
   getActive: () =>
     api.get<{ data: Session | null }>('/api/sessions/active').then((r) => r.data.data),
   getUsage: () =>
