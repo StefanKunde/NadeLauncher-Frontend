@@ -287,7 +287,7 @@ export default function CommunityDetailPage() {
         <div className="flex-1 min-w-0 space-y-4">
           {/* Practice Server Card */}
           {user && isSubscribed && (
-            <div className="max-w-[700px] rounded-xl border border-[#f0a500]/20 bg-gradient-to-r from-[#12121a] to-[#1a1a2e] p-4">
+            <div className="rounded-xl border border-[#f0a500]/20 bg-gradient-to-r from-[#12121a] to-[#1a1a2e] p-4">
               <div className="flex items-center gap-4">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#f0a500]/10">
                   <Monitor className="h-5 w-5 text-[#f0a500]" />
@@ -336,7 +336,7 @@ export default function CommunityDetailPage() {
           )}
 
           {/* Map Radar */}
-          <div className="max-w-[700px] rounded-xl border border-[#2a2a3e]/50 bg-[#12121a] overflow-hidden">
+          <div className="rounded-xl border border-[#2a2a3e]/50 bg-[#12121a] overflow-hidden">
             {map && (
               <MapRadar
                 mapName={collection.mapName}
@@ -348,7 +348,7 @@ export default function CommunityDetailPage() {
           </div>
 
           {/* Grenade Filter + Count */}
-          <div className="flex items-center justify-between max-w-[700px]">
+          <div className="flex items-center justify-between">
             <div className="flex gap-1.5">
               <button
                 onClick={() => setGrenadeFilter('all')}
@@ -381,7 +381,7 @@ export default function CommunityDetailPage() {
           </div>
 
           {/* Nade List */}
-          <div className="max-w-[700px] max-h-[400px] overflow-y-auto scrollbar-thin pr-1">
+          <div className="max-h-[400px] overflow-y-auto scrollbar-thin pr-1">
             <NadeList
               lineups={filteredLineups}
               selectedLineupId={selectedLineup?.id ?? null}

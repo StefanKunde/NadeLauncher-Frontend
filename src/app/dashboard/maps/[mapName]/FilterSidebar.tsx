@@ -256,11 +256,17 @@ export default function FilterSidebar({
                       active={isSourceActive(c.id)}
                       onClick={() => onSourceFilterChange({ type: 'collection', collectionId: c.id, collectionName: c.name })}
                       label={c.name}
-                      published={!!c.isPublished}
                     />
-                    {/* Count — hidden on hover, replaced by action buttons */}
-                    <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-[10px] group-hover/item:hidden ${isSourceActive(c.id) ? 'text-[#f0a500]/70' : 'text-[#6b6b8a]'}`}>
-                      {c.lineupCount}
+                    {/* Published icon + Count — hidden on hover, replaced by action buttons */}
+                    <span className={`absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5 group-hover/item:hidden`}>
+                      {c.isPublished && (
+                        <span title="Published to Community">
+                          <Users className="h-3 w-3 shrink-0 text-[#6c5ce7]" />
+                        </span>
+                      )}
+                      <span className={`text-[10px] ${isSourceActive(c.id) ? 'text-[#f0a500]/70' : 'text-[#6b6b8a]'}`}>
+                        {c.lineupCount}
+                      </span>
                     </span>
                     <div className="absolute right-1 top-1/2 -translate-y-1/2 hidden group-hover/item:flex items-center gap-0.5">
                       <button
@@ -679,7 +685,6 @@ function SourceButton({
   grenadeType,
   logoUrl,
   badge,
-  published,
 }: {
   active: boolean;
   onClick: () => void;
@@ -689,7 +694,6 @@ function SourceButton({
   grenadeType?: 'smoke' | 'flash' | 'molotov' | 'he';
   logoUrl?: string;
   badge?: string;
-  published?: boolean;
 }) {
   return (
     <button
@@ -713,11 +717,6 @@ function SourceButton({
       ) : null}
       {locked && !logoUrl && !grenadeType && <Lock className="h-3 w-3 text-[#6b6b8a]/50" />}
       <span className="truncate flex-1 text-left">{label}</span>
-      {published && (
-        <span title="Published to Community">
-          <Users className="h-3 w-3 shrink-0 text-[#6c5ce7]" />
-        </span>
-      )}
       {badge && (
         <span className="shrink-0 rounded bg-[#f0a500]/10 px-1 py-0.5 text-[9px] font-semibold text-[#f0a500]/70">{badge}</span>
       )}
