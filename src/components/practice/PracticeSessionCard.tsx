@@ -380,7 +380,7 @@ export default function PracticeSessionCard() {
 
   const connectUrl =
     session?.serverIp && session?.serverPort && session?.serverPassword
-      ? `steam://connect/${session.serverIp}:${session.serverPort}/${session.serverPassword}`
+      ? `steam://run/730//+connect%20${session.serverIp}:${session.serverPort}%20+password%20${session.serverPassword}`
       : null;
 
   const limitLabel = usage
