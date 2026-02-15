@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Play, ChevronDown, Loader2, Monitor, X, Trash2 } from 'lucide-react';
+import { ArrowLeft, Play, ChevronDown, Loader2, Monitor, X, Trash2, Users, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { MAPS, MAP_COLORS } from '@/lib/constants';
@@ -67,6 +67,10 @@ export default function MapDetailPage() {
   // Delete collection modal
   const [deletingCollection, setDeletingCollection] = useState<LineupCollection | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Publish confirmation modal
+  const [showPublishConfirm, setShowPublishConfirm] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
 
   // ── Data Loading ───────────────────────────────────────────────
   const loadData = useCallback(async () => {
@@ -760,7 +764,7 @@ export default function MapDetailPage() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-base font-semibold text-[#e8e8e8]">Rename Collection</h3>
+                <h3 className="text-base font-semibold text-[#e8e8e8]">Edit Collection</h3>
                 <button onClick={() => setEditingCollection(null)} className="text-[#6b6b8a] hover:text-[#e8e8e8]">
                   <X className="h-4 w-4" />
                 </button>
@@ -771,35 +775,34 @@ export default function MapDetailPage() {
                 value={editCollectionName}
                 onChange={(e) => setEditCollectionName(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleEditCollectionSubmit()}
-                placeholder="New name..."
+                placeholder="Collection name..."
                 className="mb-4 w-full rounded-lg border border-[#2a2a3e] bg-[#0a0a0f] px-4 py-2.5 text-sm text-[#e8e8e8] placeholder:text-[#6b6b8a] focus:border-[#f0a500]/50 focus:outline-none"
               />
               {/* Publish to Community toggle */}
               {user?.isPremium && editingCollection && (
                 <div className="mb-4 flex items-center justify-between rounded-lg border border-[#2a2a3e] bg-[#0a0a0f] px-4 py-3">
-                  <div>
-                    <p className="text-sm text-[#e8e8e8]">Publish to Community</p>
-                    <p className="text-xs text-[#6b6b8a]">
-                      {editingCollection.lineupCount < 5
-                        ? 'Needs at least 5 lineups'
-                        : 'Let others browse and subscribe'}
-                    </p>
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4 text-[#6c5ce7] shrink-0" />
+                    <div>
+                      <p className="text-sm text-[#e8e8e8]">Published to Community</p>
+                      <p className="text-xs text-[#6b6b8a]">
+                        {editingCollection.lineupCount < 5 && !editingCollection.isPublished
+                          ? 'Needs at least 5 lineups'
+                          : editingCollection.isPublished
+                            ? 'Others can browse and subscribe'
+                            : 'Let others browse and subscribe'}
+                      </p>
+                    </div>
                   </div>
                   <button
                     disabled={!editingCollection.isPublished && editingCollection.lineupCount < 5}
-                    onClick={async () => {
-                      try {
-                        const newState = !editingCollection.isPublished;
-                        await communityApi.publish(editingCollection.id, newState);
-                        setEditingCollection({ ...editingCollection, isPublished: newState });
-                        setUserCollections((prev) =>
-                          prev.map((x) =>
-                            x.id === editingCollection.id ? { ...x, isPublished: newState } : x,
-                          ),
-                        );
-                        toast.success(newState ? 'Published to Community!' : 'Unpublished');
-                      } catch (err: any) {
-                        toast.error(err?.response?.data?.message || 'Failed');
+                    onClick={() => {
+                      if (editingCollection.isPublished) {
+                        // Unpublish directly
+                        setShowPublishConfirm(true);
+                      } else {
+                        // Show confirmation before publishing
+                        setShowPublishConfirm(true);
                       }
                     }}
                     className={`relative h-6 w-11 rounded-full transition-colors disabled:opacity-30 ${
@@ -826,7 +829,97 @@ export default function MapDetailPage() {
                   disabled={!editCollectionName.trim() || editCollectionName.trim() === editingCollection.name}
                   className="flex-1 rounded-lg bg-[#f0a500] px-3 py-2 text-sm font-semibold text-[#0a0a0f] hover:bg-[#ffd700] transition-colors disabled:opacity-50"
                 >
-                  Rename
+                  Save
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Publish Confirmation Modal */}
+      <AnimatePresence>
+        {showPublishConfirm && editingCollection && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60"
+            onClick={() => setShowPublishConfirm(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-96 rounded-xl border border-[#2a2a3e] bg-[#12121a] p-6 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {editingCollection.isPublished ? (
+                <>
+                  <div className="mb-4 flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#ff4444]/10">
+                      <AlertTriangle className="h-5 w-5 text-[#ff4444]" />
+                    </div>
+                    <h3 className="text-base font-semibold text-[#e8e8e8]">Unpublish Collection?</h3>
+                  </div>
+                  <p className="mb-5 text-sm text-[#6b6b8a]">
+                    This will remove <span className="text-[#e8e8e8] font-medium">"{editingCollection.name}"</span> from the community. All subscribers will lose access immediately.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <div className="mb-4 flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#6c5ce7]/10">
+                      <Users className="h-5 w-5 text-[#6c5ce7]" />
+                    </div>
+                    <h3 className="text-base font-semibold text-[#e8e8e8]">Publish to Community?</h3>
+                  </div>
+                  <p className="mb-5 text-sm text-[#6b6b8a]">
+                    <span className="text-[#e8e8e8] font-medium">"{editingCollection.name}"</span> will be visible to all players. They can browse, subscribe, and rate your collection.
+                  </p>
+                </>
+              )}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowPublishConfirm(false)}
+                  className="flex-1 rounded-lg border border-[#2a2a3e] px-3 py-2 text-sm text-[#b8b8cc] hover:bg-[#1a1a2e] transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={async () => {
+                    setIsPublishing(true);
+                    try {
+                      const newState = !editingCollection.isPublished;
+                      await communityApi.publish(editingCollection.id, newState);
+                      setEditingCollection({ ...editingCollection, isPublished: newState });
+                      setUserCollections((prev) =>
+                        prev.map((x) =>
+                          x.id === editingCollection.id ? { ...x, isPublished: newState } : x,
+                        ),
+                      );
+                      toast.success(newState ? 'Published to Community!' : 'Unpublished');
+                      setShowPublishConfirm(false);
+                    } catch (err: any) {
+                      toast.error(err?.response?.data?.message || 'Failed');
+                    } finally {
+                      setIsPublishing(false);
+                    }
+                  }}
+                  disabled={isPublishing}
+                  className={`flex-1 flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-colors disabled:opacity-50 ${
+                    editingCollection.isPublished
+                      ? 'bg-[#ff4444] text-white hover:bg-[#ff5555]'
+                      : 'bg-[#6c5ce7] text-white hover:bg-[#5a4bd6]'
+                  }`}
+                >
+                  {isPublishing ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : editingCollection.isPublished ? (
+                    'Unpublish'
+                  ) : (
+                    'Publish'
+                  )}
                 </button>
               </div>
             </motion.div>
