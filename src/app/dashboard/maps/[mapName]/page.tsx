@@ -441,17 +441,18 @@ export default function MapDetailPage() {
   // Collections for the practice picker — non-premium only sees user collections
   const isPremium = user?.isPremium ?? false;
   const practiceCollections = useMemo(() => {
+    const seen = new Set<string>();
     const result: { id: string; name: string }[] = [];
     for (const c of userCollections) {
+      seen.add(c.id);
       result.push({ id: c.id, name: c.name });
     }
-    if (isPremium) {
-      for (const c of allCollections.filter((c) => c.isSubscribed && c.autoManaged)) {
-        result.push({ id: c.id, name: c.name });
-      }
+    for (const c of allCollections.filter((c) => c.isSubscribed && !seen.has(c.id))) {
+      seen.add(c.id);
+      result.push({ id: c.id, name: c.name });
     }
     return result;
-  }, [userCollections, allCollections, isPremium]);
+  }, [userCollections, allCollections]);
 
   // ── Render ─────────────────────────────────────────────────────
   if (!map) {

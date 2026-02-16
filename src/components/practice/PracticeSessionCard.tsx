@@ -290,13 +290,31 @@ export default function PracticeSessionCard() {
         if (isPremium) {
           fetches.push(collectionsApi.getAll(session.mapName));
         }
+        // Fetch subscribed community collections
+        fetches.push(
+          collectionsApi.getSubscriptions().then((subs) =>
+            subs
+              .filter((s) => s.collection.mapName === session.mapName)
+              .map((s) => s.collection),
+          ),
+        );
         const results = await Promise.all(fetches);
         if (cancelled) return;
         const userColls = results[0];
         const metaColls = isPremium && results[1]
           ? results[1].filter((c) => c.proCategory === 'meta' || c.proCategory === 'meta_all')
           : [];
-        setActiveCollections([...userColls, ...metaColls]);
+        const subscribedColls = isPremium ? results[2] : results[1];
+        // Deduplicate by id
+        const seen = new Set<string>();
+        const all: LineupCollection[] = [];
+        for (const c of [...userColls, ...metaColls, ...(subscribedColls || [])]) {
+          if (!seen.has(c.id)) {
+            seen.add(c.id);
+            all.push(c);
+          }
+        }
+        setActiveCollections(all);
       } catch {
         if (!cancelled) setActiveCollections([]);
       }
@@ -317,14 +335,33 @@ export default function PracticeSessionCard() {
         if (isPremium) {
           fetches.push(collectionsApi.getAll(selectedMap));
         }
+        // Fetch subscribed community collections
+        fetches.push(
+          collectionsApi.getSubscriptions().then((subs) =>
+            subs
+              .filter((s) => s.collection.mapName === selectedMap)
+              .map((s) => s.collection),
+          ),
+        );
         const results = await Promise.all(fetches);
         if (cancelled) return;
         const userColls = results[0];
         const metaColls = isPremium && results[1]
           ? results[1].filter((c) => c.proCategory === 'meta' || c.proCategory === 'meta_all')
           : [];
-        setCollections([...userColls, ...metaColls]);
-        setSelectedCollection('');
+        const subscribedColls = isPremium ? results[2] : results[1];
+        // Deduplicate by id
+        const seen = new Set<string>();
+        const all: LineupCollection[] = [];
+        for (const c of [...userColls, ...metaColls, ...(subscribedColls || [])]) {
+          if (!seen.has(c.id)) {
+            seen.add(c.id);
+            all.push(c);
+          }
+        }
+        setCollections(all);
+        // Pre-select the first collection (users must always have one)
+        setSelectedCollection(all.length > 0 ? all[0].id : '');
       } catch {
         if (!cancelled) setCollections([]);
       }
@@ -499,17 +536,6 @@ export default function PracticeSessionCard() {
                     className="overflow-hidden"
                   >
                     <div className="mt-3 pt-3 border-t border-[#1a1a2e] space-y-1.5">
-                      <button
-                        onClick={() => handleChangeCollection(null)}
-                        disabled={changingCollection}
-                        className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                          !session.practiceCollectionId
-                            ? 'bg-[#4a9fd420] text-[#4a9fd4] border border-[#4a9fd440]'
-                            : 'text-[#6b6b8a] hover:bg-[#1a1a2e] hover:text-[#e8e8e8]'
-                        }`}
-                      >
-                        No collection
-                      </button>
                       {activeCollections.map((c) => (
                         <button
                           key={c.id}
@@ -1132,13 +1158,12 @@ export default function PracticeSessionCard() {
               {/* Collection selector */}
               {collections.length > 0 && (
                 <>
-                  <label className="block text-xs text-[#6b6b8a] mb-2">Collection (optional)</label>
+                  <label className="block text-xs text-[#6b6b8a] mb-2">Collection</label>
                   <select
                     value={selectedCollection}
                     onChange={(e) => setSelectedCollection(e.target.value)}
                     className="w-full rounded-lg border border-[#2a2a3e] bg-[#0a0a12] px-3 py-2.5 text-sm text-[#e8e8e8] mb-4 focus:outline-none focus:border-[#4a9fd4] transition-colors"
                   >
-                    <option value="">No collection</option>
                     {collections.map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.name} ({c.lineupCount})
