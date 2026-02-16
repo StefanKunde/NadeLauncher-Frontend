@@ -154,11 +154,11 @@ function PremiumPageInner() {
       {/* Current Plan Banner */}
       <motion.div variants={fadeUp} custom={1} className="mb-10">
         {isPremium ? (
-          <div className="glass rounded-xl border-[#00c850]/30 p-5 flex items-center gap-4" style={{ borderColor: 'rgba(0,200,80,0.3)' }}>
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#00c850]/15">
+          <div className="glass rounded-xl border-[#00c850]/30 p-5 flex flex-wrap items-center gap-4" style={{ borderColor: 'rgba(0,200,80,0.3)' }}>
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#00c850]/15">
               <Check className="h-5 w-5 text-[#00c850]" />
             </div>
-            <div>
+            <div className="flex-1 min-w-0">
               <p className="text-lg font-semibold text-[#e8e8e8]">You&apos;re on Premium</p>
               {daysRemaining !== null ? (
                 <p className="text-sm text-[#6b6b8a]">
@@ -169,7 +169,7 @@ function PremiumPageInner() {
                 <p className="text-sm text-[#6b6b8a]">Thank you for supporting NadePro</p>
               )}
             </div>
-            <div className="ml-auto">
+            <div className="shrink-0">
               <span className="rounded-full bg-[#00c850]/15 px-3 py-1 text-xs font-bold text-[#00c850]">
                 ACTIVE
               </span>
@@ -193,7 +193,7 @@ function PremiumPageInner() {
         <h2 className="mb-5 text-xl font-semibold text-[#e8e8e8]">Feature Comparison</h2>
         <div className="glass rounded-xl overflow-hidden overflow-x-auto">
           {/* Table header */}
-          <div className="grid grid-cols-[1fr_90px_90px] min-w-[400px] border-b border-[#2a2a3e] px-5 py-3">
+          <div className="grid grid-cols-[1fr_60px_60px] sm:grid-cols-[1fr_90px_90px] border-b border-[#2a2a3e] px-3 sm:px-5 py-3">
             <span className="text-xs font-semibold uppercase tracking-wider text-[#6b6b8a]">Feature</span>
             <span className="text-center text-xs font-semibold uppercase tracking-wider text-[#6b6b8a]">Free</span>
             <span className="text-center text-xs font-semibold uppercase tracking-wider text-[#f0a500]">Pro</span>
@@ -202,7 +202,7 @@ function PremiumPageInner() {
           {COMPARISON_ROWS.map((row, i) => (
             <div
               key={row.feature}
-              className={`grid grid-cols-[1fr_90px_90px] min-w-[400px] items-center px-5 py-3 ${
+              className={`grid grid-cols-[1fr_60px_60px] sm:grid-cols-[1fr_90px_90px] items-center px-3 sm:px-5 py-3 ${
                 i % 2 === 0 ? 'bg-transparent' : 'bg-[#1a1a2e]/30'
               } ${i < COMPARISON_ROWS.length - 1 ? 'border-b border-[#2a2a3e]/50' : ''}`}
             >

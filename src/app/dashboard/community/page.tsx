@@ -169,8 +169,8 @@ export default function CommunityPage() {
         </div>
       ) : (
         <>
-          {/* Table header */}
-          <div className="flex items-center gap-3 px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-[#6b6b8a]">
+          {/* Table header — desktop only */}
+          <div className="hidden md:flex items-center gap-3 px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-[#6b6b8a]">
             <span className="w-16">Map</span>
             <span className="flex-1">Collection</span>
             <span className="w-20 text-center">Nades</span>
@@ -184,7 +184,8 @@ export default function CommunityPage() {
           <div className="space-y-1">
             {collections.map((col) => (
               <Link key={col.id} href={`/dashboard/community/${col.id}`}>
-                <div className="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-[#12121a] border border-transparent hover:border-[#6c5ce7]/40 hover:bg-[#1a1a2e] transition-all cursor-pointer group">
+                {/* Desktop row */}
+                <div className="hidden md:flex items-center gap-3 px-4 py-2.5 rounded-lg bg-[#12121a] border border-transparent hover:border-[#6c5ce7]/40 hover:bg-[#1a1a2e] transition-all cursor-pointer group">
                   {/* Map badge */}
                   <span
                     className="w-16 shrink-0 text-[10px] font-bold uppercase text-center px-1.5 py-0.5 rounded"
@@ -245,6 +246,42 @@ export default function CommunityPage() {
                     >
                       {col.isSubscribed ? 'Subscribed' : 'Subscribe'}
                     </button>
+                  </div>
+                </div>
+
+                {/* Mobile card */}
+                <div className="md:hidden rounded-lg bg-[#12121a] border border-transparent hover:border-[#6c5ce7]/40 hover:bg-[#1a1a2e] transition-all cursor-pointer p-3 space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span
+                        className="shrink-0 text-[10px] font-bold uppercase text-center px-1.5 py-0.5 rounded"
+                        style={{
+                          backgroundColor: `${MAP_COLORS[col.mapName] || '#6c5ce7'}15`,
+                          color: MAP_COLORS[col.mapName] || '#6c5ce7',
+                        }}
+                      >
+                        {getMapDisplayName(col.mapName)}
+                      </span>
+                      <span className="text-sm font-medium text-[#e8e8e8] truncate">{col.name}</span>
+                    </div>
+                    <button
+                      onClick={(e) => handleSubscribe(e, col.id)}
+                      className={`shrink-0 px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+                        col.isSubscribed
+                          ? 'bg-[#6c5ce7]/20 text-[#6c5ce7] hover:bg-red-500/20 hover:text-red-400'
+                          : 'bg-[#6c5ce7] text-white hover:bg-[#5a4bd6]'
+                      }`}
+                    >
+                      {col.isSubscribed ? 'Subscribed' : 'Subscribe'}
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-3 text-xs text-[#8888aa]">
+                    <span>{col.lineupCount} nades</span>
+                    <span>{col.subscriberCount} subs</span>
+                    <StarRating value={Math.round(col.averageRating)} count={col.ratingCount} />
+                    {col.ownerName && (
+                      <span className="ml-auto truncate">by {col.ownerName}</span>
+                    )}
                   </div>
                 </div>
               </Link>

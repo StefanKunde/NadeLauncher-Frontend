@@ -218,56 +218,94 @@ export default function ReferralsPage() {
           </div>
         ) : (
           <div className="glass rounded-xl overflow-hidden">
-            {/* Header */}
-            <div className="grid grid-cols-[1fr_auto_auto] gap-4 px-5 py-3 border-b border-[#2a2a3e]">
+            {/* Header — desktop only */}
+            <div className="hidden sm:grid grid-cols-[1fr_auto_auto] gap-4 px-5 py-3 border-b border-[#2a2a3e]">
               <span className="text-xs font-semibold uppercase tracking-wider text-[#6b6b8a]">User</span>
               <span className="text-xs font-semibold uppercase tracking-wider text-[#6b6b8a] w-24 text-center">Status</span>
               <span className="text-xs font-semibold uppercase tracking-wider text-[#6b6b8a] w-28 text-right">Date</span>
             </div>
             {/* Rows */}
             {referrals.map((ref, i) => (
-              <div
-                key={ref.id}
-                className={`grid grid-cols-[1fr_auto_auto] gap-4 items-center px-5 py-3 ${
-                  i % 2 === 0 ? 'bg-transparent' : 'bg-[#1a1a2e]/30'
-                } ${i < referrals.length - 1 ? 'border-b border-[#2a2a3e]/50' : ''}`}
-              >
-                {/* User */}
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full bg-[#1a1a2e]">
-                    {ref.referredAvatar ? (
-                      <Image
-                        src={ref.referredAvatar}
-                        alt={ref.referredUsername}
-                        fill
-                        className="object-cover"
-                        unoptimized
-                      />
+              <div key={ref.id}>
+                {/* Desktop row */}
+                <div
+                  className={`hidden sm:grid grid-cols-[1fr_auto_auto] gap-4 items-center px-5 py-3 ${
+                    i % 2 === 0 ? 'bg-transparent' : 'bg-[#1a1a2e]/30'
+                  } ${i < referrals.length - 1 ? 'border-b border-[#2a2a3e]/50' : ''}`}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full bg-[#1a1a2e]">
+                      {ref.referredAvatar ? (
+                        <Image
+                          src={ref.referredAvatar}
+                          alt={ref.referredUsername}
+                          fill
+                          className="object-cover"
+                          unoptimized
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-[10px] font-bold text-[#6b6b8a]">
+                          {ref.referredUsername.slice(0, 2).toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+                    <span className="text-sm text-[#e8e8e8] truncate">{ref.referredUsername}</span>
+                  </div>
+                  <div className="w-24 text-center">
+                    {ref.converted ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[#00c850]/15 px-2 py-0.5 text-[10px] font-bold tracking-wider text-[#00c850]">
+                        <Check className="h-3 w-3" />
+                        CONVERTED
+                      </span>
                     ) : (
-                      <div className="flex h-full w-full items-center justify-center text-[10px] font-bold text-[#6b6b8a]">
-                        {ref.referredUsername.slice(0, 2).toUpperCase()}
-                      </div>
+                      <span className="inline-flex items-center rounded-full bg-[#2a2a3e] px-2 py-0.5 text-[10px] font-semibold tracking-wider text-[#6b6b8a]">
+                        PENDING
+                      </span>
                     )}
                   </div>
-                  <span className="text-sm text-[#e8e8e8] truncate">{ref.referredUsername}</span>
+                  <span className="w-28 text-right text-xs text-[#6b6b8a]">
+                    {formatDate(ref.createdAt)}
+                  </span>
                 </div>
-                {/* Status */}
-                <div className="w-24 text-center">
+
+                {/* Mobile row */}
+                <div
+                  className={`sm:hidden flex items-center justify-between gap-3 px-4 py-3 ${
+                    i % 2 === 0 ? 'bg-transparent' : 'bg-[#1a1a2e]/30'
+                  } ${i < referrals.length - 1 ? 'border-b border-[#2a2a3e]/50' : ''}`}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full bg-[#1a1a2e]">
+                      {ref.referredAvatar ? (
+                        <Image
+                          src={ref.referredAvatar}
+                          alt={ref.referredUsername}
+                          fill
+                          className="object-cover"
+                          unoptimized
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-[10px] font-bold text-[#6b6b8a]">
+                          {ref.referredUsername.slice(0, 2).toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <span className="text-sm text-[#e8e8e8] truncate block">{ref.referredUsername}</span>
+                      <span className="text-xs text-[#6b6b8a]">{formatDate(ref.createdAt)}</span>
+                    </div>
+                  </div>
                   {ref.converted ? (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-[#00c850]/15 px-2 py-0.5 text-[10px] font-bold tracking-wider text-[#00c850]">
+                    <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-[#00c850]/15 px-2 py-0.5 text-[10px] font-bold tracking-wider text-[#00c850]">
                       <Check className="h-3 w-3" />
                       CONVERTED
                     </span>
                   ) : (
-                    <span className="inline-flex items-center rounded-full bg-[#2a2a3e] px-2 py-0.5 text-[10px] font-semibold tracking-wider text-[#6b6b8a]">
+                    <span className="shrink-0 inline-flex items-center rounded-full bg-[#2a2a3e] px-2 py-0.5 text-[10px] font-semibold tracking-wider text-[#6b6b8a]">
                       PENDING
                     </span>
                   )}
                 </div>
-                {/* Date */}
-                <span className="w-28 text-right text-xs text-[#6b6b8a]">
-                  {formatDate(ref.createdAt)}
-                </span>
               </div>
             ))}
           </div>

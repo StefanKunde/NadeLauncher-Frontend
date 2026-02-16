@@ -193,7 +193,7 @@ export default function FilterSidebar({
 
   return (
     <>
-      <div className="w-64 shrink-0 space-y-5 overflow-y-auto max-h-[calc(100vh-5rem)] p-1 scrollbar-thin sticky top-4 self-start">
+      <div className="hidden lg:block w-64 shrink-0 space-y-5 overflow-y-auto max-h-[calc(100vh-5rem)] p-1 scrollbar-thin sticky top-4 self-start">
         {/* Search Collections */}
         <div className="flex items-center gap-2 rounded-lg border border-[#2a2a3e] bg-[#12121a] px-3 transition-colors focus-within:border-[#f0a500] focus-within:shadow-[0_0_0_3px_rgba(240,165,0,0.15)]">
           <Search className="h-4 w-4 shrink-0 text-[#6b6b8a]" />

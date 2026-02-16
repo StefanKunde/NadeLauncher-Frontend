@@ -14,6 +14,8 @@ import {
   Play,
   Check,
   Crown,
+  Menu,
+  X,
 } from 'lucide-react';
 import Image from 'next/image';
 import GrenadeIcon from '@/components/ui/GrenadeIcon';
@@ -168,6 +170,7 @@ export default function HomePage() {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://nadelauncher-backend-a99d397c.apps.deploypilot.stefankunde.dev';
 
   const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [steamLoginUrl, setSteamLoginUrl] = useState(`${apiUrl}/auth/steam`);
 
   useEffect(() => {
@@ -192,7 +195,7 @@ export default function HomePage() {
           ================================================================ */}
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled
+          scrolled || mobileMenuOpen
             ? 'glass shadow-lg shadow-black/30'
             : 'bg-transparent'
         }`}
@@ -202,6 +205,7 @@ export default function HomePage() {
             <Image src="/logo.png" alt="NadePro" width={600} height={262} className="shrink-0 h-20 w-auto -my-6" />
           </Link>
 
+          {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-8">
             <a href="#features" className="text-[#6b6b8a] hover:text-[#e8e8e8] text-sm font-medium transition-colors">
               Features
@@ -216,7 +220,33 @@ export default function HomePage() {
               Login with Steam
             </a>
           </div>
+
+          {/* Mobile hamburger */}
+          <button
+            onClick={() => setMobileMenuOpen((v) => !v)}
+            className="md:hidden flex items-center justify-center h-10 w-10 rounded-lg text-[#6b6b8a] hover:text-[#e8e8e8] transition-colors"
+          >
+            {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
         </div>
+
+        {/* Mobile menu dropdown */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-[#2a2a3e]/60 px-6 pb-6 pt-4 space-y-4">
+            <a href="#features" onClick={() => setMobileMenuOpen(false)} className="block text-[#6b6b8a] hover:text-[#e8e8e8] text-sm font-medium transition-colors">
+              Features
+            </a>
+            <a href="#maps" onClick={() => setMobileMenuOpen(false)} className="block text-[#6b6b8a] hover:text-[#e8e8e8] text-sm font-medium transition-colors">
+              Maps
+            </a>
+            <a href="#pricing" onClick={() => setMobileMenuOpen(false)} className="block text-[#6b6b8a] hover:text-[#e8e8e8] text-sm font-medium transition-colors">
+              Pricing
+            </a>
+            <a href={steamLoginUrl} className="btn-primary text-sm px-5 py-2 inline-block text-center w-full">
+              Login with Steam
+            </a>
+          </div>
+        )}
       </nav>
 
       {/* ================================================================
@@ -322,12 +352,12 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.45 }}
-            className="flex items-center justify-center gap-6 sm:gap-10 mb-16"
+            className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 md:gap-10 mb-16"
           >
             {GRENADE_TYPES.map((g) => (
               <div key={g.type} className="flex items-center gap-2">
                 <GrenadeIcon type={g.type} size={24} glow />
-                <span className="text-sm font-medium" style={{ color: g.color }}>
+                <span className="text-xs sm:text-sm font-medium" style={{ color: g.color }}>
                   {g.label}
                 </span>
               </div>

@@ -96,7 +96,7 @@ export default function DashboardPage() {
           })}
         </div>
         {/* Second row - remaining maps */}
-        <div className="grid grid-cols-3 gap-3 mt-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-3">
           {MAPS.slice(4, 7).map((map, i) => {
             const color = MAP_COLORS[map.name] ?? '#f0a500';
             return (

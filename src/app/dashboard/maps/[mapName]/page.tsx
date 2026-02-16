@@ -492,7 +492,7 @@ export default function MapDetailPage() {
           </div>
         </div>
       ) : (
-        <div className="flex gap-6">
+        <div className="flex flex-col xl:flex-row gap-6">
           {/* Left: Filter Sidebar */}
           <FilterSidebar
             grenadeFilter={grenadeFilter}
@@ -656,13 +656,13 @@ export default function MapDetailPage() {
           </div>
 
           {/* Right: Selected Nade Detail */}
-          <div className="w-72 shrink-0">
+          <div className="w-full xl:w-72 shrink-0">
             {selectedLineup ? (
-              <div className="sticky top-4">
+              <div className="xl:sticky xl:top-4">
                 <NadeDetail lineup={selectedLineup} />
               </div>
             ) : (
-              <div className="rounded-xl border border-[#2a2a3e]/30 bg-[#12121a]/50 px-6 py-12 text-center">
+              <div className="hidden xl:block rounded-xl border border-[#2a2a3e]/30 bg-[#12121a]/50 px-6 py-12 text-center">
                 <p className="text-sm text-[#6b6b8a]">Select a nade to see details</p>
               </div>
             )}

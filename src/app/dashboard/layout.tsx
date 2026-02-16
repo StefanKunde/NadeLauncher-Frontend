@@ -9,7 +9,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <AuthProvider>
       <div className="flex min-h-screen bg-[#0a0a0f]">
         <Sidebar />
-        <main className="flex-1 ml-72 p-8 overflow-y-auto">
+        <main className="flex-1 lg:ml-72 p-4 pt-20 lg:pt-8 lg:p-8 overflow-y-auto">
           {/* Early Access Banner */}
           <div className="mb-6 max-w-7xl">
             <div className="rounded-lg bg-[#f0a50010] border border-[#f0a50030] px-4 py-3 flex items-start gap-3">

@@ -208,7 +208,7 @@ export default function CommunityDetailPage() {
   if (!collection) return null;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 max-w-[1600px]">
       {/* Header */}
       <div className="space-y-3">
         <button
@@ -219,7 +219,7 @@ export default function CommunityDetailPage() {
           Back to Community
         </button>
 
-        <div className="flex items-start justify-between">
+        <div className="flex flex-col sm:flex-row items-start justify-between gap-3">
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span
@@ -235,7 +235,7 @@ export default function CommunityDetailPage() {
             )}
 
             {/* Owner + Stats */}
-            <div className="flex items-center gap-4 mt-2">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2">
               {ownerName && (
                 <div className="flex items-center gap-1.5">
                   {ownerAvatar ? (
@@ -251,7 +251,7 @@ export default function CommunityDetailPage() {
             </div>
 
             {/* Rating */}
-            <div className="flex items-center gap-3 mt-2">
+            <div className="flex flex-wrap items-center gap-3 mt-2">
               <div className="flex items-center gap-1.5">
                 <span className="text-xs text-[#8888aa]">Community:</span>
                 <StarRating value={Math.round(averageRating)} count={ratingCount} />
@@ -269,7 +269,7 @@ export default function CommunityDetailPage() {
           {user && (
             <button
               onClick={handleSubscribe}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              className={`shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                 isSubscribed
                   ? 'bg-[#6c5ce7]/20 text-[#6c5ce7] hover:bg-red-500/20 hover:text-red-400'
                   : 'bg-[#6c5ce7] text-white hover:bg-[#5a4bd6]'
@@ -281,13 +281,13 @@ export default function CommunityDetailPage() {
         </div>
       </div>
 
-      {/* 3-column layout like maps page */}
-      <div className="flex gap-6">
+      {/* Main layout — stacks on small screens */}
+      <div className="flex flex-col lg:flex-row gap-6">
         {/* Center: Practice Server + Radar + Nade List */}
         <div className="flex-1 min-w-0 space-y-4">
           {/* Practice Server Card */}
           {user && isSubscribed && (
-            <div className="rounded-xl border border-[#f0a500]/20 bg-gradient-to-r from-[#12121a] to-[#1a1a2e] p-4">
+            <div className="max-w-[500px] rounded-xl border border-[#f0a500]/20 bg-gradient-to-r from-[#12121a] to-[#1a1a2e] p-4">
               <div className="flex items-center gap-4">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#f0a500]/10">
                   <Monitor className="h-5 w-5 text-[#f0a500]" />
@@ -336,7 +336,7 @@ export default function CommunityDetailPage() {
           )}
 
           {/* Map Radar */}
-          <div className="rounded-xl border border-[#2a2a3e]/50 bg-[#12121a] overflow-hidden">
+          <div className="max-w-[500px] rounded-xl border border-[#2a2a3e]/50 bg-[#12121a] overflow-hidden">
             {map && (
               <MapRadar
                 mapName={collection.mapName}
@@ -348,8 +348,8 @@ export default function CommunityDetailPage() {
           </div>
 
           {/* Grenade Filter + Count */}
-          <div className="flex items-center justify-between">
-            <div className="flex gap-1.5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap gap-1.5">
               <button
                 onClick={() => setGrenadeFilter('all')}
                 className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
@@ -397,9 +397,9 @@ export default function CommunityDetailPage() {
         </div>
 
         {/* Right: Selected Nade Detail */}
-        <div className="w-72 shrink-0">
+        <div className="w-full lg:w-72 shrink-0">
           {selectedLineup ? (
-            <div className="sticky top-4">
+            <div className="lg:sticky lg:top-4">
               <NadeDetail lineup={selectedLineup} />
             </div>
           ) : (

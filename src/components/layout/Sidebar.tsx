@@ -12,7 +12,10 @@ import {
   Gift,
   Settings,
   LogOut,
+  Menu,
+  X,
 } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/store/auth-store';
 import SidebarServerStatus from './SidebarServerStatus';
 import NotificationBell from '@/components/notifications/NotificationBell';
@@ -30,6 +33,12 @@ export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuthStore();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
 
   const handleLogout = () => {
     logout();
@@ -45,8 +54,8 @@ export default function Sidebar() {
     ? user.username.slice(0, 2).toUpperCase()
     : '??';
 
-  return (
-    <aside className="fixed left-0 top-0 z-40 flex h-screen w-72 flex-col border-r border-[#2a2a3e] bg-[#0d0d14]">
+  const sidebarContent = (
+    <>
       {/* Logo */}
       <div className="px-6 pt-5 pb-4">
         <Link href="/dashboard" className="flex flex-col items-center gap-2">
@@ -144,6 +153,37 @@ export default function Sidebar() {
           Logout
         </button>
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* Mobile top bar */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between border-b border-[#2a2a3e] bg-[#0d0d14] px-4 py-3">
+        <Link href="/dashboard">
+          <Image src="/logo.png" alt="NadePro" width={600} height={262} className="h-10 w-auto" />
+        </Link>
+        <button
+          onClick={() => setMobileOpen((v) => !v)}
+          className="flex h-10 w-10 items-center justify-center rounded-lg text-[#6b6b8a] hover:text-[#e8e8e8] transition-colors"
+        >
+          {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+        </button>
+      </div>
+
+      {/* Mobile overlay */}
+      {mobileOpen && (
+        <div className="lg:hidden fixed inset-0 z-40 bg-black/60" onClick={() => setMobileOpen(false)} />
+      )}
+
+      {/* Sidebar — desktop: always visible, mobile: slide-in drawer */}
+      <aside
+        className={`fixed left-0 top-0 z-50 flex h-screen w-72 flex-col border-r border-[#2a2a3e] bg-[#0d0d14] transition-transform duration-300 ${
+          mobileOpen ? 'translate-x-0' : '-translate-x-full'
+        } lg:translate-x-0`}
+      >
+        {sidebarContent}
+      </aside>
+    </>
   );
 }
