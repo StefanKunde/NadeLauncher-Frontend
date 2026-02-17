@@ -74,6 +74,7 @@ export default function MapDetailPage() {
 
   // Inline publish / unpublish
   const [publishing, setPublishing] = useState(false);
+  const [publishingCollection, setPublishingCollection] = useState<LineupCollection | null>(null);
   const [unpublishingCollection, setUnpublishingCollection] = useState<LineupCollection | null>(null);
 
   // ── Data Loading ───────────────────────────────────────────────
@@ -638,6 +639,64 @@ export default function MapDetailPage() {
               </div>
             </div>
 
+            {/* Community publish/status banner */}
+            {(() => {
+              if (sourceFilter.type !== 'collection') return null;
+              const coll = userCollections.find((c) => c.id === sourceFilter.collectionId);
+              if (!coll) return null;
+
+              if (coll.isPublished) {
+                return (
+                  <div className="max-w-[700px] rounded-lg border border-[#6c5ce7]/20 bg-[#6c5ce7]/5 px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-1.5 text-[#6c5ce7]">
+                        <Eye className="h-4 w-4" />
+                        <span className="text-xs font-semibold">Published</span>
+                      </div>
+                      <div className="flex items-center gap-4 flex-1">
+                        <div className="flex items-center gap-1.5 text-[#b8b8cc]">
+                          <Users className="h-3.5 w-3.5 text-[#6b6b8a]" />
+                          <span className="text-xs">{coll.subscriberCount ?? 0} subscriber{(coll.subscriberCount ?? 0) !== 1 ? 's' : ''}</span>
+                        </div>
+                        {(coll.ratingCount ?? 0) > 0 && (
+                          <div className="flex items-center gap-1 text-[#b8b8cc]">
+                            <Star className="h-3.5 w-3.5 text-[#f0a500]" />
+                            <span className="text-xs">{(coll.averageRating ?? 0).toFixed(1)}</span>
+                            <span className="text-[10px] text-[#6b6b8a]">({coll.ratingCount})</span>
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => setUnpublishingCollection(coll)}
+                        className="shrink-0 flex items-center gap-1.5 rounded-lg border border-[#2a2a3e] bg-[#12121a] px-3 py-1.5 text-xs font-medium text-[#b8b8cc] hover:text-[#ff4444] hover:border-[#ff4444]/30 transition-colors"
+                      >
+                        <EyeOff className="h-3 w-3" /> Unpublish
+                      </button>
+                    </div>
+                  </div>
+                );
+              }
+
+              const canPublish = coll.lineupCount >= 5;
+              return (
+                <div className="max-w-[700px] flex items-center gap-3 rounded-lg border border-[#6c5ce7]/20 bg-[#6c5ce7]/5 px-4 py-3">
+                  <Share2 className="h-4 w-4 shrink-0 text-[#6c5ce7]" />
+                  <p className="flex-1 text-xs text-[#b8b8cc]">
+                    {canPublish
+                      ? 'Share this collection with the community so others can subscribe!'
+                      : `Add ${5 - coll.lineupCount} more lineup${5 - coll.lineupCount !== 1 ? 's' : ''} to publish this collection.`}
+                  </p>
+                  <button
+                    onClick={() => setPublishingCollection(coll)}
+                    disabled={!canPublish}
+                    className="shrink-0 rounded-lg bg-[#6c5ce7] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#7c6df7] transition-colors disabled:opacity-40"
+                  >
+                    Publish
+                  </button>
+                </div>
+              );
+            })()}
+
             <div className="flex gap-2 items-start">
               <div className="max-w-[700px] flex-1 rounded-xl border border-[#2a2a3e]/50 bg-[#12121a] overflow-hidden">
                 <MapRadar
@@ -710,65 +769,6 @@ export default function MapDetailPage() {
               </p>
             </div>
 
-            {/* Community publish/status banner */}
-            {(() => {
-              if (sourceFilter.type !== 'collection') return null;
-              const coll = userCollections.find((c) => c.id === sourceFilter.collectionId);
-              if (!coll) return null;
-
-              if (coll.isPublished) {
-                // Published — show stats + unpublish
-                return (
-                  <div className="max-w-[700px] rounded-lg border border-[#6c5ce7]/20 bg-[#6c5ce7]/5 px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-1.5 text-[#6c5ce7]">
-                        <Eye className="h-4 w-4" />
-                        <span className="text-xs font-semibold">Published</span>
-                      </div>
-                      <div className="flex items-center gap-4 flex-1">
-                        <div className="flex items-center gap-1.5 text-[#b8b8cc]">
-                          <Users className="h-3.5 w-3.5 text-[#6b6b8a]" />
-                          <span className="text-xs">{coll.subscriberCount ?? 0} subscriber{(coll.subscriberCount ?? 0) !== 1 ? 's' : ''}</span>
-                        </div>
-                        {(coll.ratingCount ?? 0) > 0 && (
-                          <div className="flex items-center gap-1 text-[#b8b8cc]">
-                            <Star className="h-3.5 w-3.5 text-[#f0a500]" />
-                            <span className="text-xs">{(coll.averageRating ?? 0).toFixed(1)}</span>
-                            <span className="text-[10px] text-[#6b6b8a]">({coll.ratingCount})</span>
-                          </div>
-                        )}
-                      </div>
-                      <button
-                        onClick={() => setUnpublishingCollection(coll)}
-                        className="shrink-0 flex items-center gap-1.5 rounded-lg border border-[#2a2a3e] bg-[#12121a] px-3 py-1.5 text-xs font-medium text-[#b8b8cc] hover:text-[#ff4444] hover:border-[#ff4444]/30 transition-colors"
-                      >
-                        <EyeOff className="h-3 w-3" /> Unpublish
-                      </button>
-                    </div>
-                  </div>
-                );
-              }
-
-              // Not published — show publish CTA
-              const canPublish = coll.lineupCount >= 5;
-              return (
-                <div className="max-w-[700px] flex items-center gap-3 rounded-lg border border-[#6c5ce7]/20 bg-[#6c5ce7]/5 px-4 py-3">
-                  <Share2 className="h-4 w-4 shrink-0 text-[#6c5ce7]" />
-                  <p className="flex-1 text-xs text-[#b8b8cc]">
-                    {canPublish
-                      ? 'Share this collection with the community so others can subscribe!'
-                      : `Add ${5 - coll.lineupCount} more lineup${5 - coll.lineupCount !== 1 ? 's' : ''} to publish this collection.`}
-                  </p>
-                  <button
-                    onClick={() => handlePublishCollection(coll.id)}
-                    disabled={!canPublish || publishing}
-                    className="shrink-0 rounded-lg bg-[#6c5ce7] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#7c6df7] transition-colors disabled:opacity-40"
-                  >
-                    {publishing ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Publish'}
-                  </button>
-                </div>
-              );
-            })()}
 
             <div className="max-h-[400px] overflow-y-auto scrollbar-thin pr-1">
               <NadeList
@@ -903,6 +903,56 @@ export default function MapDetailPage() {
                 >
                   {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                   Delete
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Publish Confirmation Modal */}
+      <AnimatePresence>
+        {publishingCollection && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+            onClick={() => setPublishingCollection(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-96 rounded-xl border border-[#2a2a3e] bg-[#12121a] p-6 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-base font-semibold text-[#e8e8e8]">Publish to Community</h3>
+                <button onClick={() => setPublishingCollection(null)} className="text-[#6b6b8a] hover:text-[#e8e8e8]">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <p className="mb-5 text-sm text-[#6b6b8a]">
+                Publish <span className="text-[#e8e8e8] font-medium">"{publishingCollection.name}"</span> to the community? Other users will be able to browse, subscribe, and rate your collection.
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setPublishingCollection(null)}
+                  className="flex-1 rounded-lg border border-[#2a2a3e] px-3 py-2 text-sm text-[#b8b8cc] hover:bg-[#1a1a2e] transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={async () => {
+                    await handlePublishCollection(publishingCollection.id);
+                    setPublishingCollection(null);
+                  }}
+                  disabled={publishing}
+                  className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-[#6c5ce7] px-3 py-2 text-sm font-semibold text-white hover:bg-[#7c6df7] transition-colors disabled:opacity-50"
+                >
+                  {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4" />}
+                  Publish
                 </button>
               </div>
             </motion.div>
