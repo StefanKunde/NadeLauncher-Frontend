@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, Play, ChevronDown, Loader2, Monitor, X, Trash2, Users, Share2 } from 'lucide-react';
+import { ArrowLeft, Play, ChevronDown, Loader2, Monitor, X, Trash2, Users, Share2, Star, Eye, EyeOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { MAPS, MAP_COLORS } from '@/lib/constants';
@@ -442,10 +442,23 @@ export default function MapDetailPage() {
     setPublishing(true);
     try {
       await communityApi.publish(collectionId, true);
-      setUserCollections((prev) => prev.map((c) => (c.id === collectionId ? { ...c, isPublished: true } : c)));
+      setUserCollections((prev) => prev.map((c) => (c.id === collectionId ? { ...c, isPublished: true, publishedAt: new Date().toISOString() } : c)));
       toast.success('Published to Community!');
     } catch (err: any) {
       toast.error(err?.response?.data?.message || 'Failed to publish');
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  const handleUnpublishCollection = async (collectionId: string) => {
+    setPublishing(true);
+    try {
+      await communityApi.publish(collectionId, false);
+      setUserCollections((prev) => prev.map((c) => (c.id === collectionId ? { ...c, isPublished: false } : c)));
+      toast.success('Collection unpublished');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Failed to unpublish');
     } finally {
       setPublishing(false);
     }
@@ -696,11 +709,47 @@ export default function MapDetailPage() {
               </p>
             </div>
 
-            {/* Publish to Community banner */}
+            {/* Community publish/status banner */}
             {(() => {
               if (sourceFilter.type !== 'collection') return null;
               const coll = userCollections.find((c) => c.id === sourceFilter.collectionId);
-              if (!coll || coll.isPublished) return null;
+              if (!coll) return null;
+
+              if (coll.isPublished) {
+                // Published — show stats + unpublish
+                return (
+                  <div className="max-w-[700px] rounded-lg border border-[#6c5ce7]/20 bg-[#6c5ce7]/5 px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-1.5 text-[#6c5ce7]">
+                        <Eye className="h-4 w-4" />
+                        <span className="text-xs font-semibold">Published</span>
+                      </div>
+                      <div className="flex items-center gap-4 flex-1">
+                        <div className="flex items-center gap-1.5 text-[#b8b8cc]">
+                          <Users className="h-3.5 w-3.5 text-[#6b6b8a]" />
+                          <span className="text-xs">{coll.subscriberCount ?? 0} subscriber{(coll.subscriberCount ?? 0) !== 1 ? 's' : ''}</span>
+                        </div>
+                        {(coll.ratingCount ?? 0) > 0 && (
+                          <div className="flex items-center gap-1 text-[#b8b8cc]">
+                            <Star className="h-3.5 w-3.5 text-[#f0a500]" />
+                            <span className="text-xs">{(coll.averageRating ?? 0).toFixed(1)}</span>
+                            <span className="text-[10px] text-[#6b6b8a]">({coll.ratingCount})</span>
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => handleUnpublishCollection(coll.id)}
+                        disabled={publishing}
+                        className="shrink-0 flex items-center gap-1.5 rounded-lg border border-[#2a2a3e] bg-[#12121a] px-3 py-1.5 text-xs font-medium text-[#b8b8cc] hover:text-[#ff4444] hover:border-[#ff4444]/30 transition-colors disabled:opacity-40"
+                      >
+                        {publishing ? <Loader2 className="h-3 w-3 animate-spin" /> : <><EyeOff className="h-3 w-3" /> Unpublish</>}
+                      </button>
+                    </div>
+                  </div>
+                );
+              }
+
+              // Not published — show publish CTA
               const canPublish = coll.lineupCount >= 5;
               return (
                 <div className="max-w-[700px] flex items-center gap-3 rounded-lg border border-[#6c5ce7]/20 bg-[#6c5ce7]/5 px-4 py-3">
