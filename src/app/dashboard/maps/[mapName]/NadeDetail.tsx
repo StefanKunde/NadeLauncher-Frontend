@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import type { Lineup } from '@/lib/types';
 import GrenadeIcon from '@/components/ui/GrenadeIcon';
-import { GRENADE_TYPES } from '@/lib/constants';
+import { GRENADE_TYPES, THROW_TYPES } from '@/lib/constants';
 
 interface NadeDetailProps {
   lineup: Lineup;
@@ -12,9 +12,7 @@ interface NadeDetailProps {
 export default function NadeDetail({ lineup }: NadeDetailProps) {
   const grenadeColor = GRENADE_TYPES[lineup.grenadeType as keyof typeof GRENADE_TYPES]?.color ?? '#f0a500';
 
-  const throwTypeLabel = lineup.throwType
-    ?.replace(/([A-Z])/g, ' $1')
-    .trim() ?? 'Normal';
+  const throwTypeLabel = THROW_TYPES[lineup.throwType as keyof typeof THROW_TYPES] ?? 'Normal';
 
   return (
     <motion.div

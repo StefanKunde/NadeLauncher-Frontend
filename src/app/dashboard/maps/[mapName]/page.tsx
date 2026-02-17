@@ -3,7 +3,8 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Play, ChevronDown, Loader2, Monitor, X, Trash2, Users } from 'lucide-react';
+import Image from 'next/image';
+import { ArrowLeft, Play, ChevronDown, Loader2, Monitor, X, Trash2, Users, Share2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { MAPS, MAP_COLORS } from '@/lib/constants';
@@ -70,6 +71,9 @@ export default function MapDetailPage() {
 
   // Publish state tracked inside edit modal (saved on "Save")
   const [editPublishState, setEditPublishState] = useState(false);
+
+  // Inline publish
+  const [publishing, setPublishing] = useState(false);
 
   // ── Data Loading ───────────────────────────────────────────────
   const loadData = useCallback(async () => {
@@ -434,6 +438,19 @@ export default function MapDetailPage() {
     }
   };
 
+  const handlePublishCollection = async (collectionId: string) => {
+    setPublishing(true);
+    try {
+      await communityApi.publish(collectionId, true);
+      setUserCollections((prev) => prev.map((c) => (c.id === collectionId ? { ...c, isPublished: true } : c)));
+      toast.success('Published to Community!');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Failed to publish');
+    } finally {
+      setPublishing(false);
+    }
+  };
+
   // Current collection for practice server
   const currentCollectionId = sourceFilter.type === 'collection' ? sourceFilter.collectionId : undefined;
   const currentCollectionName = sourceFilter.type === 'collection' ? sourceFilter.collectionName : undefined;
@@ -607,14 +624,58 @@ export default function MapDetailPage() {
               </div>
             </div>
 
-            <div className="max-w-[700px] rounded-xl border border-[#2a2a3e]/50 bg-[#12121a] overflow-hidden">
-              <MapRadar
-                mapName={mapName}
-                lineups={filteredLineups}
-                selectedLineupId={selectedLineup?.id}
-                onLineupClick={(lineup) => setSelectedLineup(lineup)}
-                mini={false}
-              />
+            <div className="flex gap-2 items-start">
+              <div className="max-w-[700px] flex-1 rounded-xl border border-[#2a2a3e]/50 bg-[#12121a] overflow-hidden">
+                <MapRadar
+                  mapName={mapName}
+                  lineups={filteredLineups}
+                  selectedLineupId={selectedLineup?.id}
+                  onLineupClick={(lineup) => setSelectedLineup(lineup)}
+                  mini={false}
+                />
+              </div>
+
+              {/* Map Navigation Strip */}
+              <div className="hidden md:flex flex-col gap-1.5 shrink-0">
+                {MAPS.map((m) => {
+                  const isActive = m.name === mapName;
+                  const mapColor = MAP_COLORS[m.name] || '#f0a500';
+                  return (
+                    <Link
+                      key={m.name}
+                      href={`/dashboard/maps/${m.name}`}
+                      title={m.displayName}
+                      className={`relative w-[72px] h-[60px] rounded-lg overflow-hidden border-2 transition-all duration-200 group ${
+                        isActive
+                          ? 'border-[#f0a500] shadow-[0_0_10px_rgba(240,165,0,0.25)]'
+                          : 'border-[#2a2a3e]/50 hover:border-[#6b6b8a]/50 hover:shadow-lg hover:shadow-black/30'
+                      }`}
+                    >
+                      <Image
+                        src={m.screenshot}
+                        alt={m.displayName}
+                        fill
+                        className={`object-cover transition-all duration-200 ${isActive ? 'brightness-90' : 'brightness-[0.35] group-hover:brightness-[0.6]'}`}
+                        sizes="72px"
+                      />
+                      {isActive && (
+                        <div className="absolute inset-0 ring-1 ring-inset ring-[#f0a500]/30 rounded-[6px]" />
+                      )}
+                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent px-1.5 pb-1 pt-3">
+                        <p className={`text-[9px] font-bold text-center leading-tight tracking-wide ${isActive ? 'text-[#f0a500]' : 'text-white/80 group-hover:text-white'}`}>
+                          {m.displayName}
+                        </p>
+                      </div>
+                      {isActive && (
+                        <div
+                          className="absolute inset-x-0 top-0 h-[2px]"
+                          style={{ background: `linear-gradient(to right, transparent, ${mapColor}, transparent)` }}
+                        />
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
             </div>
 
             <div className="flex items-center justify-between">
@@ -634,6 +695,31 @@ export default function MapDetailPage() {
                 )}
               </p>
             </div>
+
+            {/* Publish to Community banner */}
+            {(() => {
+              if (sourceFilter.type !== 'collection') return null;
+              const coll = userCollections.find((c) => c.id === sourceFilter.collectionId);
+              if (!coll || coll.isPublished) return null;
+              const canPublish = coll.lineupCount >= 5;
+              return (
+                <div className="max-w-[700px] flex items-center gap-3 rounded-lg border border-[#6c5ce7]/20 bg-[#6c5ce7]/5 px-4 py-3">
+                  <Share2 className="h-4 w-4 shrink-0 text-[#6c5ce7]" />
+                  <p className="flex-1 text-xs text-[#b8b8cc]">
+                    {canPublish
+                      ? 'Share this collection with the community so others can subscribe!'
+                      : `Add ${5 - coll.lineupCount} more lineup${5 - coll.lineupCount !== 1 ? 's' : ''} to publish this collection.`}
+                  </p>
+                  <button
+                    onClick={() => handlePublishCollection(coll.id)}
+                    disabled={!canPublish || publishing}
+                    className="shrink-0 rounded-lg bg-[#6c5ce7] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#7c6df7] transition-colors disabled:opacity-40"
+                  >
+                    {publishing ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Publish'}
+                  </button>
+                </div>
+              );
+            })()}
 
             <div className="max-h-[400px] overflow-y-auto scrollbar-thin pr-1">
               <NadeList
@@ -693,15 +779,21 @@ export default function MapDetailPage() {
                   <X className="h-4 w-4" />
                 </button>
               </div>
-              <input
-                ref={createInputRef}
-                type="text"
-                value={createCollectionName}
-                onChange={(e) => setCreateCollectionName(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleCreateCollectionSubmit()}
-                placeholder="Collection name..."
-                className="mb-4 w-full rounded-lg border border-[#2a2a3e] bg-[#0a0a0f] px-4 py-2.5 text-sm text-[#e8e8e8] placeholder:text-[#6b6b8a] focus:border-[#f0a500]/50 focus:outline-none"
-              />
+              <div className="mb-4">
+                <input
+                  ref={createInputRef}
+                  type="text"
+                  value={createCollectionName}
+                  onChange={(e) => setCreateCollectionName(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleCreateCollectionSubmit()}
+                  maxLength={50}
+                  placeholder="Collection name..."
+                  className="w-full rounded-lg border border-[#2a2a3e] bg-[#0a0a0f] px-4 py-2.5 text-sm text-[#e8e8e8] placeholder:text-[#6b6b8a] focus:border-[#f0a500]/50 focus:outline-none"
+                />
+                <p className={`mt-1.5 text-right text-[10px] ${createCollectionName.length >= 45 ? 'text-[#f0a500]' : 'text-[#6b6b8a]/50'}`}>
+                  {createCollectionName.length}/50
+                </p>
+              </div>
               <div className="flex gap-2">
                 <button
                   onClick={() => setShowCreateModal(false)}
@@ -792,15 +884,21 @@ export default function MapDetailPage() {
                   <X className="h-4 w-4" />
                 </button>
               </div>
-              <input
-                ref={editInputRef}
-                type="text"
-                value={editCollectionName}
-                onChange={(e) => setEditCollectionName(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleEditCollectionSubmit()}
-                placeholder="Collection name..."
-                className="mb-4 w-full rounded-lg border border-[#2a2a3e] bg-[#0a0a0f] px-4 py-2.5 text-sm text-[#e8e8e8] placeholder:text-[#6b6b8a] focus:border-[#f0a500]/50 focus:outline-none"
-              />
+              <div className="mb-4">
+                <input
+                  ref={editInputRef}
+                  type="text"
+                  value={editCollectionName}
+                  onChange={(e) => setEditCollectionName(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleEditCollectionSubmit()}
+                  maxLength={50}
+                  placeholder="Collection name..."
+                  className="w-full rounded-lg border border-[#2a2a3e] bg-[#0a0a0f] px-4 py-2.5 text-sm text-[#e8e8e8] placeholder:text-[#6b6b8a] focus:border-[#f0a500]/50 focus:outline-none"
+                />
+                <p className={`mt-1.5 text-right text-[10px] ${editCollectionName.length >= 45 ? 'text-[#f0a500]' : 'text-[#6b6b8a]/50'}`}>
+                  {editCollectionName.length}/50
+                </p>
+              </div>
               {/* Publish to Community toggle */}
               {user?.isPremium && editingCollection && (
                 <div className="mb-4 flex items-center justify-between rounded-lg border border-[#2a2a3e] bg-[#0a0a0f] px-4 py-3">

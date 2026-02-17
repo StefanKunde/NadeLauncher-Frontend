@@ -25,6 +25,8 @@ export const metadata: Metadata = {
   },
 };
 
+const isDev = process.env.NEXT_PUBLIC_API_URL?.includes('localhost');
+
 export default function RootLayout({
   children,
 }: {
@@ -33,6 +35,11 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className="bg-[#0a0a0f] text-[#e8e8e8] antialiased">
+        {isDev && (
+          <div className="fixed top-0 left-0 z-[9999] bg-yellow-500 text-black text-[10px] font-bold px-1.5 py-0.5 rounded-br-md opacity-80">
+            DEV
+          </div>
+        )}
         {children}
         <Toaster
           position="bottom-right"

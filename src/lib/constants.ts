@@ -17,14 +17,16 @@ export const GRENADE_TYPES = {
 
 export const THROW_TYPES = {
   normal: 'Normal',
-  stepthrow: 'Step Throw',
-  walkthrow: 'Walk Throw',
-  runthrow: 'Run Throw',
-  jumpthrow: 'Jump Throw',
-  duckjumpthrow: 'Duck Jump Throw',
-  stepjumpthrow: 'Step Jump Throw',
-  walkjumpthrow: 'Walk Jump Throw',
-  runjumpthrow: 'Run Jump Throw',
+  stepthrow: 'StepThrow',
+  walkthrow: 'WalkThrow',
+  runthrow: 'RunThrow',
+  jumpthrow: 'Jumpthrow',
+  wjumpthrow: 'W-Jumpthrow',
+  duckthrow: 'DuckThrow',
+  duckjumpthrow: 'DuckJumpThrow',
+  stepjumpthrow: 'StepJumpThrow',
+  walkjumpthrow: 'WalkJumpThrow',
+  runjumpthrow: 'RunJumpThrow',
 } as const;
 
 export const MAP_COLORS: Record<string, string> = {
