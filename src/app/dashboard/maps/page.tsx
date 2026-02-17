@@ -3,11 +3,10 @@
 import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ChevronRight, FolderOpen, Share2, Loader2 } from 'lucide-react';
+import { ChevronRight, FolderOpen } from 'lucide-react';
 import { motion } from 'framer-motion';
-import toast from 'react-hot-toast';
 import { MAPS, MAP_COLORS } from '@/lib/constants';
-import { collectionsApi, userCollectionsApi, communityApi } from '@/lib/api';
+import { collectionsApi, userCollectionsApi } from '@/lib/api';
 import type { LineupCollection } from '@/lib/types';
 
 const container = {
@@ -27,22 +26,6 @@ export default function MapsPage() {
   const [allCollections, setAllCollections] = useState<LineupCollection[]>([]);
   const [userCollections, setUserCollections] = useState<LineupCollection[]>([]);
   const [loading, setLoading] = useState(true);
-  const [publishingId, setPublishingId] = useState<string | null>(null);
-
-  const handlePublish = async (collectionId: string) => {
-    setPublishingId(collectionId);
-    try {
-      await communityApi.publish(collectionId, true);
-      setUserCollections((prev) =>
-        prev.map((c) => (c.id === collectionId ? { ...c, isPublished: true } : c)),
-      );
-      toast.success('Published to Community!');
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Failed to publish');
-    } finally {
-      setPublishingId(null);
-    }
-  };
 
   useEffect(() => {
     Promise.all([
@@ -70,11 +53,6 @@ export default function MapsPage() {
     return data;
   }, [allCollections, userCollections]);
 
-  const unpublishedCollections = useMemo(
-    () => userCollections.filter((c) => !c.isPublished),
-    [userCollections],
-  );
-
   return (
     <div>
       {/* Page Header */}
@@ -84,61 +62,6 @@ export default function MapsPage() {
           Choose a map to manage your lineups
         </p>
       </div>
-
-      {/* Publish Collections */}
-      {!loading && unpublishedCollections.length > 0 && (
-        <div className="mb-8 rounded-xl border border-[#6c5ce7]/20 bg-gradient-to-r from-[#6c5ce7]/5 to-[#12121a] p-5">
-          <div className="flex items-center gap-2.5 mb-4">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#6c5ce7]/15">
-              <Share2 className="h-4 w-4 text-[#6c5ce7]" />
-            </div>
-            <div>
-              <h2 className="text-sm font-semibold text-[#e8e8e8]">Publish Your Collections</h2>
-              <p className="text-xs text-[#6b6b8a]">Share your collections with the community</p>
-            </div>
-          </div>
-          <div className="space-y-2">
-            {unpublishedCollections.map((c) => {
-              const mapInfo = MAPS.find((m) => m.name === c.mapName);
-              const mapColor = MAP_COLORS[c.mapName] || '#f0a500';
-              const canPublish = c.lineupCount >= 5;
-              const remaining = 5 - c.lineupCount;
-              return (
-                <div
-                  key={c.id}
-                  className="flex items-center gap-3 rounded-lg bg-[#0a0a0f]/50 border border-[#2a2a3e]/30 px-4 py-3"
-                >
-                  <div className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: mapColor }} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-[#e8e8e8] truncate">{c.name}</p>
-                    <p className="text-xs text-[#6b6b8a]">
-                      {mapInfo?.displayName} · {c.lineupCount} lineup{c.lineupCount !== 1 ? 's' : ''}
-                    </p>
-                  </div>
-                  {canPublish ? (
-                    <button
-                      onClick={() => handlePublish(c.id)}
-                      disabled={publishingId === c.id}
-                      className="shrink-0 flex items-center gap-2 rounded-lg bg-[#6c5ce7] px-4 py-2 text-sm font-semibold text-white hover:bg-[#7c6df7] transition-colors disabled:opacity-50"
-                    >
-                      {publishingId === c.id ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      ) : (
-                        <Share2 className="h-3.5 w-3.5" />
-                      )}
-                      Publish
-                    </button>
-                  ) : (
-                    <span className="shrink-0 text-xs text-[#6b6b8a]">
-                      {remaining} more lineup{remaining !== 1 ? 's' : ''} needed
-                    </span>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
 
       {/* Map Grid */}
       {loading ? (
