@@ -72,8 +72,9 @@ export default function MapDetailPage() {
   // Publish state tracked inside edit modal (saved on "Save")
   const [editPublishState, setEditPublishState] = useState(false);
 
-  // Inline publish
+  // Inline publish / unpublish
   const [publishing, setPublishing] = useState(false);
+  const [unpublishingCollection, setUnpublishingCollection] = useState<LineupCollection | null>(null);
 
   // ── Data Loading ───────────────────────────────────────────────
   const loadData = useCallback(async () => {
@@ -738,11 +739,10 @@ export default function MapDetailPage() {
                         )}
                       </div>
                       <button
-                        onClick={() => handleUnpublishCollection(coll.id)}
-                        disabled={publishing}
-                        className="shrink-0 flex items-center gap-1.5 rounded-lg border border-[#2a2a3e] bg-[#12121a] px-3 py-1.5 text-xs font-medium text-[#b8b8cc] hover:text-[#ff4444] hover:border-[#ff4444]/30 transition-colors disabled:opacity-40"
+                        onClick={() => setUnpublishingCollection(coll)}
+                        className="shrink-0 flex items-center gap-1.5 rounded-lg border border-[#2a2a3e] bg-[#12121a] px-3 py-1.5 text-xs font-medium text-[#b8b8cc] hover:text-[#ff4444] hover:border-[#ff4444]/30 transition-colors"
                       >
-                        {publishing ? <Loader2 className="h-3 w-3 animate-spin" /> : <><EyeOff className="h-3 w-3" /> Unpublish</>}
+                        <EyeOff className="h-3 w-3" /> Unpublish
                       </button>
                     </div>
                   </div>
@@ -903,6 +903,56 @@ export default function MapDetailPage() {
                 >
                   {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                   Delete
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Unpublish Confirmation Modal */}
+      <AnimatePresence>
+        {unpublishingCollection && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+            onClick={() => setUnpublishingCollection(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-96 rounded-xl border border-[#2a2a3e] bg-[#12121a] p-6 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-base font-semibold text-[#e8e8e8]">Unpublish Collection</h3>
+                <button onClick={() => setUnpublishingCollection(null)} className="text-[#6b6b8a] hover:text-[#e8e8e8]">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <p className="mb-5 text-sm text-[#6b6b8a]">
+                Are you sure you want to unpublish <span className="text-[#e8e8e8] font-medium">"{unpublishingCollection.name}"</span>? It will be removed from the community browse page and existing subscribers will lose access.
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setUnpublishingCollection(null)}
+                  className="flex-1 rounded-lg border border-[#2a2a3e] px-3 py-2 text-sm text-[#b8b8cc] hover:bg-[#1a1a2e] transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={async () => {
+                    await handleUnpublishCollection(unpublishingCollection.id);
+                    setUnpublishingCollection(null);
+                  }}
+                  disabled={publishing}
+                  className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-[#ff4444] px-3 py-2 text-sm font-semibold text-white hover:bg-[#ff5555] transition-colors disabled:opacity-50"
+                >
+                  {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <EyeOff className="h-4 w-4" />}
+                  Unpublish
                 </button>
               </div>
             </motion.div>
