@@ -236,16 +236,18 @@ export default function CommunityPage() {
 
                   {/* Subscribe button */}
                   <div className="w-24 flex justify-end">
-                    <button
-                      onClick={(e) => handleSubscribe(e, col.id)}
-                      className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
-                        col.isSubscribed
-                          ? 'bg-[#6c5ce7]/20 text-[#6c5ce7] hover:bg-red-500/20 hover:text-red-400'
-                          : 'bg-[#6c5ce7] text-white hover:bg-[#5a4bd6]'
-                      }`}
-                    >
-                      {col.isSubscribed ? 'Subscribed' : 'Subscribe'}
-                    </button>
+                    {user && col.ownerId !== user.id && (
+                      <button
+                        onClick={(e) => handleSubscribe(e, col.id)}
+                        className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+                          col.isSubscribed
+                            ? 'bg-[#6c5ce7]/20 text-[#6c5ce7] hover:bg-red-500/20 hover:text-red-400'
+                            : 'bg-[#6c5ce7] text-white hover:bg-[#5a4bd6]'
+                        }`}
+                      >
+                        {col.isSubscribed ? 'Subscribed' : 'Subscribe'}
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -264,16 +266,18 @@ export default function CommunityPage() {
                       </span>
                       <span className="text-sm font-medium text-[#e8e8e8] truncate">{col.name}</span>
                     </div>
-                    <button
-                      onClick={(e) => handleSubscribe(e, col.id)}
-                      className={`shrink-0 px-3 py-1 rounded-lg text-xs font-medium transition-all ${
-                        col.isSubscribed
-                          ? 'bg-[#6c5ce7]/20 text-[#6c5ce7] hover:bg-red-500/20 hover:text-red-400'
-                          : 'bg-[#6c5ce7] text-white hover:bg-[#5a4bd6]'
-                      }`}
-                    >
-                      {col.isSubscribed ? 'Subscribed' : 'Subscribe'}
-                    </button>
+                    {user && col.ownerId !== user.id && (
+                      <button
+                        onClick={(e) => handleSubscribe(e, col.id)}
+                        className={`shrink-0 px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+                          col.isSubscribed
+                            ? 'bg-[#6c5ce7]/20 text-[#6c5ce7] hover:bg-red-500/20 hover:text-red-400'
+                            : 'bg-[#6c5ce7] text-white hover:bg-[#5a4bd6]'
+                        }`}
+                      >
+                        {col.isSubscribed ? 'Subscribed' : 'Subscribe'}
+                      </button>
+                    )}
                   </div>
                   <div className="flex items-center gap-3 text-xs text-[#8888aa]">
                     <span>{col.lineupCount} nades</span>

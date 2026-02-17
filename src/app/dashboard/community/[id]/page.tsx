@@ -266,7 +266,7 @@ export default function CommunityDetailPage() {
           </div>
 
           {/* Subscribe Button */}
-          {user && (
+          {user && collection.ownerId !== user.id && (
             <button
               onClick={handleSubscribe}
               className={`shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
