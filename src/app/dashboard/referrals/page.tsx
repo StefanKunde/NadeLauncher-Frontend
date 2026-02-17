@@ -11,6 +11,8 @@ import {
   Copy,
   Check,
   UserPlus,
+  Info,
+  Wallet,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth-store';
 import { referralsApi } from '@/lib/api';
@@ -190,6 +192,25 @@ export default function ReferralsPage() {
         </motion.div>
       )}
 
+      {/* Banked Days (subscription active + earned referral days saved for later) */}
+      {stats?.hasActiveSubscription && (stats.bankedDays ?? 0) > 0 && (
+        <motion.div variants={fadeUp} custom={3} className="mb-6">
+          <div className="glass rounded-xl p-5 flex items-center gap-4" style={{ borderColor: 'rgba(108,92,231,0.3)' }}>
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#6c5ce7]/15">
+              <Wallet className="h-5 w-5 text-[#6c5ce7]" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-[#e8e8e8]">
+                {stats.bankedDays} Bonus Day{stats.bankedDays !== 1 ? 's' : ''} Saved
+              </p>
+              <p className="text-sm text-[#6b6b8a]">
+                You have an active subscription, so your referral days are banked. They&apos;ll activate automatically if your subscription ends.
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       {!user?.isPremium && (stats?.convertedReferrals ?? 0) === 0 && (
         <motion.div variants={fadeUp} custom={3} className="mb-6">
           <div className="glass rounded-xl p-5 flex items-center gap-4 border-[#f0a500]/20" style={{ borderColor: 'rgba(240,165,0,0.2)' }}>
@@ -205,6 +226,38 @@ export default function ReferralsPage() {
           </div>
         </motion.div>
       )}
+
+      {/* How it Works */}
+      <motion.div variants={fadeUp} custom={3.5} className="mb-6">
+        <div className="glass rounded-xl p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <Info className="h-4 w-4 text-[#6b6b8a]" />
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-[#6b6b8a]">How it Works</h2>
+          </div>
+          <div className="space-y-3 text-sm text-[#6b6b8a]">
+            <div className="flex gap-3">
+              <span className="shrink-0 flex h-5 w-5 items-center justify-center rounded-full bg-[#f0a500]/10 text-[10px] font-bold text-[#f0a500]">1</span>
+              <p>Share your referral link with friends. When they sign up through your link, they&apos;re tracked as your referral.</p>
+            </div>
+            <div className="flex gap-3">
+              <span className="shrink-0 flex h-5 w-5 items-center justify-center rounded-full bg-[#f0a500]/10 text-[10px] font-bold text-[#f0a500]">2</span>
+              <p>When a referred friend buys premium, you earn <span className="text-[#f0a500] font-medium">14 days</span> of premium time.</p>
+            </div>
+            <div className="flex gap-3">
+              <span className="shrink-0 flex h-5 w-5 items-center justify-center rounded-full bg-[#f0a500]/10 text-[10px] font-bold text-[#f0a500]">3</span>
+              <p><span className="text-[#e8e8e8]">No premium?</span> The 14 days activate immediately.</p>
+            </div>
+            <div className="flex gap-3">
+              <span className="shrink-0 flex h-5 w-5 items-center justify-center rounded-full bg-[#f0a500]/10 text-[10px] font-bold text-[#f0a500]">4</span>
+              <p><span className="text-[#e8e8e8]">Already have referral premium?</span> The days are added to your remaining time.</p>
+            </div>
+            <div className="flex gap-3">
+              <span className="shrink-0 flex h-5 w-5 items-center justify-center rounded-full bg-[#6c5ce7]/10 text-[10px] font-bold text-[#6c5ce7]">5</span>
+              <p><span className="text-[#e8e8e8]">Have a subscription?</span> Your referral days are saved and activate automatically when your subscription ends. They never expire.</p>
+            </div>
+          </div>
+        </div>
+      </motion.div>
 
       {/* Referral History */}
       <motion.div variants={fadeUp} custom={4}>

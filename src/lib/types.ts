@@ -15,7 +15,9 @@ export interface ReferralStats {
   totalReferrals: number;
   convertedReferrals: number;
   premiumDaysEarned: number;
+  bankedDays: number;
   premiumExpiresAt: string | null;
+  hasActiveSubscription: boolean;
 }
 
 export interface ReferralEntry {
