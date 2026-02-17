@@ -53,6 +53,10 @@ function CommandsList() {
           <span className="text-[#6b6b8a]">Save current position as a lineup <span className="text-[#88bbee]">(!s)</span></span>
         </div>
         <div className="flex items-start gap-2">
+          <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!savelast</code>
+          <span className="text-[#6b6b8a]">Save your last thrown grenade <span className="text-[#88bbee]">(!sl)</span></span>
+        </div>
+        <div className="flex items-start gap-2">
           <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!desc</code>
           <span className="text-[#6b6b8a]">Set description for last saved lineup</span>
         </div>
@@ -91,10 +95,6 @@ function CommandsList() {
         <div className="flex items-start gap-2">
           <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!maps</code>
           <span className="text-[#6b6b8a]">Change to a different map</span>
-        </div>
-        <div className="flex items-start gap-2">
-          <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!kick</code>
-          <span className="text-[#6b6b8a]">Kick a player from the server</span>
         </div>
         <div className="flex items-start gap-2">
           <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!pos</code>
