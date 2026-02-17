@@ -318,7 +318,7 @@ export default function FilterSidebar({
                   animate={{ height: 'auto', opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
                   transition={{ duration: 0.2 }}
-                  className="overflow-hidden space-y-0.5"
+                  className="overflow-hidden space-y-1"
                 >
                   {filteredCommunity.map((c) => (
                     <SourceButton
