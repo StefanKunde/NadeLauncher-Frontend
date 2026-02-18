@@ -155,8 +155,9 @@ export default function MapRadar({
   }
 
   const selectedMarker = markers.find((m) => m.lineup.id === selectedLineupId);
-  const dotSize = mini ? 5 : 7;
-  const selectedDotSize = mini ? 7 : 12;
+  const scale = mini ? 1 : 1 / zoom;
+  const dotSize = (mini ? 5 : 7) * scale;
+  const selectedDotSize = (mini ? 7 : 12) * scale;
   const isZoomed = zoom !== 1;
 
   return (
@@ -205,36 +206,36 @@ export default function MapRadar({
               x2={`${selectedMarker.landingPos.x}%`}
               y2={`${selectedMarker.landingPos.y}%`}
               stroke={GRENADE_COLORS[selectedMarker.lineup.grenadeType] || '#fff'}
-              strokeWidth="2"
-              strokeDasharray="6 4"
+              strokeWidth={2 * scale}
+              strokeDasharray={`${6 * scale} ${4 * scale}`}
               opacity="0.7"
             />
             {/* Landing position marker */}
             <circle
               cx={`${selectedMarker.landingPos.x}%`}
               cy={`${selectedMarker.landingPos.y}%`}
-              r="6"
+              r={6 * scale}
               fill="none"
               stroke={GRENADE_COLORS[selectedMarker.lineup.grenadeType] || '#fff'}
-              strokeWidth="2"
+              strokeWidth={2 * scale}
               opacity="0.8"
             />
             <line
-              x1={`${selectedMarker.landingPos.x - 0.6}%`}
+              x1={`${selectedMarker.landingPos.x - 0.6 * scale}%`}
               y1={`${selectedMarker.landingPos.y}%`}
-              x2={`${selectedMarker.landingPos.x + 0.6}%`}
+              x2={`${selectedMarker.landingPos.x + 0.6 * scale}%`}
               y2={`${selectedMarker.landingPos.y}%`}
               stroke={GRENADE_COLORS[selectedMarker.lineup.grenadeType] || '#fff'}
-              strokeWidth="2"
+              strokeWidth={2 * scale}
               opacity="0.8"
             />
             <line
               x1={`${selectedMarker.landingPos.x}%`}
-              y1={`${selectedMarker.landingPos.y - 0.6}%`}
+              y1={`${selectedMarker.landingPos.y - 0.6 * scale}%`}
               x2={`${selectedMarker.landingPos.x}%`}
-              y2={`${selectedMarker.landingPos.y + 0.6}%`}
+              y2={`${selectedMarker.landingPos.y + 0.6 * scale}%`}
               stroke={GRENADE_COLORS[selectedMarker.lineup.grenadeType] || '#fff'}
-              strokeWidth="2"
+              strokeWidth={2 * scale}
               opacity="0.8"
             />
           </svg>
@@ -338,12 +339,12 @@ export default function MapRadar({
                 <div
                   className="absolute pointer-events-none flex items-center justify-center rounded-full bg-white text-[#0a0a0f] font-bold"
                   style={{
-                    width: 11,
-                    height: 11,
-                    fontSize: 7,
+                    width: 11 * scale,
+                    height: 11 * scale,
+                    fontSize: 7 * scale,
                     lineHeight: 1,
-                    top: -dotSize / 2 - 6,
-                    left: dotSize / 2 - 3,
+                    top: -dotSize / 2 - 6 * scale,
+                    left: dotSize / 2 - 3 * scale,
                   }}
                 >
                   {group.items.length}
@@ -353,12 +354,12 @@ export default function MapRadar({
               {/* Popup selector */}
               {!mini && isPopupOpen && (
                 <div
-                  className="absolute z-[50] min-w-[180px] max-w-[240px] rounded-lg border border-[#2a2a3e] bg-[#12121a]/95 shadow-xl backdrop-blur-sm"
+                  className="absolute z-[50] min-w-[180px] max-w-[240px] rounded-lg border border-[#2a2a3e] bg-[#12121a]/95 shadow-xl backdrop-blur-sm origin-top"
                   style={{
                     // Open downward by default, upward if near bottom
                     ...(group.pos.y > 70
-                      ? { bottom: dotSize / 2 + 8, left: '50%', transform: 'translateX(-50%)' }
-                      : { top: dotSize / 2 + 8, left: '50%', transform: 'translateX(-50%)' }),
+                      ? { bottom: dotSize / 2 + 8 * scale, left: '50%', transform: `translateX(-50%) scale(${scale})`, transformOrigin: 'bottom center' }
+                      : { top: dotSize / 2 + 8 * scale, left: '50%', transform: `translateX(-50%) scale(${scale})` }),
                   }}
                   onMouseDown={(e) => e.stopPropagation()}
                   onClick={(e) => e.stopPropagation()}
@@ -430,6 +431,7 @@ export default function MapRadar({
               style={{
                 left: `${labelX}%`,
                 top: `${labelY}%`,
+                transform: `translate(-50%, -50%) scale(${scale})`,
               }}
             >
               <span className="px-1.5 py-px rounded text-[8px] font-medium bg-[#0a0a0f]/80 text-white/90 whitespace-nowrap border border-[#2a2a3e]/60">
