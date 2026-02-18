@@ -51,6 +51,7 @@ export default function MapRadar({
 
   // Popup state for stacked markers
   const [openGroupKey, setOpenGroupKey] = useState<string | null>(null);
+  const [hoveredLineupId, setHoveredLineupId] = useState<string | null>(null);
 
   const radarImage = useMemo(() => {
     if (!config) return null;
@@ -95,7 +96,7 @@ export default function MapRadar({
   }, [markers]);
 
   // Close popup when lineups change (filter/collection switch)
-  useEffect(() => { setOpenGroupKey(null); }, [lineups]);
+  useEffect(() => { setOpenGroupKey(null); setHoveredLineupId(null); }, [lineups]);
 
   // Attach wheel listener as non-passive so preventDefault stops page scroll
   useEffect(() => {
@@ -155,6 +156,7 @@ export default function MapRadar({
   }
 
   const selectedMarker = markers.find((m) => m.lineup.id === selectedLineupId);
+  const hoveredMarker = hoveredLineupId ? markers.find((m) => m.lineup.id === hoveredLineupId) : null;
   const scale = mini ? 1 : 1 / Math.pow(zoom, 0.6);
   const dotSize = (mini ? 5 : 7) * scale;
   const selectedDotSize = (mini ? 7 : 12) * scale;
@@ -237,6 +239,31 @@ export default function MapRadar({
               stroke={GRENADE_COLORS[selectedMarker.lineup.grenadeType] || '#fff'}
               strokeWidth={2 * scale}
               opacity="0.8"
+            />
+          </svg>
+        )}
+
+        {/* Hover preview line */}
+        {!mini && hoveredMarker && hoveredMarker.lineup.id !== selectedLineupId && (
+          <svg className="absolute inset-0 w-full h-full pointer-events-none z-10">
+            <line
+              x1={`${hoveredMarker.throwPos.x}%`}
+              y1={`${hoveredMarker.throwPos.y}%`}
+              x2={`${hoveredMarker.landingPos.x}%`}
+              y2={`${hoveredMarker.landingPos.y}%`}
+              stroke={GRENADE_COLORS[hoveredMarker.lineup.grenadeType] || '#fff'}
+              strokeWidth={1.5 * scale}
+              strokeDasharray={`${4 * scale} ${3 * scale}`}
+              opacity="0.4"
+            />
+            <circle
+              cx={`${hoveredMarker.landingPos.x}%`}
+              cy={`${hoveredMarker.landingPos.y}%`}
+              r={5 * scale}
+              fill="none"
+              stroke={GRENADE_COLORS[hoveredMarker.lineup.grenadeType] || '#fff'}
+              strokeWidth={1.5 * scale}
+              opacity="0.4"
             />
           </svg>
         )}
@@ -381,9 +408,12 @@ export default function MapRadar({
                           className={`flex w-full items-center gap-2 px-2 py-1.5 text-left transition-colors hover:bg-white/5 ${
                             isSelected ? 'bg-white/10' : ''
                           }`}
+                          onMouseEnter={() => setHoveredLineupId(lineup.id)}
+                          onMouseLeave={() => setHoveredLineupId(null)}
                           onClick={(e) => {
                             e.stopPropagation();
                             if (onLineupClick) onLineupClick(lineup);
+                            setHoveredLineupId(null);
                             setOpenGroupKey(null);
                           }}
                         >
