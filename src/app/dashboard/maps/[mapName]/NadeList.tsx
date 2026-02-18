@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { Plus, Check, Loader2, Minus, ChevronRight, Eye, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Lineup, LineupCollection } from '@/lib/types';
@@ -103,7 +103,15 @@ function NadeListItem({
   const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
   const [confirmRemove, setConfirmRemove] = useState(false);
   const addBtnRef = useRef<HTMLButtonElement>(null);
+  const itemRef = useRef<HTMLDivElement>(null);
   const grenadeColor = GRENADE_TYPES[lineup.grenadeType as keyof typeof GRENADE_TYPES]?.color ?? '#f0a500';
+
+  // Scroll into view when selected (e.g. from map marker click)
+  useEffect(() => {
+    if (isActive && itemRef.current) {
+      itemRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [isActive]);
   const proLine = [lineup.playerName, lineup.teamName].filter(Boolean).join(' \u00b7 ');
   const hasGhostReplay = (lineup.movementPath?.length ?? 0) > 0;
 
@@ -124,6 +132,7 @@ function NadeListItem({
 
   return (
     <motion.div
+      ref={itemRef}
       variants={staggerItem}
       exit={{ opacity: 0, x: -16, transition: { duration: 0.15 } }}
       className={`relative flex items-center gap-3 rounded-xl cursor-pointer transition-all duration-200 group overflow-hidden ${

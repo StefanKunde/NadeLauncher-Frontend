@@ -279,10 +279,12 @@ export default function MapRadar({
           }
 
           // Stacked marker — show dot with count badge + popup on click
-          const primaryColor = hasSelected
-            ? GRENADE_COLORS[group.items.find((m) => m.lineup.id === selectedLineupId)!.lineup.grenadeType] || '#fff'
+          const selectedInGroup = hasSelected
+            ? group.items.find((m) => m.lineup.id === selectedLineupId)!
+            : null;
+          const primaryColor = selectedInGroup
+            ? GRENADE_COLORS[selectedInGroup.lineup.grenadeType] || '#fff'
             : GRENADE_COLORS[group.items[0].lineup.grenadeType] || '#fff';
-          const size = hasSelected ? selectedDotSize : dotSize;
           // Check if group has mixed grenade types
           const grenadeTypes = new Set(group.items.map((m) => m.lineup.grenadeType));
           const isMixed = grenadeTypes.size > 1;
@@ -296,15 +298,29 @@ export default function MapRadar({
                 top: `${group.pos.y}%`,
               }}
             >
-              {/* Dot */}
+              {/* Selected nade rendered as individual marker on top */}
+              {!mini && selectedInGroup && (
+                <div
+                  className="absolute z-[25] rounded-full ring-2 ring-white/50 transition-all duration-200"
+                  style={{
+                    width: selectedDotSize,
+                    height: selectedDotSize,
+                    backgroundColor: primaryColor,
+                    boxShadow: `0 0 12px ${primaryColor}, 0 0 24px ${primaryColor}40`,
+                    transform: 'translate(-50%, -50%)',
+                  }}
+                />
+              )}
+
+              {/* Group dot */}
               <div
                 className={`rounded-full transition-all duration-200 ${
                   !mini ? 'cursor-pointer hover:scale-125' : ''
-                } ${hasSelected ? 'ring-2 ring-white/50' : ''}`}
+                }`}
                 style={{
-                  width: size,
-                  height: size,
-                  backgroundColor: isMixed ? '#aaa' : primaryColor,
+                  width: dotSize,
+                  height: dotSize,
+                  backgroundColor: isMixed && !hasSelected ? '#aaa' : primaryColor,
                   boxShadow: hasSelected
                     ? `0 0 12px ${primaryColor}, 0 0 24px ${primaryColor}40`
                     : `0 0 4px ${primaryColor}80`,
@@ -326,8 +342,8 @@ export default function MapRadar({
                     height: 14,
                     fontSize: 9,
                     lineHeight: 1,
-                    top: -size / 2 - 8,
-                    left: size / 2 - 4,
+                    top: -dotSize / 2 - 8,
+                    left: dotSize / 2 - 4,
                   }}
                 >
                   {group.items.length}
@@ -341,8 +357,8 @@ export default function MapRadar({
                   style={{
                     // Open downward by default, upward if near bottom
                     ...(group.pos.y > 70
-                      ? { bottom: size / 2 + 8, left: '50%', transform: 'translateX(-50%)' }
-                      : { top: size / 2 + 8, left: '50%', transform: 'translateX(-50%)' }),
+                      ? { bottom: dotSize / 2 + 8, left: '50%', transform: 'translateX(-50%)' }
+                      : { top: dotSize / 2 + 8, left: '50%', transform: 'translateX(-50%)' }),
                   }}
                   onClick={(e) => e.stopPropagation()}
                 >
@@ -359,6 +375,7 @@ export default function MapRadar({
                       return (
                         <button
                           key={lineup.id}
+                          title={lineup.name}
                           className={`flex w-full items-center gap-2 px-2 py-1.5 text-left transition-colors hover:bg-white/5 ${
                             isSelected ? 'bg-white/10' : ''
                           }`}
