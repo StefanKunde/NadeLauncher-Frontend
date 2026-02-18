@@ -59,7 +59,7 @@ export default function MapsPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-[#e8e8e8]">Maps</h1>
         <p className="text-[#6b6b8a] mt-1">
-          Choose a map to manage your lineups
+          Browse lineups, create collections, and start practicing
         </p>
       </div>
 
@@ -92,7 +92,7 @@ export default function MapsPage() {
               <motion.div key={map.name} variants={item}>
                 <Link
                   href={`/dashboard/maps/${map.name}`}
-                  className="group block rounded-2xl overflow-hidden bg-[#12121a] border border-[#2a2a3e]/50 transition-all duration-300 hover:border-[#2a2a3e] hover:shadow-lg hover:shadow-black/20"
+                  className="group block rounded-2xl overflow-hidden bg-[#12121a] border border-[#2a2a3e]/50 transition-all duration-300 hover:border-[#2a2a3e] hover:-translate-y-0.5 hover:shadow-lg"
                 >
                   {/* Map Screenshot */}
                   <div className="relative h-44 overflow-hidden">

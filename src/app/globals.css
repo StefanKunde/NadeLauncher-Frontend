@@ -454,3 +454,12 @@ select:focus {
   color: var(--text-muted);
   opacity: 1;
 }
+
+/* ============================================
+   SCROLL FADE
+   ============================================ */
+
+.scroll-fade-top {
+  mask-image: linear-gradient(to bottom, transparent 0%, black 24px);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 24px);
+}

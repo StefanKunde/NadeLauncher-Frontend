@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, Play, ChevronDown, Loader2, Monitor, X, Trash2, Users, Share2, Star, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Play, ChevronDown, Loader2, Monitor, X, Trash2, Users, Share2, Star, Eye, EyeOff, Crosshair } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { MAPS, MAP_COLORS } from '@/lib/constants';
@@ -770,7 +770,7 @@ export default function MapDetailPage() {
             </div>
 
 
-            <div className="max-h-[400px] overflow-y-auto scrollbar-thin pr-1">
+            <div className="max-h-[500px] overflow-y-auto scrollbar-thin pr-1 rounded-xl border border-[#2a2a3e]/30 bg-[#12121a]/30 p-2">
               <NadeList
                 lineups={filteredLineups}
                 selectedLineupId={selectedLineup?.id ?? null}
@@ -797,8 +797,12 @@ export default function MapDetailPage() {
                 <NadeDetail lineup={selectedLineup} />
               </div>
             ) : (
-              <div className="hidden xl:block rounded-xl border border-[#2a2a3e]/30 bg-[#12121a]/50 px-6 py-12 text-center">
-                <p className="text-sm text-[#6b6b8a]">Select a nade to see details</p>
+              <div className="hidden xl:block rounded-xl border border-[#2a2a3e]/30 bg-[#12121a]/50 px-6 py-16 text-center">
+                <Crosshair className="h-8 w-8 text-[#2a2a3e] mx-auto mb-3" />
+                <p className="text-sm font-medium text-[#6b6b8a]">Select a nade</p>
+                <p className="text-xs text-[#6b6b8a]/60 mt-1 leading-relaxed">
+                  Click a dot on the radar<br />or pick from the list below
+                </p>
               </div>
             )}
           </div>
