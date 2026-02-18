@@ -49,6 +49,7 @@ export default function MapDetailPage() {
   const [addingToCollection, setAddingToCollection] = useState<string | null>(null);
   const [startingServer, setStartingServer] = useState(false);
   const [serverCollectionPicker, setServerCollectionPicker] = useState(false);
+  const [showPracticeConfirm, setShowPracticeConfirm] = useState(false);
   const [activeSession, setActiveSession] = useState<Session | null>(null);
 
   // User collection lineup tracking
@@ -589,7 +590,7 @@ export default function MapDetailPage() {
                 </div>
               )}
               <button
-                onClick={() => handleStartServer(currentCollectionId)}
+                onClick={() => setShowPracticeConfirm(true)}
                 disabled={startingServer}
                 className="flex items-center gap-2 rounded-lg bg-[#f0a500] px-3 py-1.5 text-xs font-semibold text-[#0a0a0f] hover:bg-[#ffd700] transition-colors disabled:opacity-50"
               >
@@ -833,7 +834,7 @@ export default function MapDetailPage() {
               </div>
 
               {/* Scrollable nade list */}
-              <div className="max-h-[calc(100vh-18rem)] overflow-y-auto scrollbar-thin rounded-xl border border-[#2a2a3e]/30 bg-[#12121a]/30 p-4">
+              <div className="max-h-[calc(100vh-18rem)] overflow-y-auto scrollbar-thin rounded-xl border border-[#2a2a3e]/30 bg-[#12121a]/30 pl-4 pt-4 pb-4 pr-5">
                 <NadeList
                   lineups={searchFilteredLineups}
                   selectedLineupId={selectedLineup?.id ?? null}
@@ -1175,6 +1176,59 @@ export default function MapDetailPage() {
                   className="flex-1 rounded-lg bg-[#f0a500] px-3 py-2 text-sm font-semibold text-[#0a0a0f] hover:bg-[#ffd700] transition-colors disabled:opacity-50"
                 >
                   Save
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Practice Confirmation Modal */}
+      <AnimatePresence>
+        {showPracticeConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+            onClick={() => setShowPracticeConfirm(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-96 rounded-xl border border-[#2a2a3e] bg-[#12121a] p-6 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-4 flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#f0a500]/10">
+                  <Play className="h-5 w-5 text-[#f0a500]" />
+                </div>
+                <h3 className="text-base font-semibold text-[#e8e8e8]">Start Practice Server</h3>
+              </div>
+              <p className="mb-5 text-sm text-[#6b6b8a]">
+                Start a practice server on <span className="text-[#e8e8e8] font-medium">{map?.displayName}</span>
+                {currentCollectionName && (
+                  <> with collection <span className="text-[#f0a500] font-medium">"{currentCollectionName}"</span></>
+                )}?
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowPracticeConfirm(false)}
+                  className="flex-1 rounded-lg border border-[#2a2a3e] px-3 py-2 text-sm text-[#b8b8cc] hover:bg-[#1a1a2e] transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={async () => {
+                    setShowPracticeConfirm(false);
+                    await handleStartServer(currentCollectionId);
+                  }}
+                  disabled={startingServer}
+                  className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-[#f0a500] px-3 py-2 text-sm font-semibold text-[#0a0a0f] hover:bg-[#ffd700] transition-colors disabled:opacity-50"
+                >
+                  {startingServer ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+                  Start Server
                 </button>
               </div>
             </motion.div>

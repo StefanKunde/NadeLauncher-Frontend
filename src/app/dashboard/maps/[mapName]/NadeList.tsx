@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
-import { Plus, Check, Loader2, Minus, ChevronRight, Eye } from 'lucide-react';
+import { Plus, Check, Loader2, Minus, ChevronRight, Eye, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Lineup, LineupCollection } from '@/lib/types';
 import GrenadeIcon from '@/components/ui/GrenadeIcon';
@@ -101,6 +101,7 @@ function NadeListItem({
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
+  const [confirmRemove, setConfirmRemove] = useState(false);
   const addBtnRef = useRef<HTMLButtonElement>(null);
   const grenadeColor = GRENADE_TYPES[lineup.grenadeType as keyof typeof GRENADE_TYPES]?.color ?? '#f0a500';
   const proLine = [lineup.playerName, lineup.teamName].filter(Boolean).join(' \u00b7 ');
@@ -181,16 +182,42 @@ function NadeListItem({
       <div className="flex items-center gap-0.5 pr-2 shrink-0">
         {/* Remove from current collection button (only for user-owned collections) */}
         {isCurrentCollectionOwned && currentCollectionId && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onRemoveFromCollection(lineup.id, currentCollectionId);
-            }}
-            className="p-1.5 rounded-lg text-[#6b6b8a] opacity-0 group-hover:opacity-100 hover:text-[#ff4444] hover:bg-[#ff4444]/10 transition-all shrink-0"
-            title="Remove from collection"
-          >
-            <Minus className="h-3.5 w-3.5" />
-          </button>
+          confirmRemove ? (
+            <div className="flex items-center gap-0.5 shrink-0">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRemoveFromCollection(lineup.id, currentCollectionId);
+                  setConfirmRemove(false);
+                }}
+                className="p-1 rounded-lg text-[#ff4444] hover:bg-[#ff4444]/10 transition-colors"
+                title="Confirm remove"
+              >
+                <Check className="h-3.5 w-3.5" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setConfirmRemove(false);
+                }}
+                className="p-1 rounded-lg text-[#6b6b8a] hover:text-[#e8e8e8] hover:bg-[#1a1a2e] transition-colors"
+                title="Cancel"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setConfirmRemove(true);
+              }}
+              className="p-1.5 rounded-lg text-[#6b6b8a] opacity-0 group-hover:opacity-100 hover:text-[#ff4444] hover:bg-[#ff4444]/10 transition-all shrink-0"
+              title="Remove from collection"
+            >
+              <Minus className="h-3.5 w-3.5" />
+            </button>
+          )
         )}
 
         {/* Add to collection button */}
