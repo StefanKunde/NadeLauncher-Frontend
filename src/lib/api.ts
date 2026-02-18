@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { useAuthStore } from '@/store/auth-store';
-import type { AuthResponse, Lineup, MapInfo, Session, UsageStats, LineupCollection, UserSubscription, CollectionWithLineups, ProCollection, ProTeam, ProPlayer, ProMatch, Notification, ReferralStats, ReferralEntry, CommunityCollection } from './types';
+import type { AuthResponse, Lineup, MapInfo, Session, UsageStats, PracticeStats, LineupCollection, UserSubscription, CollectionWithLineups, ProCollection, ProTeam, ProPlayer, ProMatch, Notification, ReferralStats, ReferralEntry, CommunityCollection } from './types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://nadelauncher-backend-a99d397c.apps.deploypilot.stefankunde.dev';
 
@@ -81,6 +81,8 @@ export const sessionsApi = {
     api.get<{ data: Session | null }>('/api/sessions/active').then((r) => r.data.data),
   getUsage: () =>
     api.get<{ data: UsageStats }>('/api/sessions/usage').then((r) => r.data.data),
+  getStats: () =>
+    api.get<{ data: PracticeStats }>('/api/sessions/stats').then((r) => r.data.data),
   end: (id: string) => api.delete(`/api/sessions/${id}`),
   updateCollection: (collectionId?: string) =>
     api.patch<{ data: Session }>('/api/sessions/active/collection', {

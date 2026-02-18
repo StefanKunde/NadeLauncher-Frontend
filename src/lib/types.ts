@@ -109,6 +109,21 @@ export interface UsageStats {
   isPremium: boolean;
 }
 
+export interface MapPracticeTime {
+  mapName: string;
+  totalSeconds: number;
+  sessionCount: number;
+}
+
+export interface PracticeStats {
+  totalSeconds: number;
+  totalSessions: number;
+  weekSeconds: number;
+  monthSeconds: number;
+  yearSeconds: number;
+  mapBreakdown: MapPracticeTime[];
+}
+
 export interface LineupCollection {
   id: string;
   name: string;

@@ -705,14 +705,16 @@ export default function MapDetailPage() {
             })()}
 
             {/* Radar */}
-            <div className="rounded-xl border border-[#2a2a3e]/50 bg-[#12121a] overflow-hidden">
-              <MapRadar
-                mapName={mapName}
-                lineups={filteredLineups}
-                selectedLineupId={selectedLineup?.id}
-                onLineupClick={(lineup) => setSelectedLineup(lineup)}
-                mini={false}
-              />
+            <div className="max-w-[620px] px-3">
+              <div className="rounded-xl border border-[#2a2a3e]/50 bg-[#12121a] overflow-hidden">
+                <MapRadar
+                  mapName={mapName}
+                  lineups={filteredLineups}
+                  selectedLineupId={selectedLineup?.id}
+                  onLineupClick={(lineup) => setSelectedLineup(lineup)}
+                  mini={false}
+                />
+              </div>
             </div>
           </div>
 

@@ -15,8 +15,10 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth-store';
 import { MAPS, MAP_COLORS } from '@/lib/constants';
-import { userCollectionsApi } from '@/lib/api';
+import { userCollectionsApi, sessionsApi, collectionsApi } from '@/lib/api';
+import type { PracticeStats, LineupCollection, UserSubscription } from '@/lib/types';
 import PracticeSessionCard from '@/components/practice/PracticeSessionCard';
+import StatsGrid from '@/components/dashboard/StatsGrid';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -40,11 +42,22 @@ const GETTING_STARTED = [
 export default function DashboardPage() {
   const user = useAuthStore((s) => s.user);
   const [collectionCount, setCollectionCount] = useState<number | null>(null);
+  const [practiceStats, setPracticeStats] = useState<PracticeStats | null>(null);
+  const [myCollections, setMyCollections] = useState<LineupCollection[]>([]);
+  const [subscriptions, setSubscriptions] = useState<UserSubscription[]>([]);
+  const [statsLoading, setStatsLoading] = useState(true);
 
   useEffect(() => {
-    userCollectionsApi.getMy().then((cols) => {
+    Promise.all([
+      sessionsApi.getStats().catch(() => null),
+      userCollectionsApi.getMy().catch(() => [] as LineupCollection[]),
+      collectionsApi.getSubscriptions().catch(() => [] as UserSubscription[]),
+    ]).then(([stats, cols, subs]) => {
+      setPracticeStats(stats);
+      setMyCollections(cols);
+      setSubscriptions(subs);
       setCollectionCount(cols.length);
-    }).catch(() => {});
+    }).finally(() => setStatsLoading(false));
   }, []);
 
   return (
@@ -117,9 +130,23 @@ export default function DashboardPage() {
         </div>
       </motion.div>
 
+      {/* Your Statistics */}
+      <motion.div variants={fadeUp} custom={2} className="mb-10">
+        <div className="mb-5">
+          <h2 className="text-xl font-semibold text-[#e8e8e8]">Your Statistics</h2>
+          <p className="text-sm text-[#6b6b8a]">Practice progress and collection overview</p>
+        </div>
+        <StatsGrid
+          practiceStats={practiceStats}
+          myCollections={myCollections}
+          subscriptions={subscriptions}
+          loading={statsLoading}
+        />
+      </motion.div>
+
       {/* Getting Started (new users only) */}
       {collectionCount === 0 && (
-        <motion.div variants={fadeUp} custom={2} className="mb-10">
+        <motion.div variants={fadeUp} custom={3} className="mb-10">
           <div className="rounded-xl border border-[#2a2a3e]/50 bg-[#12121a] overflow-hidden">
             <div className="h-[3px] bg-gradient-to-r from-[#f0a500] via-[#f0a500]/40 to-transparent" />
             <div className="px-5 py-5">
@@ -149,7 +176,7 @@ export default function DashboardPage() {
       )}
 
       {/* Maps Quick Start */}
-      <motion.div variants={fadeUp} custom={collectionCount !== null && collectionCount > 0 ? 2 : 3}>
+      <motion.div variants={fadeUp} custom={collectionCount !== null && collectionCount > 0 ? 3 : 4}>
         <div className="flex items-center justify-between mb-5">
           <div>
             <h2 className="text-xl font-semibold text-[#e8e8e8]">Maps</h2>
@@ -167,7 +194,7 @@ export default function DashboardPage() {
           {MAPS.map((map, i) => {
             const color = MAP_COLORS[map.name] ?? '#f0a500';
             return (
-              <motion.div key={map.name} variants={fadeUp} custom={i + (collectionCount !== null && collectionCount > 0 ? 3 : 4)}>
+              <motion.div key={map.name} variants={fadeUp} custom={i + (collectionCount !== null && collectionCount > 0 ? 4 : 5)}>
                 <Link
                   href={`/dashboard/maps/${map.name}`}
                   className="group block rounded-xl overflow-hidden bg-[#12121a] border border-[#2a2a3e]/50 transition-all duration-300 hover:border-[#2a2a3e] hover:-translate-y-1"
