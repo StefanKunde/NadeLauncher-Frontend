@@ -297,6 +297,8 @@ export default function MapRadar({
                     ? `0 0 12px ${color}, 0 0 24px ${color}40`
                     : `0 0 4px ${color}80`,
                 }}
+                onMouseEnter={() => { if (!mini) setHoveredLineupId(lineup.id); }}
+                onMouseLeave={() => setHoveredLineupId(null)}
                 onClick={(e) => {
                   e.stopPropagation();
                   if (!mini && onLineupClick) onLineupClick(lineup);
