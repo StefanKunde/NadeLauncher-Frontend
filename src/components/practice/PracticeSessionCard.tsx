@@ -28,6 +28,47 @@ import { useAuthStore } from '@/store/auth-store';
 import { useSessionSocket } from '@/hooks/useSessionSocket';
 import type { Session, UsageStats, LineupCollection } from '@/lib/types';
 
+function groupCollections(collections: LineupCollection[], userId?: string) {
+  const pro: LineupCollection[] = [];
+  const own: LineupCollection[] = [];
+  const community: LineupCollection[] = [];
+  for (const c of collections) {
+    if (c.autoManaged && !c.ownerId) pro.push(c);
+    else if (c.ownerId === userId) own.push(c);
+    else community.push(c);
+  }
+  return { pro, own, community };
+}
+
+function CollectionOptgroups({ collections, userId }: { collections: LineupCollection[]; userId?: string }) {
+  const { pro, own, community } = groupCollections(collections, userId);
+  return (
+    <>
+      {own.length > 0 && (
+        <optgroup label="My Collections">
+          {own.map((c) => (
+            <option key={c.id} value={c.id}>{c.name} ({c.lineupCount})</option>
+          ))}
+        </optgroup>
+      )}
+      {pro.length > 0 && (
+        <optgroup label="Pro Collections">
+          {pro.map((c) => (
+            <option key={c.id} value={c.id}>{c.name} ({c.lineupCount})</option>
+          ))}
+        </optgroup>
+      )}
+      {community.length > 0 && (
+        <optgroup label="Community">
+          {community.map((c) => (
+            <option key={c.id} value={c.id}>{c.name} ({c.lineupCount})</option>
+          ))}
+        </optgroup>
+      )}
+    </>
+  );
+}
+
 function formatTime(totalSeconds: number): string {
   const mins = Math.floor(totalSeconds / 60);
   const secs = totalSeconds % 60;
@@ -523,11 +564,7 @@ export default function PracticeSessionCard() {
                   disabled={changingCollection}
                   className="w-full appearance-none rounded-lg border border-[#2a2a3e] bg-[#12121a] pl-3 pr-9 py-2 text-sm text-[#e8e8e8] focus:outline-none focus:border-[#4a9fd4]/60 transition-colors cursor-pointer hover:border-[#3a3a5e] disabled:opacity-60"
                 >
-                  {activeCollections.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name} ({c.lineupCount})
-                    </option>
-                  ))}
+                  <CollectionOptgroups collections={activeCollections} userId={user?.id} />
                 </select>
                 {changingCollection ? (
                   <Loader2 className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#6b6b8a] animate-spin pointer-events-none" />
@@ -1166,11 +1203,7 @@ export default function PracticeSessionCard() {
                       onChange={(e) => setSelectedCollection(e.target.value)}
                       className="w-full appearance-none rounded-xl border border-[#2a2a3e] bg-[#0a0a12] pl-4 pr-10 py-3 text-sm text-[#e8e8e8] focus:outline-none focus:border-[#4a9fd4]/60 focus:ring-1 focus:ring-[#4a9fd4]/20 transition-all cursor-pointer hover:border-[#3a3a5e]"
                     >
-                      {collections.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name} ({c.lineupCount})
-                        </option>
-                      ))}
+                      <CollectionOptgroups collections={collections} userId={user?.id} />
                     </select>
                     <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6b6b8a] pointer-events-none" />
                   </div>

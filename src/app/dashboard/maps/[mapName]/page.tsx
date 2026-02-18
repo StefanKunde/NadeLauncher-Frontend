@@ -491,16 +491,21 @@ export default function MapDetailPage() {
   const isPremium = user?.isPremium ?? false;
   const practiceCollections = useMemo(() => {
     const seen = new Set<string>();
-    const result: { id: string; name: string }[] = [];
+    type PracticeCollection = { id: string; name: string; type: 'own' | 'pro' | 'community' };
+    const own: PracticeCollection[] = [];
+    const pro: PracticeCollection[] = [];
+    const community: PracticeCollection[] = [];
     for (const c of userCollections) {
+      if (seen.has(c.id)) continue;
       seen.add(c.id);
-      result.push({ id: c.id, name: c.name });
+      own.push({ id: c.id, name: c.name, type: 'own' });
     }
     for (const c of allCollections.filter((c) => c.isSubscribed && !seen.has(c.id))) {
       seen.add(c.id);
-      result.push({ id: c.id, name: c.name });
+      if (c.autoManaged && !c.ownerId) pro.push({ id: c.id, name: c.name, type: 'pro' });
+      else community.push({ id: c.id, name: c.name, type: 'community' });
     }
-    return result;
+    return { own, pro, community, all: [...own, ...pro, ...community] };
   }, [userCollections, allCollections]);
 
   // ── Render ─────────────────────────────────────────────────────
@@ -548,7 +553,7 @@ export default function MapDetailPage() {
             </Link>
           ) : (
             <>
-              {practiceCollections.length > 0 && (
+              {practiceCollections.all.length > 0 && (
                 <div className="relative">
                   <button
                     onClick={() => setServerCollectionPicker(!serverCollectionPicker)}
@@ -561,29 +566,37 @@ export default function MapDetailPage() {
                   {serverCollectionPicker && (
                     <>
                       <div className="fixed inset-0 z-[60]" onClick={() => setServerCollectionPicker(false)} />
-                      <div className="absolute right-0 top-full z-[70] mt-1 w-64 rounded-xl border border-[#2a2a3e] bg-[#12121a] py-2 shadow-2xl shadow-black/50">
-                        <p className="px-4 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#6b6b8a]">
-                          Choose a collection
-                        </p>
-                        {practiceCollections.map((c) => {
-                          const isCurrent = sourceFilter.type === 'collection' && sourceFilter.collectionId === c.id;
-                          return (
-                            <button
-                              key={c.id}
-                              onClick={() => {
-                                setSourceFilter({ type: 'collection', collectionId: c.id, collectionName: c.name });
-                                setServerCollectionPicker(false);
-                              }}
-                              className={`flex w-full items-center gap-2 px-4 py-2 text-xs transition-colors ${
-                                isCurrent
-                                  ? 'bg-[#f0a500]/10 text-[#f0a500]'
-                                  : 'text-[#b8b8cc] hover:bg-[#1a1a2e] hover:text-[#e8e8e8]'
-                              }`}
-                            >
-                              <span className="truncate">{c.name}</span>
-                            </button>
-                          );
-                        })}
+                      <div className="absolute right-0 top-full z-[70] mt-1 w-64 rounded-xl border border-[#2a2a3e] bg-[#12121a] py-2 shadow-2xl shadow-black/50 max-h-[320px] overflow-y-auto">
+                        {([
+                          { label: 'My Collections', items: practiceCollections.own },
+                          { label: 'Pro Collections', items: practiceCollections.pro },
+                          { label: 'Community', items: practiceCollections.community },
+                        ] as const).filter((g) => g.items.length > 0).map((group) => (
+                          <div key={group.label}>
+                            <p className="px-4 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#6b6b8a]">
+                              {group.label}
+                            </p>
+                            {group.items.map((c) => {
+                              const isCurrent = sourceFilter.type === 'collection' && sourceFilter.collectionId === c.id;
+                              return (
+                                <button
+                                  key={c.id}
+                                  onClick={() => {
+                                    setSourceFilter({ type: 'collection', collectionId: c.id, collectionName: c.name });
+                                    setServerCollectionPicker(false);
+                                  }}
+                                  className={`flex w-full items-center gap-2 px-4 py-2 text-xs transition-colors ${
+                                    isCurrent
+                                      ? 'bg-[#f0a500]/10 text-[#f0a500]'
+                                      : 'text-[#b8b8cc] hover:bg-[#1a1a2e] hover:text-[#e8e8e8]'
+                                  }`}
+                                >
+                                  <span className="truncate">{c.name}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        ))}
                       </div>
                     </>
                   )}
@@ -592,10 +605,11 @@ export default function MapDetailPage() {
               <button
                 onClick={() => setShowPracticeConfirm(true)}
                 disabled={startingServer}
-                className="flex items-center gap-2 rounded-lg bg-[#f0a500] px-3 py-1.5 text-xs font-semibold text-[#0a0a0f] hover:bg-[#ffd700] transition-colors disabled:opacity-50"
+                className="flex items-center gap-1.5 rounded-lg bg-[#f0a500] px-2 py-1.5 text-[10px] sm:text-xs sm:px-3 sm:gap-2 font-semibold text-[#0a0a0f] hover:bg-[#ffd700] transition-colors disabled:opacity-50"
               >
-                {startingServer ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
-                Practice this Collection
+                {startingServer ? <Loader2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 animate-spin" /> : <Play className="h-3 w-3 sm:h-3.5 sm:w-3.5" />}
+                <span className="hidden sm:inline">Practice this Collection</span>
+                <span className="sm:hidden">Practice</span>
               </button>
             </>
           )}
