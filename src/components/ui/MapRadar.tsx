@@ -4,7 +4,7 @@ import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { Plus, Minus, Maximize2 } from 'lucide-react';
 import { MAP_COORDINATES, worldToRadar } from '@/lib/map-coordinates';
-import { GRENADE_TYPES } from '@/lib/constants';
+import { GRENADE_TYPES, THROW_TYPES } from '@/lib/constants';
 import type { Lineup } from '@/lib/types';
 
 interface MapRadarProps {
@@ -27,6 +27,9 @@ const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 3.0;
 const ZOOM_STEP = 0.15;
 
+type Marker = { lineup: Lineup; throwPos: { x: number; y: number }; landingPos: { x: number; y: number } };
+type MarkerGroup = { key: string; pos: { x: number; y: number }; items: Marker[] };
+
 export default function MapRadar({
   mapName,
   lineups,
@@ -45,6 +48,9 @@ export default function MapRadar({
   const isDragging = useRef(false);
   const dragStart = useRef({ x: 0, y: 0 });
   const panStart = useRef({ x: 0, y: 0 });
+
+  // Popup state for stacked markers
+  const [openGroupKey, setOpenGroupKey] = useState<string | null>(null);
 
   const radarImage = useMemo(() => {
     if (!config) return null;
@@ -69,6 +75,27 @@ export default function MapRadar({
         return { lineup: l, throwPos, landingPos };
       });
   }, [lineups, config, showLower, hasLayers]);
+
+  // Group markers by position (round to 0.5% to cluster near-identical positions)
+  const groupedMarkers = useMemo<MarkerGroup[]>(() => {
+    const groups = new Map<string, Marker[]>();
+    for (const m of markers) {
+      const kx = Math.round(m.throwPos.x * 2) / 2;
+      const ky = Math.round(m.throwPos.y * 2) / 2;
+      const key = `${kx},${ky}`;
+      const group = groups.get(key);
+      if (group) group.push(m);
+      else groups.set(key, [m]);
+    }
+    return [...groups.entries()].map(([key, items]) => ({
+      key,
+      pos: items[0].throwPos,
+      items,
+    }));
+  }, [markers]);
+
+  // Close popup when lineups change (filter/collection switch)
+  useEffect(() => { setOpenGroupKey(null); }, [lineups]);
 
   // Attach wheel listener as non-passive so preventDefault stops page scroll
   useEffect(() => {
@@ -138,7 +165,11 @@ export default function MapRadar({
       className={`relative aspect-square w-full overflow-hidden rounded-xl bg-[#0a0a0f] ${
         !mini ? 'cursor-grab active:cursor-grabbing' : ''
       }`}
-      onMouseDown={handleMouseDown}
+      onMouseDown={(e) => {
+        // Close popup when clicking the map background
+        if (!mini) setOpenGroupKey(null);
+        handleMouseDown(e);
+      }}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
@@ -209,34 +240,153 @@ export default function MapRadar({
           </svg>
         )}
 
-        {/* Lineup markers */}
-        {markers.map(({ lineup, throwPos }) => {
-          const isSelected = lineup.id === selectedLineupId;
-          const color = GRENADE_COLORS[lineup.grenadeType] || '#fff';
-          const size = isSelected ? selectedDotSize : dotSize;
+        {/* Lineup markers (grouped) */}
+        {groupedMarkers.map((group) => {
+          const hasSelected = group.items.some((m) => m.lineup.id === selectedLineupId);
+          const isStacked = group.items.length > 1;
+          const isPopupOpen = openGroupKey === group.key;
+
+          if (!isStacked) {
+            // Single marker — render exactly as before
+            const { lineup, throwPos } = group.items[0];
+            const isSelected = lineup.id === selectedLineupId;
+            const color = GRENADE_COLORS[lineup.grenadeType] || '#fff';
+            const size = isSelected ? selectedDotSize : dotSize;
+
+            return (
+              <div
+                key={group.key}
+                className={`absolute z-20 -translate-x-1/2 -translate-y-1/2 rounded-full transition-all duration-200 ${
+                  !mini ? 'cursor-pointer hover:scale-125' : ''
+                } ${isSelected ? 'ring-2 ring-white/50' : ''}`}
+                style={{
+                  left: `${throwPos.x}%`,
+                  top: `${throwPos.y}%`,
+                  width: size,
+                  height: size,
+                  backgroundColor: color,
+                  boxShadow: isSelected
+                    ? `0 0 12px ${color}, 0 0 24px ${color}40`
+                    : `0 0 4px ${color}80`,
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!mini && onLineupClick) onLineupClick(lineup);
+                }}
+                title={!mini ? lineup.name : undefined}
+              />
+            );
+          }
+
+          // Stacked marker — show dot with count badge + popup on click
+          const primaryColor = hasSelected
+            ? GRENADE_COLORS[group.items.find((m) => m.lineup.id === selectedLineupId)!.lineup.grenadeType] || '#fff'
+            : GRENADE_COLORS[group.items[0].lineup.grenadeType] || '#fff';
+          const size = hasSelected ? selectedDotSize : dotSize;
+          // Check if group has mixed grenade types
+          const grenadeTypes = new Set(group.items.map((m) => m.lineup.grenadeType));
+          const isMixed = grenadeTypes.size > 1;
 
           return (
             <div
-              key={lineup.id}
-              className={`absolute z-20 -translate-x-1/2 -translate-y-1/2 rounded-full transition-all duration-200 ${
-                !mini ? 'cursor-pointer hover:scale-125' : ''
-              } ${isSelected ? 'ring-2 ring-white/50' : ''}`}
+              key={group.key}
+              className="absolute z-20 -translate-x-1/2 -translate-y-1/2"
               style={{
-                left: `${throwPos.x}%`,
-                top: `${throwPos.y}%`,
-                width: size,
-                height: size,
-                backgroundColor: color,
-                boxShadow: isSelected
-                  ? `0 0 12px ${color}, 0 0 24px ${color}40`
-                  : `0 0 4px ${color}80`,
+                left: `${group.pos.x}%`,
+                top: `${group.pos.y}%`,
               }}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (!mini && onLineupClick) onLineupClick(lineup);
-              }}
-              title={!mini ? lineup.name : undefined}
-            />
+            >
+              {/* Dot */}
+              <div
+                className={`rounded-full transition-all duration-200 ${
+                  !mini ? 'cursor-pointer hover:scale-125' : ''
+                } ${hasSelected ? 'ring-2 ring-white/50' : ''}`}
+                style={{
+                  width: size,
+                  height: size,
+                  backgroundColor: isMixed ? '#aaa' : primaryColor,
+                  boxShadow: hasSelected
+                    ? `0 0 12px ${primaryColor}, 0 0 24px ${primaryColor}40`
+                    : `0 0 4px ${primaryColor}80`,
+                  transform: 'translate(-50%, -50%)',
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (mini) return;
+                  setOpenGroupKey(isPopupOpen ? null : group.key);
+                }}
+              />
+
+              {/* Count badge */}
+              {!mini && (
+                <div
+                  className="absolute pointer-events-none flex items-center justify-center rounded-full bg-white text-[#0a0a0f] font-bold"
+                  style={{
+                    width: 14,
+                    height: 14,
+                    fontSize: 9,
+                    lineHeight: 1,
+                    top: -size / 2 - 8,
+                    left: size / 2 - 4,
+                  }}
+                >
+                  {group.items.length}
+                </div>
+              )}
+
+              {/* Popup selector */}
+              {!mini && isPopupOpen && (
+                <div
+                  className="absolute z-[50] min-w-[180px] max-w-[240px] rounded-lg border border-[#2a2a3e] bg-[#12121a]/95 shadow-xl backdrop-blur-sm"
+                  style={{
+                    // Open downward by default, upward if near bottom
+                    ...(group.pos.y > 70
+                      ? { bottom: size / 2 + 8, left: '50%', transform: 'translateX(-50%)' }
+                      : { top: size / 2 + 8, left: '50%', transform: 'translateX(-50%)' }),
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="px-2 py-1.5 border-b border-[#2a2a3e]/50">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-[#6b6b8a]">
+                      {group.items.length} lineups at this position
+                    </span>
+                  </div>
+                  <div className="py-1 max-h-[200px] overflow-y-auto">
+                    {group.items.map(({ lineup }) => {
+                      const color = GRENADE_COLORS[lineup.grenadeType] || '#fff';
+                      const isSelected = lineup.id === selectedLineupId;
+                      const throwLabel = THROW_TYPES[lineup.throwType as keyof typeof THROW_TYPES] ?? '';
+                      return (
+                        <button
+                          key={lineup.id}
+                          className={`flex w-full items-center gap-2 px-2 py-1.5 text-left transition-colors hover:bg-white/5 ${
+                            isSelected ? 'bg-white/10' : ''
+                          }`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (onLineupClick) onLineupClick(lineup);
+                            setOpenGroupKey(null);
+                          }}
+                        >
+                          <span
+                            className="flex-shrink-0 h-2.5 w-2.5 rounded-full"
+                            style={{ backgroundColor: color }}
+                          />
+                          <span className="flex-1 truncate text-[11px] text-white/90">
+                            {lineup.name}
+                          </span>
+                          {throwLabel && (
+                            <span className="flex-shrink-0 text-[9px] text-[#6b6b8a]">
+                              {throwLabel}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
           );
         })}
 
