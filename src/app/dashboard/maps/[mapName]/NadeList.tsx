@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { Plus, Check, Loader2, Minus, ChevronRight, Eye } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Lineup, LineupCollection } from '@/lib/types';
@@ -100,9 +100,26 @@ function NadeListItem({
   isCurrentCollectionOwned: boolean;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
+  const addBtnRef = useRef<HTMLButtonElement>(null);
   const grenadeColor = GRENADE_TYPES[lineup.grenadeType as keyof typeof GRENADE_TYPES]?.color ?? '#f0a500';
   const proLine = [lineup.playerName, lineup.teamName].filter(Boolean).join(' \u00b7 ');
   const hasGhostReplay = (lineup.movementPath?.length ?? 0) > 0;
+
+  const toggleMenu = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!menuOpen && addBtnRef.current) {
+      const rect = addBtnRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const dropdownHeight = userCollections.length * 36 + 40; // estimate
+      const openAbove = spaceBelow < dropdownHeight && rect.top > dropdownHeight;
+      setMenuPos({
+        top: openAbove ? rect.top - dropdownHeight - 4 : rect.bottom + 4,
+        right: window.innerWidth - rect.right,
+      });
+    }
+    setMenuOpen(!menuOpen);
+  }, [menuOpen, userCollections.length]);
 
   return (
     <motion.div
@@ -178,20 +195,21 @@ function NadeListItem({
 
         {/* Add to collection button */}
         {userCollections.length > 0 && (
-          <div className="relative shrink-0">
+          <div className="shrink-0">
             <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setMenuOpen(!menuOpen);
-              }}
+              ref={addBtnRef}
+              onClick={toggleMenu}
               className="p-1.5 rounded-lg text-[#6b6b8a] opacity-0 group-hover:opacity-100 hover:text-[#f0a500] hover:bg-[#f0a500]/10 transition-all"
             >
               <Plus className="h-3.5 w-3.5" />
             </button>
-            {menuOpen && (
+            {menuOpen && menuPos && (
               <>
-                <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setMenuOpen(false); }} />
-                <div className="absolute right-0 top-full z-50 mt-1 w-52 rounded-xl border border-[#2a2a3e] bg-[#12121a] py-1.5 shadow-xl shadow-black/50">
+                <div className="fixed inset-0 z-[80]" onClick={(e) => { e.stopPropagation(); setMenuOpen(false); }} />
+                <div
+                  className="fixed z-[90] w-52 rounded-xl border border-[#2a2a3e] bg-[#12121a] py-1.5 shadow-xl shadow-black/50"
+                  style={{ top: menuPos.top, right: menuPos.right }}
+                >
                   <p className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#6b6b8a]/60">Add to collection</p>
                   {userCollections.map((c) => {
                     const alreadyIn = userCollectionLineupIds.get(c.id)?.has(lineup.id) ?? false;

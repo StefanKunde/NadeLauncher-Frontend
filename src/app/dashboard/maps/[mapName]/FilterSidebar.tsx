@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Search, Plus, Lock, ChevronDown, ChevronRight, Pencil, Trash2, Loader2, X, Calendar, Crown, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -79,6 +79,22 @@ export default function FilterSidebar({
   const [search, setSearch] = useState('');
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [expandedEvents, setExpandedEvents] = useState<Set<string>>(new Set());
+
+  // Auto-expand Events section when a match/event collection is pre-selected (e.g. cross-map navigation)
+  useEffect(() => {
+    if (sourceFilter.type !== 'collection') return;
+    const coll = proCollections.find((c) => c.id === sourceFilter.collectionId);
+    if (!coll || (coll.proCategory !== 'match' && coll.proCategory !== 'event')) return;
+
+    setEventsExpanded(true);
+    const eventName = (coll.metadata?.eventName as string) ?? null;
+    if (eventName) {
+      setExpandedEvents((prev) => {
+        if (prev.has(eventName)) return prev;
+        return new Set([...prev, eventName]);
+      });
+    }
+  }, [sourceFilter, proCollections]);
 
   const metaCollections = proCollections
     .filter((c) => c.proCategory === 'meta' || c.proCategory === 'meta_all')
