@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { Search, Users, Loader2, Star, ChevronDown } from 'lucide-react';
+import Image from 'next/image';
+import { Search, Users, Loader2, Star, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Globe } from 'lucide-react';
 import { communityApi, collectionsApi } from '@/lib/api';
 import { useAuthStore } from '@/store/auth-store';
 import { MAPS, MAP_COLORS } from '@/lib/constants';
@@ -117,7 +118,63 @@ export default function CommunityPage() {
         </p>
       </div>
 
-      {/* Filters */}
+      {/* Map filter strip */}
+      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin">
+        {/* All Maps button */}
+        <button
+          onClick={() => setMapFilter('')}
+          className={`relative shrink-0 flex items-center justify-center w-20 h-14 rounded-lg overflow-hidden border transition-all duration-200 ${
+            mapFilter === ''
+              ? 'border-[#6c5ce7]/60 ring-1 ring-[#6c5ce7]/30'
+              : 'border-[#2a2a3e]/30 hover:border-[#2a2a3e] opacity-60 hover:opacity-100'
+          }`}
+        >
+          <div className="absolute inset-0 bg-[#1a1a2e]" />
+          <div className="relative flex flex-col items-center gap-1">
+            <Globe className="h-4 w-4 text-[#6c5ce7]" />
+            <span className="text-[9px] font-semibold text-white/90">All Maps</span>
+          </div>
+          {mapFilter === '' && (
+            <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#6c5ce7]" />
+          )}
+        </button>
+
+        {MAPS.map((m) => {
+          const isActive = mapFilter === m.name;
+          const mColor = MAP_COLORS[m.name] ?? '#6c5ce7';
+          return (
+            <button
+              key={m.name}
+              onClick={() => setMapFilter(m.name)}
+              className={`relative shrink-0 block w-20 h-14 rounded-lg overflow-hidden border transition-all duration-200 ${
+                isActive
+                  ? 'border-[#6c5ce7]/60 ring-1 ring-[#6c5ce7]/30'
+                  : 'border-[#2a2a3e]/30 hover:border-[#2a2a3e] opacity-60 hover:opacity-100'
+              }`}
+            >
+              <Image
+                src={m.screenshot}
+                alt={m.displayName}
+                fill
+                className="object-cover"
+                sizes="80px"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+              <span className="absolute bottom-1 left-1.5 text-[9px] font-semibold text-white/90 drop-shadow-md">
+                {m.displayName}
+              </span>
+              {isActive && (
+                <div
+                  className="absolute bottom-0 left-0 right-0 h-[2px]"
+                  style={{ backgroundColor: mColor }}
+                />
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Search + Sort */}
       <div className="flex flex-wrap gap-3">
         <div className="flex items-center gap-2 flex-1 min-w-[200px] bg-[#1a1a2e] border border-[#2a2a3e] rounded-lg px-3 focus-within:border-[#6c5ce7]">
           <Search className="h-4 w-4 shrink-0 text-[#555577]" />
@@ -130,27 +187,11 @@ export default function CommunityPage() {
           />
         </div>
 
-        <div className="relative">
-          <select
-            value={mapFilter}
-            onChange={(e) => setMapFilter(e.target.value)}
-            className="appearance-none pl-3 pr-9 py-2 bg-[#1a1a2e] border border-[#2a2a3e] rounded-lg text-white text-sm focus:border-[#6c5ce7] focus:outline-none cursor-pointer"
-          >
-            <option value="">All Maps</option>
-            {MAPS.map((m) => (
-              <option key={m.name} value={m.name}>
-                {m.displayName}
-              </option>
-            ))}
-          </select>
-          <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6b6b8a] pointer-events-none" />
-        </div>
-
-        <div className="relative">
+        <div className="relative inline-flex items-center">
           <select
             value={sort}
             onChange={(e) => setSort(e.target.value as SortOption)}
-            className="appearance-none pl-3 pr-9 py-2 bg-[#1a1a2e] border border-[#2a2a3e] rounded-lg text-white text-sm focus:border-[#6c5ce7] focus:outline-none cursor-pointer"
+            className="appearance-none h-9 pl-3 pr-8 bg-[#1a1a2e] border border-[#2a2a3e] rounded-lg text-white text-sm focus:border-[#6c5ce7] focus:outline-none cursor-pointer"
           >
             {SORT_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -158,7 +199,7 @@ export default function CommunityPage() {
               </option>
             ))}
           </select>
-          <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6b6b8a] pointer-events-none" />
+          <ChevronDown className="absolute right-2.5 h-3.5 w-3.5 text-[#6b6b8a] pointer-events-none" />
         </div>
       </div>
 
@@ -187,7 +228,7 @@ export default function CommunityPage() {
           </div>
 
           {/* List */}
-          <div className="space-y-2">
+          <div className="space-y-3">
             {collections.map((col) => (
               <Link key={col.id} href={`/dashboard/community/${col.id}`}>
                 {/* Desktop row */}
@@ -299,28 +340,70 @@ export default function CommunityPage() {
           </div>
 
           {/* Pagination */}
-          <div className="flex items-center justify-between pt-2">
+          <div className="flex items-center justify-between pt-4">
             <span className="text-xs text-[#6b6b8a]">
               {total} collection{total !== 1 ? 's' : ''}
             </span>
             {totalPages > 1 && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
+                {/* First page */}
+                <button
+                  onClick={() => setPage(1)}
+                  disabled={page === 1}
+                  className="p-1.5 rounded-lg bg-[#1a1a2e] border border-[#2a2a3e] text-[#b8b8cc] hover:border-[#6c5ce7]/40 hover:text-white transition-colors disabled:opacity-30 disabled:hover:border-[#2a2a3e]"
+                  title="First page"
+                >
+                  <ChevronsLeft className="h-4 w-4" />
+                </button>
+                {/* Previous */}
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="px-3 py-1.5 bg-[#1a1a2e] border border-[#2a2a3e] rounded-lg text-sm text-white disabled:opacity-30"
+                  className="p-1.5 rounded-lg bg-[#1a1a2e] border border-[#2a2a3e] text-[#b8b8cc] hover:border-[#6c5ce7]/40 hover:text-white transition-colors disabled:opacity-30 disabled:hover:border-[#2a2a3e]"
+                  title="Previous page"
                 >
-                  Previous
+                  <ChevronLeft className="h-4 w-4" />
                 </button>
-                <span className="text-sm text-[#8888aa]">
-                  {page} / {totalPages}
-                </span>
+
+                {/* Page numbers */}
+                {(() => {
+                  const pages: number[] = [];
+                  let start = Math.max(1, page - 2);
+                  let end = Math.min(totalPages, start + 4);
+                  if (end - start < 4) start = Math.max(1, end - 4);
+                  for (let i = start; i <= end; i++) pages.push(i);
+                  return pages.map((p) => (
+                    <button
+                      key={p}
+                      onClick={() => setPage(p)}
+                      className={`min-w-[32px] h-8 rounded-lg text-xs font-medium transition-colors ${
+                        p === page
+                          ? 'bg-[#6c5ce7] text-white border border-[#6c5ce7]'
+                          : 'bg-[#1a1a2e] border border-[#2a2a3e] text-[#b8b8cc] hover:border-[#6c5ce7]/40 hover:text-white'
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  ));
+                })()}
+
+                {/* Next */}
                 <button
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages}
-                  className="px-3 py-1.5 bg-[#1a1a2e] border border-[#2a2a3e] rounded-lg text-sm text-white disabled:opacity-30"
+                  className="p-1.5 rounded-lg bg-[#1a1a2e] border border-[#2a2a3e] text-[#b8b8cc] hover:border-[#6c5ce7]/40 hover:text-white transition-colors disabled:opacity-30 disabled:hover:border-[#2a2a3e]"
+                  title="Next page"
                 >
-                  Next
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+                {/* Last page */}
+                <button
+                  onClick={() => setPage(totalPages)}
+                  disabled={page === totalPages}
+                  className="p-1.5 rounded-lg bg-[#1a1a2e] border border-[#2a2a3e] text-[#b8b8cc] hover:border-[#6c5ce7]/40 hover:text-white transition-colors disabled:opacity-30 disabled:hover:border-[#2a2a3e]"
+                  title="Last page"
+                >
+                  <ChevronsRight className="h-4 w-4" />
                 </button>
               </div>
             )}

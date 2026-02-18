@@ -514,7 +514,7 @@ export default function MapDetailPage() {
   return (
     <motion.div variants={fadeIn} initial="hidden" animate="show" className="max-w-[1600px]">
       {/* Header + Practice Bar */}
-      <div className="mb-5 flex flex-wrap items-center gap-3">
+      <div className="relative mb-5 flex items-center gap-3">
         <Link
           href="/dashboard/maps"
           className="flex items-center gap-1 text-sm text-[#6b6b8a] hover:text-[#e8e8e8] transition-colors"
@@ -526,8 +526,8 @@ export default function MapDetailPage() {
         <h1 className="text-xl font-bold text-[#e8e8e8]">{map.displayName}</h1>
         <div className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
 
-        {/* Practice bar — centered in remaining space */}
-        <div className="flex-1 flex items-center justify-center gap-2">
+        {/* Practice bar — true center */}
+        <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
           {activeSession?.isActive ? (
             <Link
               href="/dashboard"
@@ -726,7 +726,7 @@ export default function MapDetailPage() {
                     <Link
                       key={m.name}
                       href={`/dashboard/maps/${m.name}`}
-                      className={`relative block w-14 h-10 rounded-lg overflow-hidden border transition-all duration-200 ${
+                      className={`relative block w-20 h-14 rounded-lg overflow-hidden border transition-all duration-200 ${
                         isActive
                           ? 'border-[#f0a500]/60 ring-1 ring-[#f0a500]/30'
                           : 'border-[#2a2a3e]/30 hover:border-[#2a2a3e] opacity-60 hover:opacity-100'
@@ -738,8 +738,12 @@ export default function MapDetailPage() {
                         alt={m.displayName}
                         fill
                         className="object-cover"
-                        sizes="56px"
+                        sizes="80px"
                       />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                      <span className="absolute bottom-1 left-1.5 text-[9px] font-semibold text-white/90 drop-shadow-md">
+                        {m.displayName}
+                      </span>
                       {isActive && (
                         <div
                           className="absolute bottom-0 left-0 right-0 h-[2px]"

@@ -230,7 +230,7 @@ export default function CommunityDetailPage() {
   return (
     <motion.div variants={fadeIn} initial="hidden" animate="show" className="max-w-[1600px]">
       {/* Header + Practice Bar */}
-      <div className="mb-5 flex items-center gap-3">
+      <div className="relative mb-5 flex items-center gap-3">
         <Link
           href="/dashboard/community"
           className="flex items-center gap-1 text-sm text-[#6b6b8a] hover:text-[#e8e8e8] transition-colors shrink-0"
@@ -249,8 +249,8 @@ export default function CommunityDetailPage() {
           </span>
         )}
 
-        {/* Practice bar — centered in remaining space */}
-        <div className="flex-1 flex justify-center">
+        {/* Practice bar — true center */}
+        <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
           {activeSession?.isActive ? (
             <Link
               href="/dashboard"
