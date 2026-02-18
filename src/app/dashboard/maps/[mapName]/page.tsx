@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, Play, ChevronDown, Loader2, Monitor, X, Trash2, Users, Share2, Star, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Play, ChevronDown, Loader2, Monitor, X, Trash2, Users, Share2, Star, Eye, EyeOff, Search, Crosshair } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { MAPS, MAP_COLORS } from '@/lib/constants';
@@ -15,6 +15,8 @@ import MapRadar from '@/components/ui/MapRadar';
 import FilterSidebar, { type GrenadeFilter, type SourceFilter } from './FilterSidebar';
 import NadeList from './NadeList';
 import NadeDetail from './NadeDetail';
+import GrenadeIcon from '@/components/ui/GrenadeIcon';
+import { GRENADE_TYPES } from '@/lib/constants';
 import { fadeIn } from './types';
 
 export default function MapDetailPage() {
@@ -54,6 +56,10 @@ export default function MapDetailPage() {
 
   // On-demand collection loading
   const [loadingCollection, setLoadingCollection] = useState(false);
+
+  // Nade search & detail modal
+  const [nadeSearch, setNadeSearch] = useState('');
+  const [showNadeDetail, setShowNadeDetail] = useState(false);
 
   // Create collection modal
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -264,6 +270,16 @@ export default function MapDetailPage() {
     if (grenadeFilter === 'all') return allLineups;
     return allLineups.filter((l) => l.grenadeType === grenadeFilter);
   }, [allLineups, grenadeFilter]);
+
+  const searchFilteredLineups = useMemo(() => {
+    if (!nadeSearch.trim()) return filteredLineups;
+    const q = nadeSearch.toLowerCase();
+    return filteredLineups.filter((l) =>
+      l.name.toLowerCase().includes(q) ||
+      l.playerName?.toLowerCase().includes(q) ||
+      l.teamName?.toLowerCase().includes(q),
+    );
+  }, [filteredLineups, nadeSearch]);
 
   // ── Actions ────────────────────────────────────────────────────
   const handleCreateCollection = () => {
@@ -524,26 +540,41 @@ export default function MapDetailPage() {
           </div>
         </div>
       ) : (
-        <div className="flex flex-col xl:flex-row gap-6">
+        <div className="flex flex-col xl:flex-row gap-4">
           {/* Left: Filter Sidebar */}
-          <FilterSidebar
-            grenadeFilter={grenadeFilter}
-            onGrenadeFilterChange={setGrenadeFilter}
-            sourceFilter={sourceFilter}
-            onSourceFilterChange={setSourceFilter}
-            proCollections={proCollections}
-            userCollections={userCollections}
-            communityCollections={communityCollections}
-            crossMapMatches={crossMapMatches}
-            currentMapName={mapName}
-            onCreateCollection={handleCreateCollection}
-            onEditCollection={handleEditCollection}
-            onDeleteCollection={handleDeleteCollection}
-            creatingCollection={creatingCollection}
-          />
+          <div className="shrink-0">
+            {/* Column guide — desktop only */}
+            <div className="hidden xl:block mb-2.5">
+              <div className="h-[3px] rounded-full bg-[#f0a500]/25" />
+              <p className="mt-1 text-[9px] text-[#f0a500]/50 font-medium tracking-wide">Collections · Browse & filter</p>
+            </div>
+            <FilterSidebar
+              grenadeFilter={grenadeFilter}
+              onGrenadeFilterChange={setGrenadeFilter}
+              sourceFilter={sourceFilter}
+              onSourceFilterChange={setSourceFilter}
+              proCollections={proCollections}
+              userCollections={userCollections}
+              communityCollections={communityCollections}
+              crossMapMatches={crossMapMatches}
+              currentMapName={mapName}
+              onCreateCollection={handleCreateCollection}
+              onEditCollection={handleEditCollection}
+              onDeleteCollection={handleDeleteCollection}
+              creatingCollection={creatingCollection}
+            />
+          </div>
 
-          {/* Center: Radar + Nade List */}
+          {/* Center: Radar */}
           <div className="flex-1 min-w-0 space-y-4">
+            {/* Column guide — desktop only */}
+            <div className="hidden xl:flex items-start gap-4 -mb-2">
+              <div className="flex-1 min-w-0">
+                <div className="h-[3px] rounded-full bg-[#4a9fd4]/25" />
+                <p className="mt-1 text-[9px] text-[#4a9fd4]/50 font-medium tracking-wide">Interactive Map · Click dots to explore lineups</p>
+              </div>
+            </div>
+
             {/* Practice Server Card — prominent position */}
             <div className="max-w-[700px] rounded-xl border border-[#f0a500]/20 bg-gradient-to-r from-[#12121a] to-[#1a1a2e] p-4">
               <div className="flex items-center gap-4">
@@ -753,77 +784,134 @@ export default function MapDetailPage() {
             </div>
           </div>
 
-          {/* Right: Nade List / Detail Panel */}
-          <div className="w-full xl:w-80 shrink-0">
-            <div className="xl:sticky xl:top-4">
-              <AnimatePresence mode="wait" initial={false}>
-                {selectedLineup ? (
-                  <motion.div
-                    key="detail"
-                    initial={{ opacity: 0, x: 12 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 12 }}
-                    transition={{ duration: 0.15 }}
-                  >
-                    {/* Back to list button */}
-                    <button
-                      onClick={() => setSelectedLineup(null)}
-                      className="flex items-center gap-1.5 mb-3 text-xs text-[#6b6b8a] hover:text-[#e8e8e8] transition-colors"
-                    >
-                      <ArrowLeft className="h-3 w-3" />
-                      Back to list
-                    </button>
-                    <NadeDetail lineup={selectedLineup} />
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="list"
-                    initial={{ opacity: 0, x: -12 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -12 }}
-                    transition={{ duration: 0.15 }}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="text-xs text-[#6b6b8a]">
-                        {loadingCollection ? (
-                          <span className="flex items-center gap-1.5">
-                            <Loader2 className="h-3 w-3 animate-spin" />
-                            Loading...
-                          </span>
-                        ) : (
-                          <>
-                            {filteredLineups.length} nade{filteredLineups.length !== 1 ? 's' : ''}
-                            {sourceFilter.type === 'collection' && (
-                              <span className="text-[#f0a500]"> in {sourceFilter.collectionName}</span>
-                            )}
-                          </>
-                        )}
-                      </p>
-                    </div>
+          {/* Right: Nade List Panel — always visible */}
+          <div className="w-full xl:w-[340px] shrink-0">
+            <div className="xl:sticky xl:top-4 space-y-2.5">
+              {/* Column guide — desktop only */}
+              <div className="hidden xl:block -mb-1">
+                <div className="h-[3px] rounded-full bg-[#22c55e]/25" />
+                <p className="mt-1 text-[9px] text-[#22c55e]/50 font-medium tracking-wide">Nade List · Select & practice</p>
+              </div>
 
-                    <div className="max-h-[calc(100vh-10rem)] overflow-y-auto scrollbar-thin rounded-xl border border-[#2a2a3e]/30 bg-[#12121a]/30 p-3">
-                      <NadeList
-                        lineups={filteredLineups}
-                        selectedLineupId={null}
-                        onSelectLineup={setSelectedLineup}
-                        userCollections={userCollections}
-                        addingToCollection={addingToCollection}
-                        onAddToCollection={handleAddToCollection}
-                        onRemoveFromCollection={handleRemoveFromCollection}
-                        userCollectionLineupIds={userCollectionLineupIds}
-                        currentCollectionId={sourceFilter.type === 'collection' ? sourceFilter.collectionId : undefined}
-                        isCurrentCollectionOwned={
-                          sourceFilter.type === 'collection'
-                            ? userCollections.some((c) => c.id === sourceFilter.collectionId)
-                            : false
-                        }
-                      />
+              {/* Selected nade mini card */}
+              <div className="rounded-xl border border-[#2a2a3e]/30 bg-[#12121a] px-3.5 py-3">
+                {selectedLineup ? (() => {
+                  const gColor = GRENADE_TYPES[selectedLineup.grenadeType as keyof typeof GRENADE_TYPES]?.color ?? '#f0a500';
+                  const proInfo = [selectedLineup.playerName, selectedLineup.teamName].filter(Boolean).join(' \u00b7 ');
+                  return (
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="flex h-8 w-8 items-center justify-center rounded-lg shrink-0"
+                        style={{ backgroundColor: `${gColor}15` }}
+                      >
+                        <GrenadeIcon type={selectedLineup.grenadeType as 'smoke' | 'flash' | 'molotov' | 'he'} size={18} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-[#e8e8e8] truncate">{selectedLineup.name}</p>
+                        {proInfo && <p className="text-[10px] text-[#f0a500]/50 truncate">{proInfo}</p>}
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          onClick={() => setShowNadeDetail(true)}
+                          className="p-1.5 rounded-lg text-[#6b6b8a] hover:text-[#e8e8e8] hover:bg-[#1a1a2e] transition-colors"
+                          title="View details"
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          onClick={() => setSelectedLineup(null)}
+                          className="p-1.5 rounded-lg text-[#6b6b8a] hover:text-[#ff4444] hover:bg-[#ff4444]/10 transition-colors"
+                          title="Deselect"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
                     </div>
-                  </motion.div>
+                  );
+                })() : (
+                  <div className="flex items-center gap-3 py-0.5">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#1a1a2e] shrink-0">
+                      <Crosshair className="h-4 w-4 text-[#2a2a3e]" />
+                    </div>
+                    <p className="text-xs text-[#6b6b8a]">No nade selected</p>
+                  </div>
                 )}
-              </AnimatePresence>
+              </div>
+
+              {/* Search + count */}
+              <div className="flex items-center gap-2">
+                <div className="flex-1 flex items-center gap-2 rounded-lg border border-[#2a2a3e]/30 bg-[#12121a] px-3 py-1.5 focus-within:border-[#f0a500]/30 transition-colors">
+                  <Search className="h-3.5 w-3.5 text-[#6b6b8a] shrink-0" />
+                  <input
+                    type="text"
+                    placeholder="Search nades..."
+                    value={nadeSearch}
+                    onChange={(e) => setNadeSearch(e.target.value)}
+                    className="w-full bg-transparent text-xs text-[#e8e8e8] placeholder-[#6b6b8a]/50 focus:outline-none border-none"
+                  />
+                </div>
+                <p className="text-[10px] text-[#6b6b8a] shrink-0 tabular-nums">
+                  {loadingCollection ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <>{searchFilteredLineups.length}</>
+                  )}
+                </p>
+              </div>
+
+              {/* Scrollable nade list */}
+              <div className="max-h-[calc(100vh-18rem)] overflow-y-auto scrollbar-thin rounded-xl border border-[#2a2a3e]/30 bg-[#12121a]/30 p-4">
+                <NadeList
+                  lineups={searchFilteredLineups}
+                  selectedLineupId={selectedLineup?.id ?? null}
+                  onSelectLineup={setSelectedLineup}
+                  userCollections={userCollections}
+                  addingToCollection={addingToCollection}
+                  onAddToCollection={handleAddToCollection}
+                  onRemoveFromCollection={handleRemoveFromCollection}
+                  userCollectionLineupIds={userCollectionLineupIds}
+                  currentCollectionId={sourceFilter.type === 'collection' ? sourceFilter.collectionId : undefined}
+                  isCurrentCollectionOwned={
+                    sourceFilter.type === 'collection'
+                      ? userCollections.some((c) => c.id === sourceFilter.collectionId)
+                      : false
+                  }
+                />
+              </div>
             </div>
           </div>
+
+          {/* Nade Detail Modal */}
+          <AnimatePresence>
+            {showNadeDetail && selectedLineup && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-50 flex items-start justify-center pt-[10vh] bg-black/60"
+                onClick={() => setShowNadeDetail(false)}
+              >
+                <motion.div
+                  initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                  animate={{ scale: 1, opacity: 1, y: 0 }}
+                  exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                  className="w-full max-w-sm max-h-[80vh] overflow-y-auto scrollbar-thin rounded-xl border border-[#2a2a3e] bg-[#0d0d14] shadow-2xl shadow-black/60"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 bg-[#0d0d14] border-b border-[#2a2a3e]/50">
+                    <p className="text-sm font-semibold text-[#e8e8e8]">Nade Details</p>
+                    <button
+                      onClick={() => setShowNadeDetail(false)}
+                      className="p-1 rounded-lg text-[#6b6b8a] hover:text-[#e8e8e8] hover:bg-[#1a1a2e] transition-colors"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <NadeDetail lineup={selectedLineup} />
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       )}
 

@@ -131,7 +131,7 @@ export default function Sidebar() {
   const sidebarContent = (
     <>
       {/* Logo */}
-      <div className="px-6 pt-5 pb-4">
+      <div className="px-6 pt-5 pb-3">
         <Link href="/dashboard" className="flex flex-col items-center gap-2">
           <Image
             src="/logo.png"
@@ -141,6 +141,11 @@ export default function Sidebar() {
             className="shrink-0 w-full h-auto"
           />
         </Link>
+        <div className="mt-2 flex justify-center">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f0a500]/8 border border-[#f0a500]/15 px-2.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-[#f0a500]/60">
+            Early Access
+          </span>
+        </div>
       </div>
 
       {/* Gold separator */}
