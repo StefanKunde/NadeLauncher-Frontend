@@ -14,19 +14,22 @@ import {
   LogOut,
   Menu,
   X,
+  ChevronRight,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/store/auth-store';
 import SidebarServerStatus from './SidebarServerStatus';
-import NotificationBell from '@/components/notifications/NotificationBell';
 
-const NAV_ITEMS = [
-  { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { href: '/dashboard/maps', icon: Map, label: 'Nades' },
-  { href: '/dashboard/community', icon: Users, label: 'Community' },
-  { href: '/dashboard/premium', icon: Crown, label: 'Premium', badge: 'PRO' },
-  { href: '/dashboard/referrals', icon: Gift, label: 'Referrals' },
-  { href: '/dashboard/settings', icon: Settings, label: 'Settings' },
+const NAV_MAIN = [
+  { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', desc: 'Overview & practice' },
+  { href: '/dashboard/maps', icon: Map, label: 'Nades', desc: 'Browse lineups' },
+  { href: '/dashboard/community', icon: Users, label: 'Community', desc: 'Shared collections' },
+];
+
+const NAV_ACCOUNT = [
+  { href: '/dashboard/premium', icon: Crown, label: 'Premium', desc: 'Unlimited practice', badge: 'PRO' },
+  { href: '/dashboard/referrals', icon: Gift, label: 'Referrals', desc: 'Invite & earn' },
+  { href: '/dashboard/settings', icon: Settings, label: 'Settings', desc: 'Account & preferences' },
 ];
 
 export default function Sidebar() {
@@ -54,6 +57,77 @@ export default function Sidebar() {
     ? user.username.slice(0, 2).toUpperCase()
     : '??';
 
+  const renderNavItem = ({ href, icon: Icon, label, desc, badge }: {
+    href: string;
+    icon: React.ComponentType<{ className?: string }>;
+    label: string;
+    desc: string;
+    badge?: string;
+  }) => {
+    const active = isActive(href);
+    return (
+      <Link
+        key={href}
+        href={href}
+        className={`group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
+          active
+            ? 'text-[#f0a500]'
+            : 'text-[#6b6b8a] hover:text-[#e8e8e8]'
+        }`}
+      >
+        {/* Active background glow */}
+        {active && (
+          <motion.div
+            layoutId="sidebar-active"
+            className="absolute inset-0 rounded-xl"
+            style={{
+              background: 'linear-gradient(135deg, rgba(240,165,0,0.12) 0%, rgba(240,165,0,0.04) 100%)',
+              border: '1px solid rgba(240,165,0,0.15)',
+            }}
+            transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+          />
+        )}
+
+        {/* Hover background */}
+        {!active && (
+          <div className="absolute inset-0 rounded-xl bg-[#1a1a2e] opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+        )}
+
+        {/* Icon container */}
+        <div className={`relative z-10 flex h-8 w-8 items-center justify-center rounded-lg shrink-0 transition-colors duration-200 ${
+          active
+            ? 'bg-[#f0a500]/15'
+            : 'bg-[#1a1a2e] group-hover:bg-[#22223a]'
+        }`}>
+          <Icon className={`h-4 w-4 transition-colors duration-200 ${
+            active ? 'text-[#f0a500]' : 'text-[#6b6b8a] group-hover:text-[#b8b8cc]'
+          }`} />
+        </div>
+
+        {/* Label + description */}
+        <div className="relative z-10 min-w-0 flex-1">
+          <span className="block truncate">{label}</span>
+          <span className={`block text-[10px] font-normal truncate transition-colors duration-200 ${
+            active ? 'text-[#f0a500]/60' : 'text-[#6b6b8a]/60 group-hover:text-[#6b6b8a]'
+          }`}>
+            {desc}
+          </span>
+        </div>
+
+        {/* Badge or chevron */}
+        {badge ? (
+          <span className="relative z-10 ml-auto rounded-md bg-gradient-to-r from-[#f0a500]/20 to-[#ffd700]/10 px-2 py-0.5 text-[10px] font-bold tracking-wider text-[#f0a500] border border-[#f0a500]/15">
+            {badge}
+          </span>
+        ) : (
+          <ChevronRight className={`relative z-10 h-3.5 w-3.5 ml-auto transition-all duration-200 ${
+            active ? 'text-[#f0a500]/40' : 'text-transparent group-hover:text-[#6b6b8a]/40'
+          }`} />
+        )}
+      </Link>
+    );
+  };
+
   const sidebarContent = (
     <>
       {/* Logo */}
@@ -72,49 +146,39 @@ export default function Sidebar() {
       {/* Gold separator */}
       <div className="mx-6 h-px bg-gradient-to-r from-transparent via-[#f0a500]/40 to-transparent" />
 
-      {/* Navigation */}
-      <nav className="mt-6 flex-1 space-y-1 px-4">
-        {NAV_ITEMS.map(({ href, icon: Icon, label, badge }) => {
-          const active = isActive(href);
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
-                active
-                  ? 'bg-[#f0a500]/8 text-[#f0a500]'
-                  : 'text-[#6b6b8a] hover:bg-[#1a1a2e] hover:text-[#e8e8e8]'
-              }`}
-            >
-              {/* Active indicator bar */}
-              {active && (
-                <motion.div
-                  layoutId="sidebar-active"
-                  className="absolute left-0 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-r-full bg-[#f0a500]"
-                  transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-                />
-              )}
-              <Icon className="h-5 w-5 shrink-0" />
-              <span>{label}</span>
-              {badge && (
-                <span className="ml-auto rounded bg-[#f0a500]/15 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-[#f0a500]">
-                  {badge}
-                </span>
-              )}
-            </Link>
-          );
-        })}
+      {/* Main Navigation */}
+      <nav className="mt-5 flex-1 px-3">
+        <p className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-[#6b6b8a]/50">
+          Navigate
+        </p>
+        <div className="space-y-0.5">
+          {NAV_MAIN.map(renderNavItem)}
+        </div>
+
+        {/* Section separator */}
+        <div className="mx-3 my-4 h-px bg-gradient-to-r from-[#2a2a3e]/60 via-[#2a2a3e]/30 to-transparent" />
+
+        <p className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-[#6b6b8a]/50">
+          Account
+        </p>
+        <div className="space-y-0.5">
+          {NAV_ACCOUNT.map(renderNavItem)}
+        </div>
       </nav>
 
       {/* Server Status */}
       <SidebarServerStatus />
 
       {/* User Section */}
-      <div className="border-t border-[#2a2a3e] px-4 py-4">
+      <div className="border-t border-[#2a2a3e]/60 px-3 py-4">
         {user && (
-          <div className="mb-3 flex items-center gap-3">
-            {/* Avatar */}
-            <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full bg-[#1a1a2e]">
+          <div className="mb-3 flex items-center gap-3 rounded-xl bg-[#12121a] border border-[#2a2a3e]/40 px-3 py-3">
+            {/* Avatar with ring */}
+            <div className={`relative h-9 w-9 shrink-0 overflow-hidden rounded-full ${
+              user.isPremium
+                ? 'ring-2 ring-[#f0a500]/40 ring-offset-2 ring-offset-[#12121a]'
+                : 'ring-1 ring-[#2a2a3e]'
+            }`}>
               {user.avatar ? (
                 <Image
                   src={user.avatar}
@@ -124,7 +188,9 @@ export default function Sidebar() {
                   unoptimized
                 />
               ) : (
-                <div className="flex h-full w-full items-center justify-center text-xs font-bold text-[#6b6b8a]">
+                <div className={`flex h-full w-full items-center justify-center text-xs font-bold ${
+                  user.isPremium ? 'bg-[#f0a500]/10 text-[#f0a500]' : 'bg-[#1a1a2e] text-[#6b6b8a]'
+                }`}>
                   {initials}
                 </div>
               )}
@@ -134,22 +200,24 @@ export default function Sidebar() {
               <p className="truncate text-sm font-semibold text-[#e8e8e8]">
                 {user.username}
               </p>
-              {user.isPremium && (
+              {user.isPremium ? (
                 <span className="inline-flex items-center gap-1 text-[10px] font-bold tracking-wider text-[#f0a500]">
                   <Crown className="h-3 w-3" />
                   PREMIUM
                 </span>
+              ) : (
+                <span className="text-[10px] text-[#6b6b8a]">Free Plan</span>
               )}
             </div>
-            {/* Notifications */}
-            <NotificationBell />
           </div>
         )}
         <button
           onClick={handleLogout}
-          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-[#6b6b8a] transition-all duration-200 hover:bg-[#ff4444]/10 hover:text-[#ff4444]"
+          className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-[#6b6b8a] transition-all duration-200 hover:bg-[#ff4444]/8 hover:text-[#ff4444]"
         >
-          <LogOut className="h-4 w-4" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#1a1a2e]">
+            <LogOut className="h-4 w-4" />
+          </div>
           Logout
         </button>
       </div>
@@ -159,7 +227,7 @@ export default function Sidebar() {
   return (
     <>
       {/* Mobile top bar */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between border-b border-[#2a2a3e] bg-[#0d0d14] px-4 py-3">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between border-b border-[#2a2a3e] bg-[#0d0d14]/95 backdrop-blur-lg px-4 py-3">
         <Link href="/dashboard">
           <Image src="/logo.png" alt="NadePro" width={600} height={262} className="h-10 w-auto" />
         </Link>
@@ -173,16 +241,20 @@ export default function Sidebar() {
 
       {/* Mobile overlay */}
       {mobileOpen && (
-        <div className="lg:hidden fixed inset-0 z-40 bg-black/60" onClick={() => setMobileOpen(false)} />
+        <div className="lg:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
       )}
 
       {/* Sidebar — desktop: always visible, mobile: slide-in drawer */}
       <aside
-        className={`fixed left-0 top-0 z-50 flex h-screen w-72 flex-col border-r border-[#2a2a3e] bg-[#0d0d14] transition-transform duration-300 ${
+        className={`fixed left-0 top-0 z-50 flex h-screen w-72 flex-col border-r border-[#2a2a3e]/50 bg-[#0d0d14] transition-transform duration-300 ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         } lg:translate-x-0`}
       >
-        {sidebarContent}
+        {/* Subtle gradient overlay on sidebar */}
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-[#f0a500]/[0.02] via-transparent to-[#0a0a0f]/50" />
+        <div className="relative z-10 flex flex-col h-full">
+          {sidebarContent}
+        </div>
       </aside>
     </>
   );

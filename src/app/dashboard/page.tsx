@@ -11,6 +11,7 @@ import {
   Map,
   FolderPlus,
   Monitor,
+  Sparkles,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth-store';
 import { MAPS, MAP_COLORS } from '@/lib/constants';
@@ -40,9 +41,9 @@ const TIPS = [
 ];
 
 const GETTING_STARTED = [
-  { icon: Map, text: 'Pick a map below to browse available lineups' },
-  { icon: FolderPlus, text: 'Create a collection and add your favorite nades' },
-  { icon: Monitor, text: 'Start a Practice Server to practice them in CS2' },
+  { icon: Map, text: 'Pick a map below to browse available lineups', desc: 'Explore pro lineups and community collections' },
+  { icon: FolderPlus, text: 'Create a collection and add your favorite nades', desc: 'Organize lineups by strategy or preference' },
+  { icon: Monitor, text: 'Start a Practice Server to practice them in CS2', desc: 'Ghost guidance walks you through each throw' },
 ];
 
 export default function DashboardPage() {
@@ -87,56 +88,46 @@ export default function DashboardPage() {
 
       {/* Practice Server */}
       <motion.div variants={fadeUp} custom={1} className="mb-10">
-        <h2 className="mb-1 text-xl font-semibold text-[#e8e8e8]">Practice Server</h2>
-        <p className="mb-5 text-sm text-[#6b6b8a]">Start a private CS2 practice session</p>
+        <div className="flex items-center gap-2.5 mb-4">
+          <h2 className="text-xl font-semibold text-[#e8e8e8]">Practice Server</h2>
+        </div>
+        <p className="mb-5 text-sm text-[#6b6b8a] -mt-2">Start a private CS2 practice session with ghost-guided lineups</p>
         <PracticeSessionCard />
       </motion.div>
 
-      {/* Quick Tip */}
-      {!tipDismissed && (
-        <motion.div variants={fadeUp} custom={2} className="mb-8">
-          <div className="rounded-xl border border-[#f0a500]/15 bg-[#f0a500]/[0.04] px-4 py-3.5 flex items-start gap-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#f0a500]/10 mt-0.5">
-              <Lightbulb className="h-4 w-4 text-[#f0a500]" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-[#f0a500] mb-0.5">Quick Tip</p>
-              <p className="text-sm text-[#b8b8cc] leading-relaxed">{TIPS[tipIndex]}</p>
-            </div>
-            <button
-              onClick={dismissTip}
-              className="shrink-0 p-1 rounded text-[#6b6b8a] hover:text-[#e8e8e8] transition-colors"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        </motion.div>
-      )}
-
       {/* Getting Started (new users only) */}
       {!hasCollections && (
-        <motion.div variants={fadeUp} custom={3} className="mb-10">
-          <div className="glass rounded-xl px-5 py-5">
-            <h3 className="text-sm font-semibold text-[#e8e8e8] mb-4">Getting Started</h3>
-            <div className="flex flex-col sm:flex-row gap-4">
-              {GETTING_STARTED.map((step, i) => (
-                <div key={i} className="flex items-start gap-3 flex-1">
-                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#f0a500]/15 text-[#f0a500] text-xs font-bold">
-                    {i + 1}
+        <motion.div variants={fadeUp} custom={2} className="mb-10">
+          <div className="rounded-xl border border-[#2a2a3e]/50 bg-[#12121a] overflow-hidden">
+            <div className="h-[3px] bg-gradient-to-r from-[#f0a500] via-[#f0a500]/40 to-transparent" />
+            <div className="px-5 py-5">
+              <div className="flex items-center gap-2 mb-5">
+                <Sparkles className="h-4 w-4 text-[#f0a500]" />
+                <h3 className="text-sm font-semibold text-[#e8e8e8]">Getting Started</h3>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-4">
+                {GETTING_STARTED.map((step, i) => (
+                  <div key={i} className="flex items-start gap-3 flex-1 rounded-xl bg-[#0a0a12] border border-[#2a2a3e]/30 p-4">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#f0a500]/12 text-[#f0a500] text-xs font-bold border border-[#f0a500]/10">
+                      {i + 1}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <step.icon className="h-3.5 w-3.5 shrink-0 text-[#6b6b8a]" />
+                        <p className="text-sm font-medium text-[#e8e8e8] leading-snug">{step.text}</p>
+                      </div>
+                      <p className="mt-1 text-[11px] text-[#6b6b8a] leading-relaxed">{step.desc}</p>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 pt-0.5">
-                    <step.icon className="h-4 w-4 shrink-0 text-[#6b6b8a]" />
-                    <p className="text-sm text-[#b8b8cc] leading-snug">{step.text}</p>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </motion.div>
       )}
 
       {/* Maps Quick Start */}
-      <motion.div variants={fadeUp} custom={hasCollections ? 3 : 4}>
+      <motion.div variants={fadeUp} custom={hasCollections ? 2 : 3}>
         <div className="flex items-center justify-between mb-5">
           <div>
             <h2 className="text-xl font-semibold text-[#e8e8e8]">Maps</h2>
@@ -154,16 +145,16 @@ export default function DashboardPage() {
           {MAPS.map((map, i) => {
             const color = MAP_COLORS[map.name] ?? '#f0a500';
             return (
-              <motion.div key={map.name} variants={fadeUp} custom={i + (hasCollections ? 4 : 5)}>
+              <motion.div key={map.name} variants={fadeUp} custom={i + (hasCollections ? 3 : 4)}>
                 <Link
                   href={`/dashboard/maps/${map.name}`}
-                  className="group block rounded-xl overflow-hidden bg-[#12121a] border border-[#2a2a3e]/50 transition-all duration-300 hover:border-[#2a2a3e] hover:-translate-y-0.5"
+                  className="group block rounded-xl overflow-hidden bg-[#12121a] border border-[#2a2a3e]/50 transition-all duration-300 hover:border-[#2a2a3e] hover:-translate-y-1"
                   style={{
                     // @ts-expect-error CSS custom property
                     '--map-glow': color,
                   }}
                 >
-                  <div className="relative h-32 overflow-hidden">
+                  <div className="relative h-36 overflow-hidden">
                     <Image
                       src={map.screenshot}
                       alt={map.displayName}
@@ -171,12 +162,26 @@ export default function DashboardPage() {
                       className="object-cover transition-transform duration-500 group-hover:scale-110"
                       sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#12121a] via-[#12121a]/20 to-transparent" />
+                    {/* Stronger gradient overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#12121a] via-[#12121a]/30 to-transparent" />
+
+                    {/* Hover glow overlay */}
+                    <div
+                      className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                      style={{
+                        background: `linear-gradient(135deg, ${color}10 0%, transparent 60%)`,
+                      }}
+                    />
+
+                    {/* Map name */}
                     <div className="absolute bottom-0 left-0 right-0 p-3.5 pb-3">
                       <h3 className="text-base font-bold text-white drop-shadow-lg">{map.displayName}</h3>
+                      <p className="text-[10px] text-white/40 font-mono mt-0.5">{map.name}</p>
                     </div>
+
+                    {/* Bottom color accent */}
                     <div
-                      className="absolute bottom-0 left-0 right-0 h-[2px] transition-opacity duration-300 opacity-60 group-hover:opacity-100"
+                      className="absolute bottom-0 left-0 right-0 h-[2px] transition-all duration-300 opacity-50 group-hover:opacity-100 group-hover:h-[3px]"
                       style={{ background: `linear-gradient(to right, ${color}, transparent)` }}
                     />
                   </div>
@@ -186,6 +191,29 @@ export default function DashboardPage() {
           })}
         </div>
       </motion.div>
+
+      {/* Quick Tip — positioned at bottom, subtle and non-intrusive */}
+      {!tipDismissed && (
+        <motion.div variants={fadeUp} custom={hasCollections ? 10 : 11} className="mt-10">
+          <div className="rounded-xl bg-[#12121a] border border-[#2a2a3e]/30 px-4 py-3 flex items-center gap-3">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#f0a500]/8">
+              <Lightbulb className="h-3.5 w-3.5 text-[#f0a500]/70" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-[#6b6b8a] leading-relaxed">
+                <span className="text-[#f0a500]/60 font-medium">Tip:</span>{' '}
+                {TIPS[tipIndex]}
+              </p>
+            </div>
+            <button
+              onClick={dismissTip}
+              className="shrink-0 p-1 rounded text-[#6b6b8a]/40 hover:text-[#6b6b8a] transition-colors"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </div>
+        </motion.div>
+      )}
     </motion.div>
   );
 }

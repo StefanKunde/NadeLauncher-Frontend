@@ -12,14 +12,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <main className="flex-1 lg:ml-72 p-4 pt-20 lg:pt-8 lg:p-8 overflow-y-auto">
           {/* Early Access Banner */}
           <div className="mb-6 max-w-7xl">
-            <div className="rounded-lg bg-[#f0a50010] border border-[#f0a50030] px-4 py-3 flex items-start gap-3">
-              <Construction className="h-5 w-5 text-[#f0a500] shrink-0 mt-0.5" />
-              <div className="text-sm">
-                <p className="text-[#f0a500] font-medium">Early Access</p>
-                <p className="text-[#6b6b8a] mt-0.5">
-                  NadePro is still in development and may have bugs. If you encounter any issues, your feedback helps a lot!
-                </p>
+            <div className="rounded-xl bg-[#12121a] border border-[#f0a500]/15 px-4 py-3 flex items-center gap-3">
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#f0a500]/10">
+                <Construction className="h-3.5 w-3.5 text-[#f0a500]" />
               </div>
+              <p className="text-xs text-[#6b6b8a]">
+                <span className="text-[#f0a500]/80 font-medium">Early Access</span>
+                <span className="mx-1.5 text-[#2a2a3e]">&middot;</span>
+                NadePro is in development. Your feedback helps a lot!
+              </p>
             </div>
           </div>
           {children}

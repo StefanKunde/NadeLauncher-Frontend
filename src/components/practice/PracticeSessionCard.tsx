@@ -18,6 +18,8 @@ import {
   Users,
   Terminal,
   RefreshCw,
+  ChevronDown,
+  Map,
 } from 'lucide-react';
 import Link from 'next/link';
 import { sessionsApi, collectionsApi, userCollectionsApi } from '@/lib/api';
@@ -1087,28 +1089,37 @@ export default function PracticeSessionCard() {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="glass rounded-xl overflow-hidden"
-      style={{ borderTop: '2px solid #4a9fd4' }}
+      className="rounded-xl overflow-hidden border border-[#2a2a3e]/50 bg-[#12121a]"
     >
+      {/* Top gradient accent */}
+      <div className="h-[3px] bg-gradient-to-r from-[#4a9fd4] via-[#4a9fd4]/60 to-transparent" />
+
       <div className="p-6">
         {/* Usage bar for free users (only when time is not exhausted) */}
         {usage && !usage.isPremium && !timeExhausted && (
-          <div className="mb-5">
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-xs text-[#6b6b8a]">Weekly usage</span>
+          <div className="mb-6 rounded-lg bg-[#0a0a12] border border-[#2a2a3e]/40 p-3">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Clock className="h-3.5 w-3.5 text-[#6b6b8a]" />
+                <span className="text-xs font-medium text-[#b8b8cc]">Weekly Usage</span>
+              </div>
               <span className="text-xs font-mono text-[#6b6b8a]">
                 {formatMinutes(usage.usedSeconds)} / {formatMinutes(usage.limitSeconds)}
               </span>
             </div>
-            <div className="h-2 rounded-full bg-[#1a1a2e] overflow-hidden">
+            <div className="h-1.5 rounded-full bg-[#1a1a2e] overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${usagePercent}%` }}
-                transition={{ duration: 0.6, ease: 'easeOut' }}
+                transition={{ duration: 0.8, ease: 'easeOut' }}
                 className="h-full rounded-full"
                 style={{
-                  backgroundColor:
-                    usagePercent >= 90 ? '#ff4444' : usagePercent >= 70 ? '#f0a500' : '#00c850',
+                  background:
+                    usagePercent >= 90
+                      ? 'linear-gradient(90deg, #ff4444, #ff6666)'
+                      : usagePercent >= 70
+                        ? 'linear-gradient(90deg, #f0a500, #ffd700)'
+                        : 'linear-gradient(90deg, #00c850, #22e070)',
                 }}
               />
             </div>
@@ -1124,16 +1135,16 @@ export default function PracticeSessionCard() {
               exit={{ opacity: 0 }}
               className="text-center py-4"
             >
-              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#f0a50015]">
-                <Crown className="h-6 w-6 text-[#f0a500]" />
+              <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#f0a500]/20 to-[#f0a500]/5 border border-[#f0a500]/15">
+                <Crown className="h-7 w-7 text-[#f0a500]" />
               </div>
-              <p className="text-sm text-[#e8e8e8] mb-1 font-medium">Weekly limit reached</p>
-              <p className="text-xs text-[#6b6b8a] mb-4">
-                Your free {limitLabel} this week are used up. Come back next week or upgrade for unlimited practice.
+              <p className="text-sm text-[#e8e8e8] mb-1 font-semibold">Weekly limit reached</p>
+              <p className="text-xs text-[#6b6b8a] mb-5 leading-relaxed">
+                Your free {limitLabel} this week are used up.<br />Come back next week or upgrade for unlimited practice.
               </p>
               <Link
                 href="/dashboard/premium"
-                className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#f0a500] to-[#d4900a] px-5 py-2.5 text-sm font-bold text-[#0a0a12] transition-all hover:shadow-lg hover:shadow-[#f0a50030]"
+                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#f0a500] to-[#d4900a] px-6 py-3 text-sm font-bold text-[#0a0a12] transition-all hover:shadow-lg hover:shadow-[#f0a50030] hover:-translate-y-0.5"
               >
                 <Crown className="h-4 w-4" />
                 Upgrade to Premium
@@ -1142,56 +1153,93 @@ export default function PracticeSessionCard() {
           ) : (
             <motion.div key="ready" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               {/* Map selector */}
-              <label className="block text-xs text-[#6b6b8a] mb-2">Select Map</label>
-              <select
-                value={selectedMap}
-                onChange={(e) => setSelectedMap(e.target.value)}
-                className="w-full rounded-lg border border-[#2a2a3e] bg-[#0a0a12] px-3 py-2.5 text-sm text-[#e8e8e8] mb-4 focus:outline-none focus:border-[#4a9fd4] transition-colors"
-              >
-                {MAPS.map((map) => (
-                  <option key={map.name} value={map.name}>
-                    {map.displayName} ({map.name})
-                  </option>
-                ))}
-              </select>
-
-              {/* Collection selector */}
-              {collections.length > 0 && (
-                <>
-                  <label className="block text-xs text-[#6b6b8a] mb-2">Collection</label>
+              <div className="mb-4">
+                <label className="flex items-center gap-1.5 text-xs font-medium text-[#b8b8cc] mb-2">
+                  <Map className="h-3.5 w-3.5 text-[#6b6b8a]" />
+                  Map
+                </label>
+                <div className="relative">
                   <select
-                    value={selectedCollection}
-                    onChange={(e) => setSelectedCollection(e.target.value)}
-                    className="w-full rounded-lg border border-[#2a2a3e] bg-[#0a0a12] px-3 py-2.5 text-sm text-[#e8e8e8] mb-4 focus:outline-none focus:border-[#4a9fd4] transition-colors"
+                    value={selectedMap}
+                    onChange={(e) => setSelectedMap(e.target.value)}
+                    className="w-full appearance-none rounded-xl border border-[#2a2a3e] bg-[#0a0a12] pl-4 pr-10 py-3 text-sm text-[#e8e8e8] focus:outline-none focus:border-[#4a9fd4]/60 focus:ring-1 focus:ring-[#4a9fd4]/20 transition-all cursor-pointer hover:border-[#3a3a5e]"
                   >
-                    {collections.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name} ({c.lineupCount})
+                    {MAPS.map((map) => (
+                      <option key={map.name} value={map.name}>
+                        {map.displayName} ({map.name})
                       </option>
                     ))}
                   </select>
-                </>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6b6b8a] pointer-events-none" />
+                </div>
+              </div>
+
+              {/* Collection selector */}
+              {collections.length > 0 && (
+                <div className="mb-5">
+                  <label className="flex items-center gap-1.5 text-xs font-medium text-[#b8b8cc] mb-2">
+                    <Shield className="h-3.5 w-3.5 text-[#6b6b8a]" />
+                    Collection
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={selectedCollection}
+                      onChange={(e) => setSelectedCollection(e.target.value)}
+                      className="w-full appearance-none rounded-xl border border-[#2a2a3e] bg-[#0a0a12] pl-4 pr-10 py-3 text-sm text-[#e8e8e8] focus:outline-none focus:border-[#4a9fd4]/60 focus:ring-1 focus:ring-[#4a9fd4]/20 transition-all cursor-pointer hover:border-[#3a3a5e]"
+                    >
+                      {collections.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name} ({c.lineupCount})
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6b6b8a] pointer-events-none" />
+                  </div>
+                </div>
               )}
 
               {error && (
-                <p className="text-xs text-[#ff4444] mb-3">{error}</p>
+                <div className="rounded-lg bg-[#ff4444]/8 border border-[#ff4444]/15 px-3 py-2 mb-4">
+                  <p className="text-xs text-[#ff4444]">{error}</p>
+                </div>
               )}
 
+              {/* Start button */}
               <button
                 onClick={handleCreate}
                 disabled={creating}
-                className="w-full flex items-center justify-center gap-2 rounded-lg bg-[#4a9fd4] px-4 py-3 text-sm font-semibold text-white transition-all hover:bg-[#3a8fc4] disabled:opacity-50"
+                className="group relative w-full overflow-hidden rounded-xl px-4 py-4 text-sm font-bold text-white transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-0.5 active:translate-y-0"
+                style={{
+                  background: creating
+                    ? '#2a2a3e'
+                    : 'linear-gradient(135deg, #4a9fd4, #3a7fb8)',
+                  boxShadow: creating
+                    ? 'none'
+                    : '0 4px 20px rgba(74, 159, 212, 0.25), 0 0 40px rgba(74, 159, 212, 0.08)',
+                }}
               >
-                {creating ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Play className="h-4 w-4" />
+                {/* Shimmer effect */}
+                {!creating && (
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(255,255,255,0.05) 100%)',
+                    }}
+                  />
                 )}
-                Start Practice
+                <div className="relative flex items-center justify-center gap-2.5">
+                  {creating ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/15">
+                      <Play className="h-4 w-4" />
+                    </div>
+                  )}
+                  <span className="text-[15px]">{creating ? 'Starting...' : 'Start Practice'}</span>
+                </div>
               </button>
 
               {usage && !usage.isPremium && (
-                <p className="mt-3 text-center text-xs text-[#6b6b8a]">
+                <p className="mt-3 text-center text-[11px] text-[#6b6b8a]">
                   {formatMinutes(usage.remainingSeconds)} remaining this week
                 </p>
               )}

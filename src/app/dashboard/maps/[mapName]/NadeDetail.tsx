@@ -20,26 +20,34 @@ export default function NadeDetail({ lineup }: NadeDetailProps) {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
-      className="glass rounded-xl overflow-hidden"
+      className="rounded-xl overflow-hidden border border-[#2a2a3e]/50 bg-[#12121a]"
     >
       {/* Grenade-type colored top accent */}
-      <div className="h-[3px]" style={{ background: `linear-gradient(to right, ${grenadeColor}, ${grenadeColor}40)` }} />
+      <div
+        className="h-[3px]"
+        style={{ background: `linear-gradient(to right, ${grenadeColor}, ${grenadeColor}60, transparent)` }}
+      />
 
       <div className="p-4 space-y-3">
         {/* Header */}
-        <div className="flex items-start gap-2.5">
-          <GrenadeIcon type={lineup.grenadeType as 'smoke' | 'flash' | 'molotov' | 'he'} size={24} />
+        <div className="flex items-start gap-3">
+          <div
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+            style={{ backgroundColor: `${grenadeColor}12`, border: `1px solid ${grenadeColor}15` }}
+          >
+            <GrenadeIcon type={lineup.grenadeType as 'smoke' | 'flash' | 'molotov' | 'he'} size={22} />
+          </div>
           <div className="min-w-0 flex-1">
             <h3 className="text-sm font-semibold text-[#e8e8e8] leading-tight">{lineup.name}</h3>
-            <div className="mt-1 flex items-center gap-2">
+            <div className="mt-1.5 flex items-center gap-2">
               <span
-                className="rounded px-1.5 py-0.5 text-[10px] font-medium capitalize"
-                style={{ backgroundColor: `${grenadeColor}15`, color: grenadeColor }}
+                className="rounded-md px-1.5 py-0.5 text-[10px] font-semibold capitalize tracking-wide"
+                style={{ backgroundColor: `${grenadeColor}15`, color: grenadeColor, border: `1px solid ${grenadeColor}10` }}
               >
                 {throwTypeLabel}
               </span>
               {lineup.throwStrength && lineup.throwStrength !== 'full' && (
-                <span className="rounded bg-[#1a1a2e] px-1.5 py-0.5 text-[10px] text-[#6b6b8a] capitalize">
+                <span className="rounded-md bg-[#1a1a2e] border border-[#2a2a3e]/30 px-1.5 py-0.5 text-[10px] text-[#6b6b8a] capitalize">
                   {lineup.throwStrength}
                 </span>
               )}
@@ -49,9 +57,20 @@ export default function NadeDetail({ lineup }: NadeDetailProps) {
 
         {/* Pro attribution */}
         {proLine && (
-          <div className="flex items-center gap-2 rounded-lg bg-[#f0a500]/[0.06] border border-[#f0a500]/10 px-3 py-2">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[#f0a500]/70">Pro</span>
-            <span className="text-xs text-[#b8b8cc]">{proLine}</span>
+          <div
+            className="flex items-center gap-2.5 rounded-lg px-3 py-2.5"
+            style={{
+              backgroundColor: `${grenadeColor}06`,
+              border: `1px solid ${grenadeColor}12`,
+            }}
+          >
+            <span
+              className="text-[9px] font-bold uppercase tracking-[0.1em] px-1.5 py-0.5 rounded"
+              style={{ backgroundColor: `${grenadeColor}15`, color: grenadeColor }}
+            >
+              Pro
+            </span>
+            <span className="text-xs text-[#b8b8cc] font-medium">{proLine}</span>
           </div>
         )}
 
@@ -62,18 +81,20 @@ export default function NadeDetail({ lineup }: NadeDetailProps) {
 
         {/* Instructions */}
         {lineup.instructions?.length > 0 && (
-          <div>
-            <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#f0a500]">Instructions</p>
-            <ol className="space-y-1">
+          <div className="rounded-lg bg-[#0a0a12] border border-[#2a2a3e]/25 p-3">
+            <p className="mb-2.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-[#f0a500]/80">
+              Instructions
+            </p>
+            <ol className="space-y-2">
               {lineup.instructions.map((instruction, i) => (
-                <li key={i} className="flex items-start gap-2 text-xs text-[#b8b8cc]">
+                <li key={i} className="flex items-start gap-2.5 text-xs text-[#b8b8cc]">
                   <span
-                    className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[9px] font-bold"
-                    style={{ backgroundColor: `${grenadeColor}20`, color: grenadeColor }}
+                    className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-[9px] font-bold"
+                    style={{ backgroundColor: `${grenadeColor}18`, color: grenadeColor, border: `1px solid ${grenadeColor}12` }}
                   >
                     {i + 1}
                   </span>
-                  <span className="leading-relaxed">{instruction}</span>
+                  <span className="leading-relaxed pt-0.5">{instruction}</span>
                 </li>
               ))}
             </ol>
@@ -82,9 +103,12 @@ export default function NadeDetail({ lineup }: NadeDetailProps) {
 
         {/* Tags */}
         {lineup.tags?.length > 0 && (
-          <div className="flex flex-wrap gap-1">
+          <div className="flex flex-wrap gap-1.5">
             {lineup.tags.map((tag) => (
-              <span key={tag} className="rounded bg-[#f0a500]/10 px-1.5 py-0.5 text-[10px] font-medium text-[#f0a500]">
+              <span
+                key={tag}
+                className="rounded-md bg-[#1a1a2e] border border-[#2a2a3e]/30 px-2 py-0.5 text-[10px] font-medium text-[#6b6b8a]"
+              >
                 {tag}
               </span>
             ))}
@@ -92,7 +116,7 @@ export default function NadeDetail({ lineup }: NadeDetailProps) {
         )}
 
         {/* Footer */}
-        <div className="flex items-center gap-2 text-[10px] text-[#6b6b8a] pt-1 border-t border-[#2a2a3e]/30">
+        <div className="flex items-center gap-2 text-[10px] text-[#6b6b8a]/70 pt-2 border-t border-[#2a2a3e]/20">
           {lineup.collectionName && <span>{lineup.collectionName}</span>}
           {lineup.collectionName && lineup.createdAt && <span>&middot;</span>}
           {lineup.createdAt && (

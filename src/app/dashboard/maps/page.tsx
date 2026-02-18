@@ -92,7 +92,7 @@ export default function MapsPage() {
               <motion.div key={map.name} variants={item}>
                 <Link
                   href={`/dashboard/maps/${map.name}`}
-                  className="group block rounded-2xl overflow-hidden bg-[#12121a] border border-[#2a2a3e]/50 transition-all duration-300 hover:border-[#2a2a3e] hover:-translate-y-0.5 hover:shadow-lg"
+                  className="group block rounded-2xl overflow-hidden bg-[#12121a] border border-[#2a2a3e]/50 transition-all duration-300 hover:border-[#2a2a3e] hover:-translate-y-1 hover:shadow-xl hover:shadow-black/30"
                 >
                   {/* Map Screenshot */}
                   <div className="relative h-44 overflow-hidden">
