@@ -155,8 +155,8 @@ export default function MapRadar({
   }
 
   const selectedMarker = markers.find((m) => m.lineup.id === selectedLineupId);
-  const dotSize = mini ? 6 : 10;
-  const selectedDotSize = mini ? 8 : 16;
+  const dotSize = mini ? 5 : 7;
+  const selectedDotSize = mini ? 7 : 12;
   const isZoomed = zoom !== 1;
 
   return (
@@ -292,7 +292,7 @@ export default function MapRadar({
           return (
             <div
               key={group.key}
-              className="absolute z-20 -translate-x-1/2 -translate-y-1/2"
+              className={`absolute -translate-x-1/2 -translate-y-1/2 ${isPopupOpen ? 'z-[45]' : 'z-20'}`}
               style={{
                 left: `${group.pos.x}%`,
                 top: `${group.pos.y}%`,
@@ -360,6 +360,7 @@ export default function MapRadar({
                       ? { bottom: dotSize / 2 + 8, left: '50%', transform: 'translateX(-50%)' }
                       : { top: dotSize / 2 + 8, left: '50%', transform: 'translateX(-50%)' }),
                   }}
+                  onMouseDown={(e) => e.stopPropagation()}
                   onClick={(e) => e.stopPropagation()}
                 >
                   <div className="px-2 py-1.5 border-b border-[#2a2a3e]/50">
