@@ -1,17 +1,18 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   ChevronRight,
   Lightbulb,
-  X,
   Map,
   FolderPlus,
   Monitor,
   Sparkles,
+  Users,
+  Folder,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth-store';
 import { MAPS, MAP_COLORS } from '@/lib/constants';
@@ -48,27 +49,22 @@ const GETTING_STARTED = [
 
 export default function DashboardPage() {
   const user = useAuthStore((s) => s.user);
-  const [tipDismissed, setTipDismissed] = useState(true);
-  const [hasCollections, setHasCollections] = useState(true);
+  const [collectionCount, setCollectionCount] = useState<number | null>(null);
+  const [tipIndex, setTipIndex] = useState(() => Math.floor(Math.random() * TIPS.length));
 
-  const tipIndex = useMemo(() => Math.floor(Math.random() * TIPS.length), []);
-
+  // Auto-rotate tips every 8 seconds
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setTipDismissed(localStorage.getItem('nadepro-tip-dismissed') === '1');
-    }
+    const interval = setInterval(() => {
+      setTipIndex((prev) => (prev + 1) % TIPS.length);
+    }, 8000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
     userCollectionsApi.getMy().then((cols) => {
-      setHasCollections(cols.length > 0);
+      setCollectionCount(cols.length);
     }).catch(() => {});
   }, []);
-
-  const dismissTip = () => {
-    setTipDismissed(true);
-    localStorage.setItem('nadepro-tip-dismissed', '1');
-  };
 
   return (
     <motion.div
@@ -86,34 +82,66 @@ export default function DashboardPage() {
         </p>
       </motion.div>
 
-      {/* Practice Server + Quick Tip */}
+      {/* Practice Server + Side Tiles */}
       <motion.div variants={fadeUp} custom={1} className="mb-10">
         <h2 className="text-xl font-semibold text-[#e8e8e8] mb-1">Practice Server</h2>
         <p className="mb-5 text-sm text-[#6b6b8a]">Start a private CS2 practice session with ghost-guided lineups</p>
-        <div className="flex flex-col lg:flex-row gap-4 items-start">
+        <div className="flex flex-col lg:flex-row gap-3 items-start">
           <div className="flex-1 min-w-0">
             <PracticeSessionCard />
           </div>
-          {!tipDismissed && (
-            <div className="lg:w-64 shrink-0 w-full rounded-xl bg-[#12121a] border border-[#2a2a3e]/30 p-4 relative">
-              <button
-                onClick={dismissTip}
-                className="absolute top-2.5 right-2.5 p-1 rounded text-[#6b6b8a]/40 hover:text-[#6b6b8a] transition-colors"
-              >
-                <X className="h-3 w-3" />
-              </button>
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#f0a500]/10 mb-3">
+          <div className="lg:w-56 shrink-0 w-full flex flex-row lg:flex-col gap-3">
+            {/* My Collections tile */}
+            <Link
+              href="/dashboard/maps"
+              className="flex-1 rounded-xl bg-[#12121a] border border-[#2a2a3e]/30 p-4 hover:border-[#f0a500]/30 transition-colors group"
+            >
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#f0a500]/10 mb-2.5">
+                <Folder className="h-3.5 w-3.5 text-[#f0a500]" />
+              </div>
+              <p className="text-xs font-semibold text-[#e8e8e8] mb-0.5">My Collections</p>
+              <p className="text-[11px] text-[#6b6b8a]">
+                {collectionCount !== null ? `${collectionCount} collection${collectionCount !== 1 ? 's' : ''}` : 'Manage lineups'}
+              </p>
+            </Link>
+
+            {/* Community tile */}
+            <Link
+              href="/dashboard/community"
+              className="flex-1 rounded-xl bg-[#12121a] border border-[#2a2a3e]/30 p-4 hover:border-[#6c5ce7]/30 transition-colors group"
+            >
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#6c5ce7]/10 mb-2.5">
+                <Users className="h-3.5 w-3.5 text-[#6c5ce7]" />
+              </div>
+              <p className="text-xs font-semibold text-[#e8e8e8] mb-0.5">Community</p>
+              <p className="text-[11px] text-[#6b6b8a]">Browse & subscribe</p>
+            </Link>
+
+            {/* Quick Tip tile — auto-rotating */}
+            <div className="flex-1 rounded-xl bg-[#12121a] border border-[#2a2a3e]/30 p-4">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#f0a500]/10 mb-2.5">
                 <Lightbulb className="h-3.5 w-3.5 text-[#f0a500]" />
               </div>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-[#f0a500]/60 mb-1.5">Quick Tip</p>
-              <p className="text-xs text-[#6b6b8a] leading-relaxed">{TIPS[tipIndex]}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-[#f0a500]/60 mb-1">Tip</p>
+              <AnimatePresence mode="wait">
+                <motion.p
+                  key={tipIndex}
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.3 }}
+                  className="text-[11px] text-[#6b6b8a] leading-relaxed"
+                >
+                  {TIPS[tipIndex]}
+                </motion.p>
+              </AnimatePresence>
             </div>
-          )}
+          </div>
         </div>
       </motion.div>
 
       {/* Getting Started (new users only) */}
-      {!hasCollections && (
+      {collectionCount === 0 && (
         <motion.div variants={fadeUp} custom={2} className="mb-10">
           <div className="rounded-xl border border-[#2a2a3e]/50 bg-[#12121a] overflow-hidden">
             <div className="h-[3px] bg-gradient-to-r from-[#f0a500] via-[#f0a500]/40 to-transparent" />
@@ -144,7 +172,7 @@ export default function DashboardPage() {
       )}
 
       {/* Maps Quick Start */}
-      <motion.div variants={fadeUp} custom={hasCollections ? 2 : 3}>
+      <motion.div variants={fadeUp} custom={collectionCount !== null && collectionCount > 0 ? 2 : 3}>
         <div className="flex items-center justify-between mb-5">
           <div>
             <h2 className="text-xl font-semibold text-[#e8e8e8]">Maps</h2>
@@ -162,7 +190,7 @@ export default function DashboardPage() {
           {MAPS.map((map, i) => {
             const color = MAP_COLORS[map.name] ?? '#f0a500';
             return (
-              <motion.div key={map.name} variants={fadeUp} custom={i + (hasCollections ? 3 : 4)}>
+              <motion.div key={map.name} variants={fadeUp} custom={i + (collectionCount !== null && collectionCount > 0 ? 3 : 4)}>
                 <Link
                   href={`/dashboard/maps/${map.name}`}
                   className="group block rounded-xl overflow-hidden bg-[#12121a] border border-[#2a2a3e]/50 transition-all duration-300 hover:border-[#2a2a3e] hover:-translate-y-1"
