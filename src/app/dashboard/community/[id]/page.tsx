@@ -317,8 +317,8 @@ export default function CommunityDetailPage() {
             onClick={handleSubscribe}
             className={`ml-auto shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
               isSubscribed
-                ? 'bg-[#6c5ce7]/20 text-[#6c5ce7] hover:bg-red-500/20 hover:text-red-400'
-                : 'bg-[#6c5ce7] text-white hover:bg-[#5a4bd6]'
+                ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30 hover:text-red-300'
+                : 'bg-[#22c55e] text-white hover:bg-[#16a34a]'
             }`}
           >
             {isSubscribed ? 'Unsubscribe' : 'Subscribe'}

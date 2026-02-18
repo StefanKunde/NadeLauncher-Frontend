@@ -114,9 +114,9 @@ export const collectionsApi = {
 
 // Community Collections
 export const communityApi = {
-  browse: (params: { map?: string; search?: string; sort?: string; page?: number; limit?: number }) =>
+  browse: (params: { map?: string; search?: string; sort?: string; direction?: string; page?: number; limit?: number }) =>
     api.get<{ data: { items: CommunityCollection[]; total: number; page: number } }>('/api/collections/community', { params }).then((r) => r.data.data),
-  browseWithStatus: (params: { map?: string; search?: string; sort?: string; page?: number; limit?: number }) =>
+  browseWithStatus: (params: { map?: string; search?: string; sort?: string; direction?: string; page?: number; limit?: number }) =>
     api.get<{ data: { items: CommunityCollection[]; total: number; page: number } }>('/api/collections/community/user', { params }).then((r) => r.data.data),
   publish: (id: string, isPublished: boolean) =>
     api.put<{ data: LineupCollection }>(`/api/collections/my/${id}/publish`, { isPublished }).then((r) => r.data.data),

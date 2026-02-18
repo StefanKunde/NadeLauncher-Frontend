@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Search, Users, Loader2, Star, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Globe } from 'lucide-react';
+import { Search, Users, Loader2, Star, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Globe, ArrowUpDown } from 'lucide-react';
 import { communityApi, collectionsApi } from '@/lib/api';
 import { useAuthStore } from '@/store/auth-store';
 import { MAPS, MAP_COLORS } from '@/lib/constants';
@@ -12,13 +12,7 @@ import type { CommunityCollection } from '@/lib/types';
 import toast from 'react-hot-toast';
 
 type SortOption = 'popular' | 'top_rated' | 'newest' | 'most_lineups';
-
-const SORT_OPTIONS: { value: SortOption; label: string }[] = [
-  { value: 'popular', label: 'Most Popular' },
-  { value: 'top_rated', label: 'Top Rated' },
-  { value: 'newest', label: 'Newest' },
-  { value: 'most_lineups', label: 'Most Lineups' },
-];
+type SortDirection = 'asc' | 'desc';
 
 const LIMIT = 25;
 
@@ -30,6 +24,7 @@ export default function CommunityPage() {
   const [loading, setLoading] = useState(true);
   const [mapFilter, setMapFilter] = useState<string>('');
   const [sort, setSort] = useState<SortOption>('popular');
+  const [sortDir, setSortDir] = useState<SortDirection>('desc');
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
 
@@ -46,6 +41,7 @@ export default function CommunityPage() {
         map: mapFilter || undefined,
         search: debouncedSearch || undefined,
         sort,
+        direction: sortDir,
         page,
         limit: LIMIT,
       };
@@ -59,7 +55,7 @@ export default function CommunityPage() {
     } finally {
       setLoading(false);
     }
-  }, [mapFilter, debouncedSearch, sort, page, user]);
+  }, [mapFilter, debouncedSearch, sort, sortDir, page, user]);
 
   useEffect(() => {
     fetchCollections();
@@ -68,7 +64,23 @@ export default function CommunityPage() {
   // Reset page when filters change
   useEffect(() => {
     setPage(1);
-  }, [mapFilter, debouncedSearch, sort]);
+  }, [mapFilter, debouncedSearch, sort, sortDir]);
+
+  const handleSort = (column: SortOption) => {
+    if (sort === column) {
+      setSortDir((d) => (d === 'desc' ? 'asc' : 'desc'));
+    } else {
+      setSort(column);
+      setSortDir('desc');
+    }
+  };
+
+  const SortIcon = ({ column }: { column: SortOption }) => {
+    if (sort !== column) return <ArrowUpDown className="h-3 w-3 opacity-0 group-hover/sort:opacity-50 transition-opacity" />;
+    return sortDir === 'desc'
+      ? <ChevronDown className="h-3 w-3 text-[#6c5ce7]" />
+      : <ChevronUp className="h-3 w-3 text-[#6c5ce7]" />;
+  };
 
   const handleSubscribe = async (e: React.MouseEvent, collectionId: string) => {
     e.preventDefault();
@@ -174,33 +186,16 @@ export default function CommunityPage() {
         })}
       </div>
 
-      {/* Search + Sort */}
-      <div className="flex flex-wrap gap-3">
-        <div className="flex items-center gap-2 flex-1 min-w-[200px] bg-[#1a1a2e] border border-[#2a2a3e] rounded-lg px-3 focus-within:border-[#6c5ce7]">
-          <Search className="h-4 w-4 shrink-0 text-[#555577]" />
-          <input
-            type="text"
-            placeholder="Search collections..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-transparent py-2 text-white text-sm placeholder-[#555577] focus:outline-none border-none"
-          />
-        </div>
-
-        <div className="relative inline-flex items-center">
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value as SortOption)}
-            className="appearance-none h-9 pl-3 pr-8 bg-[#1a1a2e] border border-[#2a2a3e] rounded-lg text-white text-sm focus:border-[#6c5ce7] focus:outline-none cursor-pointer"
-          >
-            {SORT_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-          <ChevronDown className="absolute right-2.5 h-3.5 w-3.5 text-[#6b6b8a] pointer-events-none" />
-        </div>
+      {/* Search */}
+      <div className="flex items-center gap-2 bg-[#1a1a2e] border border-[#2a2a3e] rounded-lg px-3 focus-within:border-[#6c5ce7]">
+        <Search className="h-4 w-4 shrink-0 text-[#555577]" />
+        <input
+          type="text"
+          placeholder="Search collections..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full bg-transparent py-2 text-white text-sm placeholder-[#555577] focus:outline-none border-none"
+        />
       </div>
 
       {/* Results */}
@@ -216,21 +211,41 @@ export default function CommunityPage() {
         </div>
       ) : (
         <>
-          {/* Table header — desktop only */}
-          <div className="hidden md:flex items-center gap-3 px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-[#6b6b8a]">
+          {/* Table header — desktop only, sortable */}
+          <div className="hidden md:flex items-center gap-3 px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-[#6b6b8a] select-none">
             <span className="w-16">Map</span>
-            <span className="flex-1">Collection</span>
-            <span className="w-20 text-center">Nades</span>
-            <span className="w-20 text-center">Subs</span>
-            <span className="w-24 text-center">Rating</span>
+            <button
+              onClick={() => handleSort('newest')}
+              className="group/sort flex-1 flex items-center gap-1 text-left hover:text-[#e8e8e8] transition-colors"
+            >
+              Collection <SortIcon column="newest" />
+            </button>
+            <button
+              onClick={() => handleSort('most_lineups')}
+              className="group/sort w-20 flex items-center justify-center gap-1 hover:text-[#e8e8e8] transition-colors"
+            >
+              Nades <SortIcon column="most_lineups" />
+            </button>
+            <button
+              onClick={() => handleSort('popular')}
+              className="group/sort w-20 flex items-center justify-center gap-1 hover:text-[#e8e8e8] transition-colors"
+            >
+              Subs <SortIcon column="popular" />
+            </button>
+            <button
+              onClick={() => handleSort('top_rated')}
+              className="group/sort w-24 flex items-center justify-center gap-1 hover:text-[#e8e8e8] transition-colors"
+            >
+              Rating <SortIcon column="top_rated" />
+            </button>
             <span className="w-32">By</span>
             <span className="w-24" />
           </div>
 
           {/* List */}
-          <div className="space-y-3">
+          <div className="flex flex-col gap-3">
             {collections.map((col) => (
-              <Link key={col.id} href={`/dashboard/community/${col.id}`}>
+              <Link key={col.id} href={`/dashboard/community/${col.id}`} className="block">
                 {/* Desktop row */}
                 <div className="hidden md:flex items-center gap-3 px-4 py-2.5 rounded-lg bg-[#12121a] border border-transparent hover:border-[#6c5ce7]/40 hover:bg-[#1a1a2e] transition-all cursor-pointer group">
                   {/* Map badge */}
@@ -288,8 +303,8 @@ export default function CommunityPage() {
                         onClick={(e) => handleSubscribe(e, col.id)}
                         className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
                           col.isSubscribed
-                            ? 'bg-[#6c5ce7]/20 text-[#6c5ce7] hover:bg-red-500/20 hover:text-red-400'
-                            : 'bg-[#6c5ce7] text-white hover:bg-[#5a4bd6]'
+                            ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30 hover:text-red-300'
+                            : 'bg-[#22c55e] text-white hover:bg-[#16a34a]'
                         }`}
                       >
                         {col.isSubscribed ? 'Unsubscribe' : 'Subscribe'}
@@ -318,8 +333,8 @@ export default function CommunityPage() {
                         onClick={(e) => handleSubscribe(e, col.id)}
                         className={`shrink-0 px-3 py-1 rounded-lg text-xs font-medium transition-all ${
                           col.isSubscribed
-                            ? 'bg-[#6c5ce7]/20 text-[#6c5ce7] hover:bg-red-500/20 hover:text-red-400'
-                            : 'bg-[#6c5ce7] text-white hover:bg-[#5a4bd6]'
+                            ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30 hover:text-red-300'
+                            : 'bg-[#22c55e] text-white hover:bg-[#16a34a]'
                         }`}
                       >
                         {col.isSubscribed ? 'Unsubscribe' : 'Subscribe'}

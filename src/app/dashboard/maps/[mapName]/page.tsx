@@ -527,7 +527,7 @@ export default function MapDetailPage() {
         <div className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
 
         {/* Practice bar — true center */}
-        <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
+        <div className="absolute left-1/2 -translate-x-1/2 z-30 flex items-center gap-2">
           {activeSession?.isActive ? (
             <Link
               href="/dashboard"
@@ -559,8 +559,8 @@ export default function MapDetailPage() {
                   </button>
                   {serverCollectionPicker && (
                     <>
-                      <div className="fixed inset-0 z-40" onClick={() => setServerCollectionPicker(false)} />
-                      <div className="absolute right-0 top-full z-50 mt-1 w-64 rounded-xl border border-[#2a2a3e] bg-[#12121a] py-2 shadow-2xl shadow-black/50">
+                      <div className="fixed inset-0 z-[60]" onClick={() => setServerCollectionPicker(false)} />
+                      <div className="absolute right-0 top-full z-[70] mt-1 w-64 rounded-xl border border-[#2a2a3e] bg-[#12121a] py-2 shadow-2xl shadow-black/50">
                         <p className="px-4 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#6b6b8a]">
                           Choose a collection
                         </p>
@@ -726,7 +726,7 @@ export default function MapDetailPage() {
                     <Link
                       key={m.name}
                       href={`/dashboard/maps/${m.name}`}
-                      className={`relative block w-20 h-14 rounded-lg overflow-hidden border transition-all duration-200 ${
+                      className={`relative block w-28 h-20 rounded-lg overflow-hidden border transition-all duration-200 ${
                         isActive
                           ? 'border-[#f0a500]/60 ring-1 ring-[#f0a500]/30'
                           : 'border-[#2a2a3e]/30 hover:border-[#2a2a3e] opacity-60 hover:opacity-100'
@@ -738,10 +738,10 @@ export default function MapDetailPage() {
                         alt={m.displayName}
                         fill
                         className="object-cover"
-                        sizes="80px"
+                        sizes="112px"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                      <span className="absolute bottom-1 left-1.5 text-[9px] font-semibold text-white/90 drop-shadow-md">
+                      <span className="absolute bottom-1 left-1.5 text-[10px] font-semibold text-white/90 drop-shadow-md">
                         {m.displayName}
                       </span>
                       {isActive && (

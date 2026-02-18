@@ -83,7 +83,8 @@ export default function StatsGrid({ practiceStats, myCollections, subscriptions,
   const topCollections = [...myCollections]
     .sort((a, b) => b.lineupCount - a.lineupCount)
     .slice(0, 3);
-  const topSubscriptions = subscriptions.slice(0, 3);
+  const communitySubscriptions = subscriptions.filter((s) => s.collection.ownerId);
+  const topSubscriptions = communitySubscriptions.slice(0, 3);
   const maxMapSeconds = stats.mapBreakdown[0]?.totalSeconds || 1;
 
   return (
@@ -216,7 +217,7 @@ export default function StatsGrid({ practiceStats, myCollections, subscriptions,
       {/* Tile 6: Subscribed Collections */}
       <div className="rounded-xl bg-[#12121a] border border-[#2a2a3e]/30 p-5">
         <TileHeader icon={Users} label="Subscriptions" color="#6c5ce7" />
-        <p className="text-3xl font-bold text-[#e8e8e8]">{subscriptions.length}</p>
+        <p className="text-3xl font-bold text-[#e8e8e8]">{communitySubscriptions.length}</p>
         {topSubscriptions.length > 0 ? (
           <div className="mt-3 space-y-1.5">
             {topSubscriptions.map((s) => (
