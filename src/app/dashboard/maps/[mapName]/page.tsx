@@ -705,8 +705,8 @@ export default function MapDetailPage() {
             })()}
 
             {/* Radar */}
-            <div className="max-w-[620px] px-3">
-              <div className="rounded-xl border border-[#2a2a3e]/50 bg-[#12121a] overflow-hidden">
+            <div className="flex justify-center px-4">
+              <div className="w-full max-w-[700px] rounded-xl border border-[#2a2a3e]/50 bg-[#12121a] overflow-hidden">
                 <MapRadar
                   mapName={mapName}
                   lineups={filteredLineups}
