@@ -3,7 +3,9 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Users, Loader2, Play, Monitor } from 'lucide-react';
+import Image from 'next/image';
+import { ArrowLeft, Users, Loader2, Play, Monitor, X, Eye, Search, Crosshair, ChevronDown } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { MAPS, MAP_COLORS, GRENADE_TYPES } from '@/lib/constants';
 import { collectionsApi, userCollectionsApi, communityApi, sessionsApi } from '@/lib/api';
@@ -16,6 +18,11 @@ import NadeDetail from '../../maps/[mapName]/NadeDetail';
 import NadeList from '../../maps/[mapName]/NadeList';
 
 type GrenadeFilter = 'all' | 'smoke' | 'flash' | 'molotov' | 'he';
+
+const fadeIn = {
+  hidden: { opacity: 0, y: 16 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' as const } },
+};
 
 export default function CommunityDetailPage() {
   const params = useParams();
@@ -44,6 +51,10 @@ export default function CommunityDetailPage() {
   // Practice server
   const [startingServer, setStartingServer] = useState(false);
   const [activeSession, setActiveSession] = useState<Session | null>(null);
+
+  // Nade search & detail modal
+  const [nadeSearch, setNadeSearch] = useState('');
+  const [showNadeDetail, setShowNadeDetail] = useState(false);
 
   const map = collection ? MAPS.find((m) => m.name === collection.mapName) : null;
   const color = collection ? (MAP_COLORS[collection.mapName] || '#6c5ce7') : '#6c5ce7';
@@ -124,6 +135,16 @@ export default function CommunityDetailPage() {
     if (grenadeFilter === 'all') return lineups;
     return lineups.filter((l) => l.grenadeType === grenadeFilter);
   }, [lineups, grenadeFilter]);
+
+  const searchFilteredLineups = useMemo(() => {
+    if (!nadeSearch.trim()) return filteredLineups;
+    const q = nadeSearch.toLowerCase();
+    return filteredLineups.filter((l) =>
+      l.name.toLowerCase().includes(q) ||
+      l.playerName?.toLowerCase().includes(q) ||
+      l.teamName?.toLowerCase().includes(q),
+    );
+  }, [filteredLineups, nadeSearch]);
 
   const handleSubscribe = async () => {
     if (!user) return;
@@ -208,207 +229,324 @@ export default function CommunityDetailPage() {
   if (!collection) return null;
 
   return (
-    <div className="space-y-4 max-w-[1600px]">
-      {/* Header */}
-      <div className="space-y-3">
-        <button
-          onClick={() => router.push('/dashboard/community')}
-          className="flex items-center gap-1.5 text-sm text-[#8888aa] hover:text-white transition-colors"
+    <motion.div variants={fadeIn} initial="hidden" animate="show" className="max-w-[1600px]">
+      {/* Header + Practice Bar */}
+      <div className="mb-5 flex flex-wrap items-center gap-3">
+        <Link
+          href="/dashboard/community"
+          className="flex items-center gap-1 text-sm text-[#6b6b8a] hover:text-[#e8e8e8] transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to Community
-        </button>
+          Community
+        </Link>
+        <div className="h-4 w-px bg-[#2a2a3e]" />
+        <h1 className="text-xl font-bold text-[#e8e8e8]">{collection.name}</h1>
+        {map && (
+          <span
+            className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded"
+            style={{ backgroundColor: `${color}20`, color }}
+          >
+            {map.displayName}
+          </span>
+        )}
 
-        <div className="flex flex-col sm:flex-row items-start justify-between gap-3">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span
-                className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded"
-                style={{ backgroundColor: `${color}20`, color }}
-              >
-                {map?.displayName ?? collection.mapName}
-              </span>
-            </div>
-            <h1 className="text-xl font-bold text-white">{collection.name}</h1>
-            {collection.description && (
-              <p className="text-sm text-[#8888aa] mt-1">{collection.description}</p>
-            )}
-
-            {/* Owner + Stats */}
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2">
-              {ownerName && (
-                <div className="flex items-center gap-1.5">
-                  {ownerAvatar ? (
-                    <img src={ownerAvatar} alt="" className="h-4 w-4 rounded-full" />
-                  ) : (
-                    <div className="h-4 w-4 rounded-full bg-[#2a2a3e]" />
-                  )}
-                  <span className="text-xs text-[#8888aa]">{ownerName}</span>
-                </div>
-              )}
-              <span className="text-xs text-[#8888aa]">{lineups.length} nades</span>
-              <span className="text-xs text-[#8888aa]">{subscriberCount} subscribers</span>
-            </div>
-
-            {/* Rating */}
-            <div className="flex flex-wrap items-center gap-3 mt-2">
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs text-[#8888aa]">Community:</span>
-                <StarRating value={Math.round(averageRating)} count={ratingCount} />
-              </div>
-              {user && collection.ownerId !== user.id && (
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs text-[#8888aa]">Your rating:</span>
-                  <StarRating value={userRating} onChange={handleRate} size="md" />
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Subscribe Button */}
-          {user && collection.ownerId !== user.id && (
-            <button
-              onClick={handleSubscribe}
-              className={`shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                isSubscribed
-                  ? 'bg-[#6c5ce7]/20 text-[#6c5ce7] hover:bg-red-500/20 hover:text-red-400'
-                  : 'bg-[#6c5ce7] text-white hover:bg-[#5a4bd6]'
-              }`}
+        {/* Practice bar — inline with header */}
+        <div className="ml-auto flex items-center gap-2">
+          {activeSession?.isActive ? (
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-2 rounded-lg border border-[#4a9fd4]/30 bg-[#4a9fd4]/10 px-3 py-1.5 text-xs font-semibold text-[#4a9fd4] hover:bg-[#4a9fd4]/20 transition-colors"
             >
-              {isSubscribed ? 'Subscribed' : 'Subscribe'}
+              {activeSession.status === 'pending' || activeSession.status === 'provisioning' || activeSession.status === 'queued' ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  {activeSession.status === 'queued' ? 'Queued...' : 'Starting...'}
+                </>
+              ) : (
+                <>
+                  <Monitor className="h-3.5 w-3.5" />
+                  Server Active
+                </>
+              )}
+            </Link>
+          ) : user && isSubscribed && (
+            <button
+              onClick={handleStartServer}
+              disabled={startingServer}
+              className="flex items-center gap-2 rounded-lg bg-[#f0a500] px-3 py-1.5 text-xs font-semibold text-[#0a0a0f] hover:bg-[#ffd700] transition-colors disabled:opacity-50"
+            >
+              {startingServer ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
+              Practice this Collection
             </button>
           )}
         </div>
       </div>
 
-      {/* Main layout — stacks on small screens */}
-      <div className="flex flex-col lg:flex-row gap-6">
-        {/* Center: Practice Server + Radar + Nade List */}
-        <div className="flex-1 min-w-0 space-y-4">
-          {/* Practice Server Card */}
-          {user && isSubscribed && (
-            <div className="max-w-[500px] rounded-xl border border-[#f0a500]/20 bg-gradient-to-r from-[#12121a] to-[#1a1a2e] p-4">
-              <div className="flex items-center gap-4">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#f0a500]/10">
-                  <Monitor className="h-5 w-5 text-[#f0a500]" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <h3 className="text-sm font-semibold text-[#e8e8e8]">Practice Server</h3>
-                      <p className="mt-0.5 text-xs text-[#6b6b8a] truncate">
-                        Collection: <span className="text-[#f0a500]">{collection.name}</span>
-                      </p>
-                    </div>
-                    <div className="shrink-0">
-                      {activeSession?.isActive ? (
-                        <Link
-                          href="/dashboard"
-                          className="flex items-center gap-2 rounded-lg border border-[#4a9fd4]/30 bg-[#4a9fd4]/10 px-4 py-2 text-sm font-semibold text-[#4a9fd4] hover:bg-[#4a9fd4]/20 transition-colors"
-                        >
-                          {activeSession.status === 'pending' || activeSession.status === 'provisioning' || activeSession.status === 'queued' ? (
-                            <>
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                              {activeSession.status === 'queued' ? 'Queued...' : 'Starting...'}
-                            </>
-                          ) : (
-                            <>
-                              <Monitor className="h-4 w-4" />
-                              Server Active
-                            </>
-                          )}
-                        </Link>
-                      ) : (
-                        <button
-                          onClick={handleStartServer}
-                          disabled={startingServer}
-                          className="flex items-center gap-2 rounded-lg bg-[#f0a500] px-4 py-2 text-sm font-semibold text-[#0a0a0f] hover:bg-[#ffd700] transition-colors disabled:opacity-50"
-                        >
-                          {startingServer ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
-                          Start Server
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Map Radar */}
-          <div className="max-w-[500px] rounded-xl border border-[#2a2a3e]/50 bg-[#12121a] overflow-hidden">
-            {map && (
-              <MapRadar
-                mapName={collection.mapName}
-                lineups={filteredLineups}
-                selectedLineupId={selectedLineup?.id ?? null}
-                onLineupClick={setSelectedLineup}
-              />
+      {/* Collection info bar */}
+      <div className="mb-5 flex flex-wrap items-center gap-x-5 gap-y-2 rounded-xl border border-[#2a2a3e]/30 bg-[#12121a] px-4 py-3">
+        {/* Owner */}
+        {ownerName && (
+          <div className="flex items-center gap-1.5">
+            {ownerAvatar ? (
+              <img src={ownerAvatar} alt="" className="h-5 w-5 rounded-full" />
+            ) : (
+              <div className="h-5 w-5 rounded-full bg-[#2a2a3e]" />
             )}
+            <span className="text-xs text-[#b8b8cc] font-medium">{ownerName}</span>
+          </div>
+        )}
+        <span className="text-xs text-[#6b6b8a]">{lineups.length} nades</span>
+        <div className="flex items-center gap-1">
+          <Users className="h-3 w-3 text-[#6b6b8a]" />
+          <span className="text-xs text-[#6b6b8a]">{subscriberCount}</span>
+        </div>
+
+        {/* Rating */}
+        <div className="flex items-center gap-1.5">
+          <StarRating value={Math.round(averageRating)} count={ratingCount} />
+        </div>
+        {user && collection.ownerId !== user.id && (
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] text-[#6b6b8a]">Your rating:</span>
+            <StarRating value={userRating} onChange={handleRate} size="md" />
+          </div>
+        )}
+
+        {/* Subscribe button */}
+        {user && collection.ownerId !== user.id && (
+          <button
+            onClick={handleSubscribe}
+            className={`ml-auto shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              isSubscribed
+                ? 'bg-[#6c5ce7]/20 text-[#6c5ce7] hover:bg-red-500/20 hover:text-red-400'
+                : 'bg-[#6c5ce7] text-white hover:bg-[#5a4bd6]'
+            }`}
+          >
+            {isSubscribed ? 'Subscribed' : 'Subscribe'}
+          </button>
+        )}
+
+        {/* Description */}
+        {collection.description && (
+          <p className="w-full text-xs text-[#6b6b8a] leading-relaxed mt-1">{collection.description}</p>
+        )}
+      </div>
+
+      {/* Main Layout — two columns */}
+      <div className="flex flex-col xl:flex-row gap-4">
+        {/* Center: Radar + Grenade Filters */}
+        <div className="flex-1 min-w-0 space-y-3">
+          {/* Column guide — desktop only */}
+          <div className="hidden xl:block mb-1">
+            <div className="h-[3px] rounded-full bg-[#4a9fd4]/25" />
+            <p className="mt-1.5 text-[9px] text-[#4a9fd4]/50 font-medium tracking-wide">Interactive Map</p>
           </div>
 
-          {/* Grenade Filter + Count */}
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex flex-wrap gap-1.5">
+          {/* Grenade Filter Pills */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            <button
+              onClick={() => setGrenadeFilter('all')}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                grenadeFilter === 'all'
+                  ? 'bg-[#f0a500]/15 text-[#f0a500] border border-[#f0a500]/30'
+                  : 'bg-[#12121a] text-[#6b6b8a] border border-[#2a2a3e]/50 hover:text-[#e8e8e8]'
+              }`}
+            >
+              All
+            </button>
+            {(Object.keys(GRENADE_TYPES) as Array<keyof typeof GRENADE_TYPES>).map((type) => (
               <button
-                onClick={() => setGrenadeFilter('all')}
-                className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                  grenadeFilter === 'all'
+                key={type}
+                onClick={() => setGrenadeFilter(type)}
+                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                  grenadeFilter === type
                     ? 'bg-[#f0a500]/15 text-[#f0a500] border border-[#f0a500]/30'
                     : 'bg-[#12121a] text-[#6b6b8a] border border-[#2a2a3e]/50 hover:text-[#e8e8e8]'
                 }`}
               >
-                All
+                <GrenadeIcon type={type} size={14} />
+                {GRENADE_TYPES[type].label}
               </button>
-              {(Object.keys(GRENADE_TYPES) as Array<keyof typeof GRENADE_TYPES>).map((type) => (
-                <button
-                  key={type}
-                  onClick={() => setGrenadeFilter(type)}
-                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                    grenadeFilter === type
-                      ? 'bg-[#f0a500]/15 text-[#f0a500] border border-[#f0a500]/30'
-                      : 'bg-[#12121a] text-[#6b6b8a] border border-[#2a2a3e]/50 hover:text-[#e8e8e8]'
-                  }`}
-                >
-                  <GrenadeIcon type={type} size={14} />
-                  {GRENADE_TYPES[type].label}
-                </button>
-              ))}
-            </div>
-            <p className="text-xs text-[#6b6b8a]">
-              {filteredLineups.length} nade{filteredLineups.length !== 1 ? 's' : ''}
-            </p>
+            ))}
           </div>
 
-          {/* Nade List */}
-          <div className="max-h-[400px] overflow-y-auto scrollbar-thin pr-1">
-            <NadeList
-              lineups={filteredLineups}
-              selectedLineupId={selectedLineup?.id ?? null}
-              onSelectLineup={setSelectedLineup}
-              userCollections={userCollections}
-              addingToCollection={addingToCollection}
-              onAddToCollection={handleAddToCollection}
-              onRemoveFromCollection={handleRemoveFromCollection}
-              userCollectionLineupIds={userCollectionLineupIds}
-              isCurrentCollectionOwned={false}
-            />
+          {/* Radar + Map Nav */}
+          <div className="flex gap-2 items-start">
+            <div className="flex-1 min-w-0 rounded-xl border border-[#2a2a3e]/50 bg-[#12121a] overflow-hidden">
+              {map && (
+                <MapRadar
+                  mapName={collection.mapName}
+                  lineups={filteredLineups}
+                  selectedLineupId={selectedLineup?.id ?? null}
+                  onLineupClick={setSelectedLineup}
+                />
+              )}
+            </div>
+
+            {/* Map Navigation Strip */}
+            <div className="hidden md:flex flex-col gap-1.5 shrink-0">
+              {MAPS.map((m) => {
+                const isActive = m.name === collection.mapName;
+                const mapColor = MAP_COLORS[m.name] || '#f0a500';
+                return (
+                  <Link
+                    key={m.name}
+                    href={`/dashboard/maps/${m.name}`}
+                    title={m.displayName}
+                    className={`relative w-[72px] h-[60px] rounded-lg overflow-hidden border-2 transition-all duration-200 group ${
+                      isActive
+                        ? 'border-[#f0a500] shadow-[0_0_10px_rgba(240,165,0,0.25)]'
+                        : 'border-[#2a2a3e]/50 hover:border-[#6b6b8a]/50 hover:shadow-lg hover:shadow-black/30'
+                    }`}
+                  >
+                    <Image
+                      src={m.screenshot}
+                      alt={m.displayName}
+                      fill
+                      className={`object-cover transition-all duration-200 ${isActive ? 'brightness-90' : 'brightness-[0.35] group-hover:brightness-[0.6]'}`}
+                      sizes="72px"
+                    />
+                    {isActive && (
+                      <div className="absolute inset-0 ring-1 ring-inset ring-[#f0a500]/30 rounded-[6px]" />
+                    )}
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent px-1.5 pb-1 pt-3">
+                      <p className={`text-[9px] font-bold text-center leading-tight tracking-wide ${isActive ? 'text-[#f0a500]' : 'text-white/80 group-hover:text-white'}`}>
+                        {m.displayName}
+                      </p>
+                    </div>
+                    {isActive && (
+                      <div
+                        className="absolute inset-x-0 top-0 h-[2px]"
+                        style={{ background: `linear-gradient(to right, transparent, ${mapColor}, transparent)` }}
+                      />
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
           </div>
         </div>
 
-        {/* Right: Selected Nade Detail */}
-        <div className="w-full lg:w-72 shrink-0">
-          {selectedLineup ? (
-            <div className="lg:sticky lg:top-4">
-              <NadeDetail lineup={selectedLineup} />
+        {/* Right: Nade List Panel — always visible */}
+        <div className="w-full xl:w-[340px] shrink-0">
+          <div className="xl:sticky xl:top-4 space-y-2.5">
+            {/* Column guide — desktop only */}
+            <div className="hidden xl:block mb-1">
+              <div className="h-[3px] rounded-full bg-[#22c55e]/25" />
+              <p className="mt-1.5 text-[9px] text-[#22c55e]/50 font-medium tracking-wide">Nade List</p>
             </div>
-          ) : (
-            <div className="rounded-xl border border-[#2a2a3e]/30 bg-[#12121a]/50 px-6 py-12 text-center">
-              <p className="text-sm text-[#6b6b8a]">Select a nade to see details</p>
+
+            {/* Selected nade mini card */}
+            <div className="rounded-xl border border-[#2a2a3e]/30 bg-[#12121a] px-3.5 py-3">
+              {selectedLineup ? (() => {
+                const gColor = GRENADE_TYPES[selectedLineup.grenadeType as keyof typeof GRENADE_TYPES]?.color ?? '#f0a500';
+                const proInfo = [selectedLineup.playerName, selectedLineup.teamName].filter(Boolean).join(' \u00b7 ');
+                return (
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="flex h-8 w-8 items-center justify-center rounded-lg shrink-0"
+                      style={{ backgroundColor: `${gColor}15` }}
+                    >
+                      <GrenadeIcon type={selectedLineup.grenadeType as 'smoke' | 'flash' | 'molotov' | 'he'} size={18} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-[#e8e8e8] truncate">{selectedLineup.name}</p>
+                      {proInfo && <p className="text-[10px] text-[#f0a500]/50 truncate">{proInfo}</p>}
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        onClick={() => setShowNadeDetail(true)}
+                        className="p-1.5 rounded-lg text-[#6b6b8a] hover:text-[#e8e8e8] hover:bg-[#1a1a2e] transition-colors"
+                        title="View details"
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => setSelectedLineup(null)}
+                        className="p-1.5 rounded-lg text-[#6b6b8a] hover:text-[#ff4444] hover:bg-[#ff4444]/10 transition-colors"
+                        title="Deselect"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })() : (
+                <div className="flex items-center gap-3 py-0.5">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#1a1a2e] shrink-0">
+                    <Crosshair className="h-4 w-4 text-[#2a2a3e]" />
+                  </div>
+                  <p className="text-xs text-[#6b6b8a]">No nade selected</p>
+                </div>
+              )}
             </div>
+
+            {/* Search + count */}
+            <div className="flex items-center gap-2">
+              <div className="flex-1 flex items-center gap-2 rounded-lg border border-[#2a2a3e]/30 bg-[#12121a] px-3 py-1.5 focus-within:border-[#f0a500]/30 transition-colors">
+                <Search className="h-3.5 w-3.5 text-[#6b6b8a] shrink-0" />
+                <input
+                  type="text"
+                  placeholder="Search nades..."
+                  value={nadeSearch}
+                  onChange={(e) => setNadeSearch(e.target.value)}
+                  className="w-full bg-transparent text-xs text-[#e8e8e8] placeholder-[#6b6b8a]/50 focus:outline-none border-none"
+                />
+              </div>
+              <p className="text-[10px] text-[#6b6b8a] shrink-0 tabular-nums">
+                {searchFilteredLineups.length}
+              </p>
+            </div>
+
+            {/* Scrollable nade list */}
+            <div className="max-h-[calc(100vh-18rem)] overflow-y-auto scrollbar-thin rounded-xl border border-[#2a2a3e]/30 bg-[#12121a]/30 p-4">
+              <NadeList
+                lineups={searchFilteredLineups}
+                selectedLineupId={selectedLineup?.id ?? null}
+                onSelectLineup={setSelectedLineup}
+                userCollections={userCollections}
+                addingToCollection={addingToCollection}
+                onAddToCollection={handleAddToCollection}
+                onRemoveFromCollection={handleRemoveFromCollection}
+                userCollectionLineupIds={userCollectionLineupIds}
+                isCurrentCollectionOwned={false}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Nade Detail Modal */}
+        <AnimatePresence>
+          {showNadeDetail && selectedLineup && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-start justify-center pt-[10vh] bg-black/60"
+              onClick={() => setShowNadeDetail(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                className="w-full max-w-sm max-h-[80vh] overflow-y-auto scrollbar-thin rounded-xl border border-[#2a2a3e] bg-[#0d0d14] shadow-2xl shadow-black/60"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 bg-[#0d0d14] border-b border-[#2a2a3e]/50">
+                  <p className="text-sm font-semibold text-[#e8e8e8]">Nade Details</p>
+                  <button
+                    onClick={() => setShowNadeDetail(false)}
+                    className="p-1 rounded-lg text-[#6b6b8a] hover:text-[#e8e8e8] hover:bg-[#1a1a2e] transition-colors"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                <NadeDetail lineup={selectedLineup} />
+              </motion.div>
+            </motion.div>
           )}
-        </div>
+        </AnimatePresence>
       </div>
-    </div>
+    </motion.div>
   );
 }
