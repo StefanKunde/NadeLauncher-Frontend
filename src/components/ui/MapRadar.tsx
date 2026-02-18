@@ -155,7 +155,7 @@ export default function MapRadar({
   }
 
   const selectedMarker = markers.find((m) => m.lineup.id === selectedLineupId);
-  const scale = mini ? 1 : 1 / zoom;
+  const scale = mini ? 1 : 1 / Math.pow(zoom, 0.6);
   const dotSize = (mini ? 5 : 7) * scale;
   const selectedDotSize = (mini ? 7 : 12) * scale;
   const isZoomed = zoom !== 1;
