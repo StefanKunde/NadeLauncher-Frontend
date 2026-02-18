@@ -229,56 +229,56 @@ export default function CommunityDetailPage() {
 
   return (
     <motion.div variants={fadeIn} initial="hidden" animate="show" className="max-w-[1600px]">
-      {/* Header */}
-      <div className="mb-3 flex flex-wrap items-center gap-3">
+      {/* Header + Practice Bar */}
+      <div className="mb-5 flex items-center gap-3">
         <Link
           href="/dashboard/community"
-          className="flex items-center gap-1 text-sm text-[#6b6b8a] hover:text-[#e8e8e8] transition-colors"
+          className="flex items-center gap-1 text-sm text-[#6b6b8a] hover:text-[#e8e8e8] transition-colors shrink-0"
         >
           <ArrowLeft className="h-4 w-4" />
           Community
         </Link>
-        <div className="h-4 w-px bg-[#2a2a3e]" />
-        <h1 className="text-xl font-bold text-[#e8e8e8]">{collection.name}</h1>
+        <div className="h-4 w-px bg-[#2a2a3e] shrink-0" />
+        <h1 className="text-xl font-bold text-[#e8e8e8] shrink-0">{collection.name}</h1>
         {map && (
           <span
-            className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded"
+            className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded shrink-0"
             style={{ backgroundColor: `${color}20`, color }}
           >
             {map.displayName}
           </span>
         )}
-      </div>
 
-      {/* Practice bar — centered */}
-      <div className="mb-5 flex justify-center">
-        {activeSession?.isActive ? (
-          <Link
-            href="/dashboard"
-            className="flex items-center gap-2 rounded-lg border border-[#4a9fd4]/30 bg-[#4a9fd4]/10 px-4 py-2 text-xs font-semibold text-[#4a9fd4] hover:bg-[#4a9fd4]/20 transition-colors"
-          >
-            {activeSession.status === 'pending' || activeSession.status === 'provisioning' || activeSession.status === 'queued' ? (
-              <>
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                {activeSession.status === 'queued' ? 'Queued...' : 'Starting...'}
-              </>
-            ) : (
-              <>
-                <Monitor className="h-3.5 w-3.5" />
-                Server Active
-              </>
-            )}
-          </Link>
-        ) : user && isSubscribed ? (
-          <button
-            onClick={handleStartServer}
-            disabled={startingServer}
-            className="flex items-center gap-2 rounded-lg bg-[#f0a500] px-4 py-2 text-xs font-semibold text-[#0a0a0f] hover:bg-[#ffd700] transition-colors disabled:opacity-50"
-          >
-            {startingServer ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
-            Practice this Collection
-          </button>
-        ) : null}
+        {/* Practice bar — centered in remaining space */}
+        <div className="flex-1 flex justify-center">
+          {activeSession?.isActive ? (
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-2 rounded-lg border border-[#4a9fd4]/30 bg-[#4a9fd4]/10 px-4 py-2 text-xs font-semibold text-[#4a9fd4] hover:bg-[#4a9fd4]/20 transition-colors"
+            >
+              {activeSession.status === 'pending' || activeSession.status === 'provisioning' || activeSession.status === 'queued' ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  {activeSession.status === 'queued' ? 'Queued...' : 'Starting...'}
+                </>
+              ) : (
+                <>
+                  <Monitor className="h-3.5 w-3.5" />
+                  Server Active
+                </>
+              )}
+            </Link>
+          ) : user && isSubscribed ? (
+            <button
+              onClick={handleStartServer}
+              disabled={startingServer}
+              className="flex items-center gap-2 rounded-lg bg-[#f0a500] px-4 py-2 text-xs font-semibold text-[#0a0a0f] hover:bg-[#ffd700] transition-colors disabled:opacity-50"
+            >
+              {startingServer ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
+              Practice this Collection
+            </button>
+          ) : null}
+        </div>
       </div>
 
       {/* Collection info bar */}
@@ -321,7 +321,7 @@ export default function CommunityDetailPage() {
                 : 'bg-[#6c5ce7] text-white hover:bg-[#5a4bd6]'
             }`}
           >
-            {isSubscribed ? 'Subscribed' : 'Subscribe'}
+            {isSubscribed ? 'Unsubscribe' : 'Subscribe'}
           </button>
         )}
 

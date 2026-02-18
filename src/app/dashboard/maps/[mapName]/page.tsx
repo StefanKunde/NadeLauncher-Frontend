@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowLeft, Play, ChevronDown, Loader2, Monitor, X, Trash2, Users, Share2, Star, Eye, EyeOff, Search, Crosshair } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -525,8 +526,8 @@ export default function MapDetailPage() {
         <h1 className="text-xl font-bold text-[#e8e8e8]">{map.displayName}</h1>
         <div className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
 
-        {/* Practice bar — inline with header */}
-        <div className="ml-auto flex items-center gap-2">
+        {/* Practice bar — centered in remaining space */}
+        <div className="flex-1 flex items-center justify-center gap-2">
           {activeSession?.isActive ? (
             <Link
               href="/dashboard"
@@ -704,8 +705,8 @@ export default function MapDetailPage() {
               );
             })()}
 
-            {/* Radar */}
-            <div className="flex justify-center px-4">
+            {/* Radar + Map Nav */}
+            <div className="flex gap-2 items-start justify-center px-4">
               <div className="w-full max-w-[700px] rounded-xl border border-[#2a2a3e]/50 bg-[#12121a] overflow-hidden">
                 <MapRadar
                   mapName={mapName}
@@ -714,6 +715,40 @@ export default function MapDetailPage() {
                   onLineupClick={(lineup) => setSelectedLineup(lineup)}
                   mini={false}
                 />
+              </div>
+
+              {/* Map navigation strip */}
+              <div className="hidden md:flex flex-col gap-1.5 shrink-0">
+                {MAPS.map((m) => {
+                  const isActive = m.name === mapName;
+                  const mColor = MAP_COLORS[m.name] ?? '#f0a500';
+                  return (
+                    <Link
+                      key={m.name}
+                      href={`/dashboard/maps/${m.name}`}
+                      className={`relative block w-14 h-10 rounded-lg overflow-hidden border transition-all duration-200 ${
+                        isActive
+                          ? 'border-[#f0a500]/60 ring-1 ring-[#f0a500]/30'
+                          : 'border-[#2a2a3e]/30 hover:border-[#2a2a3e] opacity-60 hover:opacity-100'
+                      }`}
+                      title={m.displayName}
+                    >
+                      <Image
+                        src={m.screenshot}
+                        alt={m.displayName}
+                        fill
+                        className="object-cover"
+                        sizes="56px"
+                      />
+                      {isActive && (
+                        <div
+                          className="absolute bottom-0 left-0 right-0 h-[2px]"
+                          style={{ backgroundColor: mColor }}
+                        />
+                      )}
+                    </Link>
+                  );
+                })}
               </div>
             </div>
           </div>

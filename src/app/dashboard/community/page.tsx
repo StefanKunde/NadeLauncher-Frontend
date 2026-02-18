@@ -251,7 +251,7 @@ export default function CommunityPage() {
                             : 'bg-[#6c5ce7] text-white hover:bg-[#5a4bd6]'
                         }`}
                       >
-                        {col.isSubscribed ? 'Subscribed' : 'Subscribe'}
+                        {col.isSubscribed ? 'Unsubscribe' : 'Subscribe'}
                       </button>
                     )}
                   </div>
@@ -281,7 +281,7 @@ export default function CommunityPage() {
                             : 'bg-[#6c5ce7] text-white hover:bg-[#5a4bd6]'
                         }`}
                       >
-                        {col.isSubscribed ? 'Subscribed' : 'Subscribe'}
+                        {col.isSubscribed ? 'Unsubscribe' : 'Subscribe'}
                       </button>
                     )}
                   </div>

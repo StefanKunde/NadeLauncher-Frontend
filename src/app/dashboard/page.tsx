@@ -10,8 +10,6 @@ import {
   FolderPlus,
   Monitor,
   Sparkles,
-  Users,
-  Folder,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth-store';
 import { MAPS, MAP_COLORS } from '@/lib/constants';
@@ -76,56 +74,11 @@ export default function DashboardPage() {
         </p>
       </motion.div>
 
-      {/* Practice Server + Side Tiles */}
+      {/* Practice Server */}
       <motion.div variants={fadeUp} custom={1} className="mb-10">
         <h2 className="text-xl font-semibold text-[#e8e8e8] mb-1">Practice Server</h2>
         <p className="mb-5 text-sm text-[#6b6b8a]">Start a private CS2 practice session with ghost-guided lineups</p>
-        <div className="flex flex-col lg:flex-row gap-3 items-stretch">
-          <div className="flex-1 min-w-0">
-            <PracticeSessionCard />
-          </div>
-          <div className="lg:w-52 shrink-0 w-full flex flex-row lg:flex-col gap-3">
-            {/* My Collections tile */}
-            <Link
-              href="/dashboard/maps"
-              className="flex-1 rounded-xl bg-[#12121a] border border-[#2a2a3e]/30 px-4 py-3.5 hover:border-[#f0a500]/30 transition-colors group"
-            >
-              <div className="flex items-center gap-2.5 mb-2">
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#f0a500]/10 shrink-0">
-                  <Folder className="h-3.5 w-3.5 text-[#f0a500]" />
-                </div>
-                <p className="text-sm font-semibold text-[#e8e8e8]">My Collections</p>
-              </div>
-              <p className="text-[11px] text-[#6b6b8a] leading-relaxed">
-                {collectionCount !== null && collectionCount > 0
-                  ? `${collectionCount} collection${collectionCount !== 1 ? 's' : ''} saved`
-                  : 'Organize your favorite lineups'}
-              </p>
-              <span className="inline-flex items-center gap-1 mt-2 text-[10px] font-medium text-[#f0a500]/70 group-hover:text-[#ffd700] transition-colors">
-                Manage <ChevronRight className="h-3 w-3" />
-              </span>
-            </Link>
-
-            {/* Community tile */}
-            <Link
-              href="/dashboard/community"
-              className="flex-1 rounded-xl bg-[#12121a] border border-[#2a2a3e]/30 px-4 py-3.5 hover:border-[#6c5ce7]/30 transition-colors group"
-            >
-              <div className="flex items-center gap-2.5 mb-2">
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#6c5ce7]/10 shrink-0">
-                  <Users className="h-3.5 w-3.5 text-[#6c5ce7]" />
-                </div>
-                <p className="text-sm font-semibold text-[#e8e8e8]">Community</p>
-              </div>
-              <p className="text-[11px] text-[#6b6b8a] leading-relaxed">
-                Browse and subscribe to shared collections
-              </p>
-              <span className="inline-flex items-center gap-1 mt-2 text-[10px] font-medium text-[#6c5ce7]/70 group-hover:text-[#8b7cf7] transition-colors">
-                Browse <ChevronRight className="h-3 w-3" />
-              </span>
-            </Link>
-          </div>
-        </div>
+        <PracticeSessionCard />
       </motion.div>
 
       {/* Your Statistics */}
