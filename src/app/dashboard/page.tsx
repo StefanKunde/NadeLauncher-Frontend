@@ -3,10 +3,9 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   ChevronRight,
-  Lightbulb,
   Map,
   FolderPlus,
   Monitor,
@@ -32,15 +31,6 @@ const stagger = {
   visible: { transition: { staggerChildren: 0.06 } },
 };
 
-const TIPS = [
-  'Create a collection for each map to organize your favorite lineups.',
-  'Browse Pro Collections to learn lineups used in professional CS2 matches.',
-  'Start a Practice Server to test lineups directly in CS2 with ghost guidance.',
-  'Publish your best collection to share it with the community.',
-  'Subscribe to community collections to add other players\u2019 curated lineups.',
-  'Click any nade dot on the radar map to see its detailed throw instructions.',
-];
-
 const GETTING_STARTED = [
   { icon: Map, text: 'Pick a map below to browse available lineups', desc: 'Explore pro lineups and community collections' },
   { icon: FolderPlus, text: 'Create a collection and add your favorite nades', desc: 'Organize lineups by strategy or preference' },
@@ -50,15 +40,6 @@ const GETTING_STARTED = [
 export default function DashboardPage() {
   const user = useAuthStore((s) => s.user);
   const [collectionCount, setCollectionCount] = useState<number | null>(null);
-  const [tipIndex, setTipIndex] = useState(() => Math.floor(Math.random() * TIPS.length));
-
-  // Auto-rotate tips every 8 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTipIndex((prev) => (prev + 1) % TIPS.length);
-    }, 8000);
-    return () => clearInterval(interval);
-  }, []);
 
   useEffect(() => {
     userCollectionsApi.getMy().then((cols) => {
@@ -86,56 +67,52 @@ export default function DashboardPage() {
       <motion.div variants={fadeUp} custom={1} className="mb-10">
         <h2 className="text-xl font-semibold text-[#e8e8e8] mb-1">Practice Server</h2>
         <p className="mb-5 text-sm text-[#6b6b8a]">Start a private CS2 practice session with ghost-guided lineups</p>
-        <div className="flex flex-col lg:flex-row gap-3 items-start">
+        <div className="flex flex-col lg:flex-row gap-4 items-stretch">
           <div className="flex-1 min-w-0">
             <PracticeSessionCard />
           </div>
-          <div className="lg:w-56 shrink-0 w-full flex flex-row lg:flex-col gap-3">
+          <div className="lg:w-64 shrink-0 w-full flex flex-row lg:flex-col gap-4">
             {/* My Collections tile */}
             <Link
               href="/dashboard/maps"
-              className="flex-1 rounded-xl bg-[#12121a] border border-[#2a2a3e]/30 p-4 hover:border-[#f0a500]/30 transition-colors group"
+              className="flex-1 rounded-xl bg-[#12121a] border border-[#2a2a3e]/30 p-5 hover:border-[#f0a500]/30 transition-colors group"
             >
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#f0a500]/10 mb-2.5">
-                <Folder className="h-3.5 w-3.5 text-[#f0a500]" />
+              <div className="flex items-center gap-3 mb-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#f0a500]/10">
+                  <Folder className="h-4 w-4 text-[#f0a500]" />
+                </div>
+                <p className="text-sm font-semibold text-[#e8e8e8]">My Collections</p>
               </div>
-              <p className="text-xs font-semibold text-[#e8e8e8] mb-0.5">My Collections</p>
-              <p className="text-[11px] text-[#6b6b8a]">
-                {collectionCount !== null ? `${collectionCount} collection${collectionCount !== 1 ? 's' : ''}` : 'Manage lineups'}
+              <p className="text-xs text-[#6b6b8a] leading-relaxed">
+                {collectionCount !== null
+                  ? `You have ${collectionCount} collection${collectionCount !== 1 ? 's' : ''}. Organize your favorite lineups by map and strategy.`
+                  : 'Organize your favorite lineups by map and strategy.'}
               </p>
+              <span className="inline-flex items-center gap-1 mt-3 text-[11px] font-medium text-[#f0a500] group-hover:text-[#ffd700] transition-colors">
+                Manage collections
+                <ChevronRight className="h-3 w-3" />
+              </span>
             </Link>
 
             {/* Community tile */}
             <Link
               href="/dashboard/community"
-              className="flex-1 rounded-xl bg-[#12121a] border border-[#2a2a3e]/30 p-4 hover:border-[#6c5ce7]/30 transition-colors group"
+              className="flex-1 rounded-xl bg-[#12121a] border border-[#2a2a3e]/30 p-5 hover:border-[#6c5ce7]/30 transition-colors group"
             >
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#6c5ce7]/10 mb-2.5">
-                <Users className="h-3.5 w-3.5 text-[#6c5ce7]" />
+              <div className="flex items-center gap-3 mb-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#6c5ce7]/10">
+                  <Users className="h-4 w-4 text-[#6c5ce7]" />
+                </div>
+                <p className="text-sm font-semibold text-[#e8e8e8]">Community</p>
               </div>
-              <p className="text-xs font-semibold text-[#e8e8e8] mb-0.5">Community</p>
-              <p className="text-[11px] text-[#6b6b8a]">Browse & subscribe</p>
+              <p className="text-xs text-[#6b6b8a] leading-relaxed">
+                Browse collections shared by other players. Subscribe to add their curated lineups to your practice.
+              </p>
+              <span className="inline-flex items-center gap-1 mt-3 text-[11px] font-medium text-[#6c5ce7] group-hover:text-[#8b7cf7] transition-colors">
+                Browse collections
+                <ChevronRight className="h-3 w-3" />
+              </span>
             </Link>
-
-            {/* Quick Tip tile — auto-rotating */}
-            <div className="flex-1 rounded-xl bg-[#12121a] border border-[#2a2a3e]/30 p-4">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#f0a500]/10 mb-2.5">
-                <Lightbulb className="h-3.5 w-3.5 text-[#f0a500]" />
-              </div>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-[#f0a500]/60 mb-1">Tip</p>
-              <AnimatePresence mode="wait">
-                <motion.p
-                  key={tipIndex}
-                  initial={{ opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -4 }}
-                  transition={{ duration: 0.3 }}
-                  className="text-[11px] text-[#6b6b8a] leading-relaxed"
-                >
-                  {TIPS[tipIndex]}
-                </motion.p>
-              </AnimatePresence>
-            </div>
           </div>
         </div>
       </motion.div>
