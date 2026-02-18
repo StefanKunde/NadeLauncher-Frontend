@@ -413,7 +413,7 @@ export default function MapRadar({
           const dx = selectedMarker.landingPos.x - selectedMarker.throwPos.x;
           const dy = selectedMarker.landingPos.y - selectedMarker.throwPos.y;
 
-          const offsetDistance = 4;
+          const offsetDistance = 6;
           const length = Math.sqrt(dx * dx + dy * dy) || 1;
           const offsetX = -(dx / length) * offsetDistance;
           const offsetY = -(dy / length) * offsetDistance;
@@ -426,13 +426,13 @@ export default function MapRadar({
 
           return (
             <div
-              className="absolute z-30 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+              className="absolute z-10 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
               style={{
                 left: `${labelX}%`,
                 top: `${labelY}%`,
               }}
             >
-              <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-[#0a0a0f]/90 text-white whitespace-nowrap border border-[#2a2a3e]">
+              <span className="px-1.5 py-px rounded text-[8px] font-medium bg-[#0a0a0f]/80 text-white/90 whitespace-nowrap border border-[#2a2a3e]/60">
                 {selectedMarker.lineup.name}
               </span>
             </div>
