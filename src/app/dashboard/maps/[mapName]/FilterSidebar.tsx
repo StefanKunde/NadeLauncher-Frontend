@@ -362,46 +362,44 @@ export default function FilterSidebar({
         </div>
 
         {/* Community Collections */}
-        {communityCollections.length > 0 && (
-          <div>
-            <button
-              onClick={() => setCommunityExpanded(!communityExpanded)}
-              className="mb-2 flex w-full items-center gap-1 text-xs font-semibold uppercase tracking-wider text-[#6b6b8a] hover:text-[#e8e8e8] transition-colors"
-            >
-              {communityExpanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-              <Users className="h-3 w-3" />
-              Community
-            </button>
-            <AnimatePresence>
-              {communityExpanded && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="overflow-hidden space-y-1"
+        <div>
+          <button
+            onClick={() => setCommunityExpanded(!communityExpanded)}
+            className="mb-2 flex w-full items-center gap-1 text-xs font-semibold uppercase tracking-wider text-[#6b6b8a] hover:text-[#e8e8e8] transition-colors"
+          >
+            {communityExpanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+            <Users className="h-3 w-3" />
+            Community
+          </button>
+          <AnimatePresence>
+            {communityExpanded && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden space-y-1"
+              >
+                {filteredCommunity.map((c) => (
+                  <SourceButton
+                    key={c.id}
+                    active={isSourceActive(c.id)}
+                    onClick={() => onSourceFilterChange({ type: 'collection', collectionId: c.id, collectionName: c.name })}
+                    label={c.name}
+                    count={c.lineupCount}
+                  />
+                ))}
+                <Link
+                  href="/dashboard/community"
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-[#6b6b8a] hover:text-[#6c5ce7] hover:bg-[#6c5ce7]/5 transition-colors"
                 >
-                  {filteredCommunity.map((c) => (
-                    <SourceButton
-                      key={c.id}
-                      active={isSourceActive(c.id)}
-                      onClick={() => onSourceFilterChange({ type: 'collection', collectionId: c.id, collectionName: c.name })}
-                      label={c.name}
-                      count={c.lineupCount}
-                    />
-                  ))}
-                  <Link
-                    href="/dashboard/community"
-                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-[#6b6b8a] hover:text-[#6c5ce7] hover:bg-[#6c5ce7]/5 transition-colors"
-                  >
-                    <Search className="h-3.5 w-3.5" />
-                    Browse more...
-                  </Link>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        )}
+                  <Search className="h-3.5 w-3.5" />
+                  Browse more...
+                </Link>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
         {/* Pro Collections */}
         {proCollections.length > 0 && (
