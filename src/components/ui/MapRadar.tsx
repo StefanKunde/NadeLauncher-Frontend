@@ -301,7 +301,7 @@ export default function MapRadar({
               {/* Selected nade rendered as individual marker on top */}
               {!mini && selectedInGroup && (
                 <div
-                  className="absolute z-[25] rounded-full ring-2 ring-white/50 transition-all duration-200"
+                  className="absolute z-[25] rounded-full ring-2 ring-white/50 transition-all duration-200 pointer-events-none"
                   style={{
                     width: selectedDotSize,
                     height: selectedDotSize,
