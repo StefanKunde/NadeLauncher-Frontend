@@ -3,7 +3,6 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import { ArrowLeft, Users, Loader2, Play, Monitor, X, Eye, Search, Crosshair, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -230,8 +229,8 @@ export default function CommunityDetailPage() {
 
   return (
     <motion.div variants={fadeIn} initial="hidden" animate="show" className="max-w-[1600px]">
-      {/* Header + Practice Bar */}
-      <div className="mb-5 flex flex-wrap items-center gap-3">
+      {/* Header */}
+      <div className="mb-3 flex flex-wrap items-center gap-3">
         <Link
           href="/dashboard/community"
           className="flex items-center gap-1 text-sm text-[#6b6b8a] hover:text-[#e8e8e8] transition-colors"
@@ -249,37 +248,37 @@ export default function CommunityDetailPage() {
             {map.displayName}
           </span>
         )}
+      </div>
 
-        {/* Practice bar — inline with header */}
-        <div className="ml-auto flex items-center gap-2">
-          {activeSession?.isActive ? (
-            <Link
-              href="/dashboard"
-              className="flex items-center gap-2 rounded-lg border border-[#4a9fd4]/30 bg-[#4a9fd4]/10 px-3 py-1.5 text-xs font-semibold text-[#4a9fd4] hover:bg-[#4a9fd4]/20 transition-colors"
-            >
-              {activeSession.status === 'pending' || activeSession.status === 'provisioning' || activeSession.status === 'queued' ? (
-                <>
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  {activeSession.status === 'queued' ? 'Queued...' : 'Starting...'}
-                </>
-              ) : (
-                <>
-                  <Monitor className="h-3.5 w-3.5" />
-                  Server Active
-                </>
-              )}
-            </Link>
-          ) : user && isSubscribed && (
-            <button
-              onClick={handleStartServer}
-              disabled={startingServer}
-              className="flex items-center gap-2 rounded-lg bg-[#f0a500] px-3 py-1.5 text-xs font-semibold text-[#0a0a0f] hover:bg-[#ffd700] transition-colors disabled:opacity-50"
-            >
-              {startingServer ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
-              Practice this Collection
-            </button>
-          )}
-        </div>
+      {/* Practice bar — centered */}
+      <div className="mb-5 flex justify-center">
+        {activeSession?.isActive ? (
+          <Link
+            href="/dashboard"
+            className="flex items-center gap-2 rounded-lg border border-[#4a9fd4]/30 bg-[#4a9fd4]/10 px-4 py-2 text-xs font-semibold text-[#4a9fd4] hover:bg-[#4a9fd4]/20 transition-colors"
+          >
+            {activeSession.status === 'pending' || activeSession.status === 'provisioning' || activeSession.status === 'queued' ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                {activeSession.status === 'queued' ? 'Queued...' : 'Starting...'}
+              </>
+            ) : (
+              <>
+                <Monitor className="h-3.5 w-3.5" />
+                Server Active
+              </>
+            )}
+          </Link>
+        ) : user && isSubscribed ? (
+          <button
+            onClick={handleStartServer}
+            disabled={startingServer}
+            className="flex items-center gap-2 rounded-lg bg-[#f0a500] px-4 py-2 text-xs font-semibold text-[#0a0a0f] hover:bg-[#ffd700] transition-colors disabled:opacity-50"
+          >
+            {startingServer ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
+            Practice this Collection
+          </button>
+        ) : null}
       </div>
 
       {/* Collection info bar */}
@@ -370,60 +369,16 @@ export default function CommunityDetailPage() {
             ))}
           </div>
 
-          {/* Radar + Map Nav */}
-          <div className="flex gap-2 items-start">
-            <div className="flex-1 min-w-0 rounded-xl border border-[#2a2a3e]/50 bg-[#12121a] overflow-hidden">
-              {map && (
-                <MapRadar
-                  mapName={collection.mapName}
-                  lineups={filteredLineups}
-                  selectedLineupId={selectedLineup?.id ?? null}
-                  onLineupClick={setSelectedLineup}
-                />
-              )}
-            </div>
-
-            {/* Map Navigation Strip */}
-            <div className="hidden md:flex flex-col gap-1.5 shrink-0">
-              {MAPS.map((m) => {
-                const isActive = m.name === collection.mapName;
-                const mapColor = MAP_COLORS[m.name] || '#f0a500';
-                return (
-                  <Link
-                    key={m.name}
-                    href={`/dashboard/maps/${m.name}`}
-                    title={m.displayName}
-                    className={`relative w-[72px] h-[60px] rounded-lg overflow-hidden border-2 transition-all duration-200 group ${
-                      isActive
-                        ? 'border-[#f0a500] shadow-[0_0_10px_rgba(240,165,0,0.25)]'
-                        : 'border-[#2a2a3e]/50 hover:border-[#6b6b8a]/50 hover:shadow-lg hover:shadow-black/30'
-                    }`}
-                  >
-                    <Image
-                      src={m.screenshot}
-                      alt={m.displayName}
-                      fill
-                      className={`object-cover transition-all duration-200 ${isActive ? 'brightness-90' : 'brightness-[0.35] group-hover:brightness-[0.6]'}`}
-                      sizes="72px"
-                    />
-                    {isActive && (
-                      <div className="absolute inset-0 ring-1 ring-inset ring-[#f0a500]/30 rounded-[6px]" />
-                    )}
-                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent px-1.5 pb-1 pt-3">
-                      <p className={`text-[9px] font-bold text-center leading-tight tracking-wide ${isActive ? 'text-[#f0a500]' : 'text-white/80 group-hover:text-white'}`}>
-                        {m.displayName}
-                      </p>
-                    </div>
-                    {isActive && (
-                      <div
-                        className="absolute inset-x-0 top-0 h-[2px]"
-                        style={{ background: `linear-gradient(to right, transparent, ${mapColor}, transparent)` }}
-                      />
-                    )}
-                  </Link>
-                );
-              })}
-            </div>
+          {/* Radar */}
+          <div className="max-w-[600px] rounded-xl border border-[#2a2a3e]/50 bg-[#12121a] overflow-hidden">
+            {map && (
+              <MapRadar
+                mapName={collection.mapName}
+                lineups={filteredLineups}
+                selectedLineupId={selectedLineup?.id ?? null}
+                onLineupClick={setSelectedLineup}
+              />
+            )}
           </div>
         </div>
 
