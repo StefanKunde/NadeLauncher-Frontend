@@ -230,7 +230,7 @@ function NadeListItem({
         )}
 
         {/* Add to collection button */}
-        {userCollections.length > 0 && (
+        {userCollections.some((c) => c.mapName === lineup.mapName) && (
           <div className="shrink-0">
             <button
               ref={addBtnRef}
@@ -247,7 +247,7 @@ function NadeListItem({
                   style={{ top: menuPos.top, right: menuPos.right }}
                 >
                   <p className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#6b6b8a]/60">Add to collection</p>
-                  {userCollections.map((c) => {
+                  {userCollections.filter((c) => c.mapName === lineup.mapName).map((c) => {
                     const alreadyIn = userCollectionLineupIds.get(c.id)?.has(lineup.id) ?? false;
                     const isAdding = addingToCollection === lineup.id;
                     return (
