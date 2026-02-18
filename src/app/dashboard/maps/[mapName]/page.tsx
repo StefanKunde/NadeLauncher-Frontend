@@ -513,8 +513,8 @@ export default function MapDetailPage() {
 
   return (
     <motion.div variants={fadeIn} initial="hidden" animate="show" className="max-w-[1600px]">
-      {/* Header */}
-      <div className="mb-5 flex items-center gap-3">
+      {/* Header + Practice Bar */}
+      <div className="mb-5 flex flex-wrap items-center gap-3">
         <Link
           href="/dashboard/maps"
           className="flex items-center gap-1 text-sm text-[#6b6b8a] hover:text-[#e8e8e8] transition-colors"
@@ -525,6 +525,80 @@ export default function MapDetailPage() {
         <div className="h-4 w-px bg-[#2a2a3e]" />
         <h1 className="text-xl font-bold text-[#e8e8e8]">{map.displayName}</h1>
         <div className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
+
+        {/* Practice bar — inline with header */}
+        <div className="ml-auto flex items-center gap-2">
+          {activeSession?.isActive ? (
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-2 rounded-lg border border-[#4a9fd4]/30 bg-[#4a9fd4]/10 px-3 py-1.5 text-xs font-semibold text-[#4a9fd4] hover:bg-[#4a9fd4]/20 transition-colors"
+            >
+              {activeSession.status === 'pending' || activeSession.status === 'provisioning' || activeSession.status === 'queued' ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  {activeSession.status === 'queued' ? 'Queued...' : 'Starting...'}
+                </>
+              ) : (
+                <>
+                  <Monitor className="h-3.5 w-3.5" />
+                  Server Active
+                </>
+              )}
+            </Link>
+          ) : (
+            <>
+              {practiceCollections.length > 0 && (
+                <div className="relative">
+                  <button
+                    onClick={() => setServerCollectionPicker(!serverCollectionPicker)}
+                    disabled={startingServer}
+                    className="flex items-center gap-1.5 rounded-lg border border-[#2a2a3e] bg-[#12121a] px-3 py-1.5 text-xs text-[#b8b8cc] hover:border-[#f0a500]/30 hover:text-[#e8e8e8] transition-colors disabled:opacity-50"
+                  >
+                    <ChevronDown className={`h-3 w-3 transition-transform ${serverCollectionPicker ? 'rotate-180' : ''}`} />
+                    <span className="max-w-[140px] truncate">{currentCollectionName ?? 'All Nades'}</span>
+                  </button>
+                  {serverCollectionPicker && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => setServerCollectionPicker(false)} />
+                      <div className="absolute right-0 top-full z-50 mt-1 w-64 rounded-xl border border-[#2a2a3e] bg-[#12121a] py-2 shadow-2xl shadow-black/50">
+                        <p className="px-4 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#6b6b8a]">
+                          Choose a collection
+                        </p>
+                        {practiceCollections.map((c) => {
+                          const isCurrent = sourceFilter.type === 'collection' && sourceFilter.collectionId === c.id;
+                          return (
+                            <button
+                              key={c.id}
+                              onClick={() => {
+                                setSourceFilter({ type: 'collection', collectionId: c.id, collectionName: c.name });
+                                setServerCollectionPicker(false);
+                              }}
+                              className={`flex w-full items-center gap-2 px-4 py-2 text-xs transition-colors ${
+                                isCurrent
+                                  ? 'bg-[#f0a500]/10 text-[#f0a500]'
+                                  : 'text-[#b8b8cc] hover:bg-[#1a1a2e] hover:text-[#e8e8e8]'
+                              }`}
+                            >
+                              <span className="truncate">{c.name}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+              <button
+                onClick={() => handleStartServer(currentCollectionId)}
+                disabled={startingServer}
+                className="flex items-center gap-2 rounded-lg bg-[#f0a500] px-3 py-1.5 text-xs font-semibold text-[#0a0a0f] hover:bg-[#ffd700] transition-colors disabled:opacity-50"
+              >
+                {startingServer ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
+                Practice this Collection
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Main Layout */}
@@ -544,9 +618,9 @@ export default function MapDetailPage() {
           {/* Left: Filter Sidebar */}
           <div className="shrink-0">
             {/* Column guide — desktop only */}
-            <div className="hidden xl:block mb-2.5">
+            <div className="hidden xl:block mb-4">
               <div className="h-[3px] rounded-full bg-[#f0a500]/25" />
-              <p className="mt-1 text-[9px] text-[#f0a500]/50 font-medium tracking-wide">Collections · Browse & filter</p>
+              <p className="mt-1.5 text-[9px] text-[#f0a500]/50 font-medium tracking-wide">Collections</p>
             </div>
             <FilterSidebar
               grenadeFilter={grenadeFilter}
@@ -566,108 +640,11 @@ export default function MapDetailPage() {
           </div>
 
           {/* Center: Radar */}
-          <div className="flex-1 min-w-0 space-y-4">
+          <div className="flex-1 min-w-0 space-y-3">
             {/* Column guide — desktop only */}
-            <div className="hidden xl:flex items-start gap-4 -mb-2">
-              <div className="flex-1 min-w-0">
-                <div className="h-[3px] rounded-full bg-[#4a9fd4]/25" />
-                <p className="mt-1 text-[9px] text-[#4a9fd4]/50 font-medium tracking-wide">Interactive Map · Click dots to explore lineups</p>
-              </div>
-            </div>
-
-            {/* Practice Server Card — prominent position */}
-            <div className="max-w-[700px] rounded-xl border border-[#f0a500]/20 bg-gradient-to-r from-[#12121a] to-[#1a1a2e] p-4">
-              <div className="flex items-center gap-4">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#f0a500]/10">
-                  <Monitor className="h-5 w-5 text-[#f0a500]" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <h3 className="text-sm font-semibold text-[#e8e8e8]">Practice Server</h3>
-                      {currentCollectionName ? (
-                        <p className="mt-0.5 text-xs text-[#6b6b8a] truncate">
-                          Collection: <span className="text-[#f0a500]">{currentCollectionName}</span>
-                        </p>
-                      ) : (
-                        <p className="mt-0.5 text-xs text-[#6b6b8a]">All nades on this map</p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      {activeSession?.isActive ? (
-                        <Link
-                          href="/dashboard"
-                          className="flex items-center gap-2 rounded-lg border border-[#4a9fd4]/30 bg-[#4a9fd4]/10 px-4 py-2 text-sm font-semibold text-[#4a9fd4] hover:bg-[#4a9fd4]/20 transition-colors"
-                        >
-                          {activeSession.status === 'pending' || activeSession.status === 'provisioning' || activeSession.status === 'queued' ? (
-                            <>
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                              {activeSession.status === 'queued' ? 'Queued...' : 'Starting...'}
-                            </>
-                          ) : (
-                            <>
-                              <Monitor className="h-4 w-4" />
-                              Server Active
-                            </>
-                          )}
-                        </Link>
-                      ) : (
-                        <>
-                          <button
-                            onClick={() => handleStartServer(currentCollectionId)}
-                            disabled={startingServer}
-                            className="flex items-center gap-2 rounded-lg bg-[#f0a500] px-4 py-2 text-sm font-semibold text-[#0a0a0f] hover:bg-[#ffd700] transition-colors disabled:opacity-50"
-                          >
-                            {startingServer ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
-                            Start Server
-                          </button>
-                          {practiceCollections.length > 0 && (
-                            <div className="relative">
-                              <button
-                                onClick={() => setServerCollectionPicker(!serverCollectionPicker)}
-                                disabled={startingServer}
-                                className="flex items-center gap-1.5 rounded-lg border border-[#2a2a3e] bg-[#12121a] px-3 py-2 text-sm text-[#b8b8cc] hover:border-[#f0a500]/30 hover:text-[#e8e8e8] transition-colors disabled:opacity-50"
-                              >
-                                <ChevronDown className={`h-3.5 w-3.5 transition-transform ${serverCollectionPicker ? 'rotate-180' : ''}`} />
-                                Change
-                              </button>
-                              {serverCollectionPicker && (
-                                <>
-                                  <div className="fixed inset-0 z-40" onClick={() => setServerCollectionPicker(false)} />
-                                  <div className="absolute right-0 bottom-full z-50 mb-2 w-64 rounded-xl border border-[#2a2a3e] bg-[#12121a] py-2 shadow-2xl shadow-black/50">
-                                    <p className="px-4 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#6b6b8a]">
-                                      Choose a collection
-                                    </p>
-                                    {practiceCollections.map((c) => {
-                                      const isActive = sourceFilter.type === 'collection' && sourceFilter.collectionId === c.id;
-                                      return (
-                                        <button
-                                          key={c.id}
-                                          onClick={() => {
-                                            setSourceFilter({ type: 'collection', collectionId: c.id, collectionName: c.name });
-                                            setServerCollectionPicker(false);
-                                          }}
-                                          className={`flex w-full items-center gap-2 px-4 py-2 text-sm transition-colors ${
-                                            isActive
-                                              ? 'bg-[#f0a500]/10 text-[#f0a500]'
-                                              : 'text-[#b8b8cc] hover:bg-[#1a1a2e] hover:text-[#e8e8e8]'
-                                          }`}
-                                        >
-                                          <span className="truncate">{c.name}</span>
-                                        </button>
-                                      );
-                                    })}
-                                  </div>
-                                </>
-                              )}
-                            </div>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
+            <div className="hidden xl:block mb-1">
+              <div className="h-[3px] rounded-full bg-[#4a9fd4]/25" />
+              <p className="mt-1.5 text-[9px] text-[#4a9fd4]/50 font-medium tracking-wide">Interactive Map</p>
             </div>
 
             {/* Community publish/status banner */}
@@ -678,7 +655,7 @@ export default function MapDetailPage() {
 
               if (coll.isPublished) {
                 return (
-                  <div className="max-w-[700px] rounded-lg border border-[#6c5ce7]/20 bg-[#6c5ce7]/5 px-4 py-3">
+                  <div className="rounded-lg border border-[#6c5ce7]/20 bg-[#6c5ce7]/5 px-4 py-3">
                     <div className="flex items-center gap-3">
                       <div className="flex items-center gap-1.5 text-[#6c5ce7]">
                         <Eye className="h-4 w-4" />
@@ -710,7 +687,7 @@ export default function MapDetailPage() {
 
               const canPublish = coll.lineupCount >= 5;
               return (
-                <div className="max-w-[700px] flex items-center gap-3 rounded-lg border border-[#6c5ce7]/20 bg-[#6c5ce7]/5 px-4 py-3">
+                <div className="flex items-center gap-3 rounded-lg border border-[#6c5ce7]/20 bg-[#6c5ce7]/5 px-4 py-3">
                   <Share2 className="h-4 w-4 shrink-0 text-[#6c5ce7]" />
                   <p className="flex-1 text-xs text-[#b8b8cc]">
                     {canPublish
@@ -730,7 +707,7 @@ export default function MapDetailPage() {
 
             {/* Radar + Map Nav */}
             <div className="flex gap-2 items-start">
-              <div className="flex-1 min-w-0 max-w-[700px] rounded-xl border border-[#2a2a3e]/50 bg-[#12121a] overflow-hidden">
+              <div className="flex-1 min-w-0 rounded-xl border border-[#2a2a3e]/50 bg-[#12121a] overflow-hidden">
                 <MapRadar
                   mapName={mapName}
                   lineups={filteredLineups}
@@ -788,9 +765,9 @@ export default function MapDetailPage() {
           <div className="w-full xl:w-[340px] shrink-0">
             <div className="xl:sticky xl:top-4 space-y-2.5">
               {/* Column guide — desktop only */}
-              <div className="hidden xl:block -mb-1">
+              <div className="hidden xl:block mb-1">
                 <div className="h-[3px] rounded-full bg-[#22c55e]/25" />
-                <p className="mt-1 text-[9px] text-[#22c55e]/50 font-medium tracking-wide">Nade List · Select & practice</p>
+                <p className="mt-1.5 text-[9px] text-[#22c55e]/50 font-medium tracking-wide">Nade List</p>
               </div>
 
               {/* Selected nade mini card */}

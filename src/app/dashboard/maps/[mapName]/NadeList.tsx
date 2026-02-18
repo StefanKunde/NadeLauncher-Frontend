@@ -119,6 +119,7 @@ function NadeListItem({
         backgroundColor: isActive ? `${grenadeColor}10` : undefined,
       }}
       onClick={onSelect}
+      title={lineup.name}
     >
       <div className="flex items-center gap-3 flex-1 min-w-0 px-3 py-2.5">
         {/* Grenade icon with subtle background */}
