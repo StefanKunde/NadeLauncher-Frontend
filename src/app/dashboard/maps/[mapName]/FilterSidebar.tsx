@@ -191,9 +191,54 @@ export default function FilterSidebar({
     }
   };
 
+  const [mobileOpen, setMobileOpen] = useState(false);
+
   return (
     <>
-      <div className="hidden lg:block w-64 shrink-0 space-y-5 overflow-y-auto max-h-[calc(100vh-5rem)] p-1 scrollbar-thin sticky top-4 self-start">
+      {/* Mobile: Collections toggle button */}
+      <div className="lg:hidden">
+        <button
+          onClick={() => setMobileOpen(true)}
+          className="flex items-center gap-2 rounded-xl border border-[#2a2a3e] bg-[#12121a] px-4 py-2.5 text-sm text-[#b8b8cc] hover:bg-[#1a1a2e] hover:text-[#e8e8e8] transition-colors w-full"
+        >
+          <Search className="h-4 w-4 text-[#6b6b8a]" />
+          <span className="flex-1 text-left">
+            {sourceFilter.type === 'collection' ? sourceFilter.collectionName : 'All Collections'}
+          </span>
+          <ChevronDown className="h-4 w-4 text-[#6b6b8a]" />
+        </button>
+      </div>
+
+      {/* Mobile: Slide-in drawer overlay */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="lg:hidden fixed inset-0 z-40 bg-black/60"
+            onClick={() => setMobileOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Sidebar — desktop: always visible, mobile: slide-in drawer */}
+      <div className={`
+        lg:relative lg:translate-x-0 lg:w-64 lg:shrink-0 lg:space-y-5 lg:overflow-y-auto lg:max-h-[calc(100vh-5rem)] lg:p-1 lg:scrollbar-thin lg:sticky lg:top-4 lg:self-start lg:z-auto lg:bg-transparent lg:border-0
+        fixed left-0 top-0 bottom-0 z-50 w-72 bg-[#0d0d14] border-r border-[#2a2a3e] overflow-y-auto p-4 scrollbar-thin transition-transform duration-300
+        ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+      `}>
+        {/* Mobile header */}
+        <div className="lg:hidden flex items-center justify-between mb-4">
+          <h3 className="text-sm font-semibold text-[#e8e8e8]">Collections</h3>
+          <button
+            onClick={() => setMobileOpen(false)}
+            className="p-1.5 rounded-lg text-[#6b6b8a] hover:text-[#e8e8e8] hover:bg-[#1a1a2e] transition-colors"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
         {/* Search Collections */}
         <div className="flex items-center gap-2 rounded-lg border border-[#2a2a3e] bg-[#12121a] px-3 transition-colors focus-within:border-[#f0a500] focus-within:shadow-[0_0_0_3px_rgba(240,165,0,0.15)]">
           <Search className="h-4 w-4 shrink-0 text-[#6b6b8a]" />

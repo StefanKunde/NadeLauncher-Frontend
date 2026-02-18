@@ -1,11 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Check, Loader2, Minus, ChevronRight } from 'lucide-react';
+import { Plus, Check, Loader2, Minus, ChevronRight, Eye } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Lineup, LineupCollection } from '@/lib/types';
 import GrenadeIcon from '@/components/ui/GrenadeIcon';
-import { GRENADE_TYPES, THROW_TYPES } from '@/lib/constants';
+import { GRENADE_TYPES } from '@/lib/constants';
 import { staggerContainer, staggerItem } from './types';
 
 interface NadeListProps {
@@ -49,7 +49,7 @@ export default function NadeList({
 
   return (
     <motion.div
-      className="space-y-1"
+      className="space-y-1.5"
       variants={staggerContainer}
       initial="hidden"
       animate="show"
@@ -101,10 +101,8 @@ function NadeListItem({
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const grenadeColor = GRENADE_TYPES[lineup.grenadeType as keyof typeof GRENADE_TYPES]?.color ?? '#f0a500';
-  const throwTypeLabel = lineup.throwType && lineup.throwType !== 'normal'
-    ? (THROW_TYPES[lineup.throwType as keyof typeof THROW_TYPES] ?? null)
-    : null;
   const proLine = [lineup.playerName, lineup.teamName].filter(Boolean).join(' \u00b7 ');
+  const hasGhostReplay = (lineup.movementPath?.length ?? 0) > 0;
 
   return (
     <motion.div
@@ -112,18 +110,17 @@ function NadeListItem({
       exit={{ opacity: 0, x: -16, transition: { duration: 0.15 } }}
       className={`relative flex items-center gap-3 rounded-xl cursor-pointer transition-all duration-200 group overflow-hidden ${
         isActive
-          ? 'border border-transparent'
-          : 'border border-transparent hover:bg-[#1a1a2e]/60'
+          ? 'border border-[#2a2a3e]/30'
+          : 'border border-[#2a2a3e]/10 hover:border-[#2a2a3e]/30 hover:bg-[#1a1a2e]/60'
       }`}
       style={{
         borderLeftWidth: isActive ? 4 : 3,
         borderLeftColor: isActive ? grenadeColor : `${grenadeColor}30`,
         backgroundColor: isActive ? `${grenadeColor}10` : undefined,
-        boxShadow: isActive ? `inset 0 0 20px ${grenadeColor}08` : undefined,
       }}
       onClick={onSelect}
     >
-      <div className="flex items-center gap-3 flex-1 min-w-0 px-3 py-3">
+      <div className="flex items-center gap-3 flex-1 min-w-0 px-3 py-2.5">
         {/* Grenade icon with subtle background */}
         <div
           className="flex h-8 w-8 items-center justify-center rounded-lg shrink-0 transition-colors duration-200"
@@ -139,17 +136,10 @@ function NadeListItem({
             <span className={`text-sm font-medium truncate transition-colors duration-200 ${isActive ? 'text-[#e8e8e8]' : 'text-[#b8b8cc] group-hover:text-[#e8e8e8]'}`}>
               {lineup.name}
             </span>
-            {throwTypeLabel && (
-              <span
-                className="shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold tracking-wide"
-                style={{ backgroundColor: `${grenadeColor}15`, color: grenadeColor, border: `1px solid ${grenadeColor}15` }}
-              >
-                {throwTypeLabel}
-              </span>
-            )}
-            {lineup.throwStrength && lineup.throwStrength !== 'full' && (
-              <span className="shrink-0 rounded-md bg-[#1a1a2e] border border-[#2a2a3e]/30 px-1.5 py-0.5 text-[10px] text-[#6b6b8a] capitalize">
-                {lineup.throwStrength}
+            {hasGhostReplay && (
+              <span className="shrink-0 flex items-center gap-1 rounded-md bg-[#22c55e]/10 border border-[#22c55e]/10 px-1.5 py-0.5 text-[10px] font-medium text-[#22c55e]">
+                <Eye className="h-3 w-3" />
+                Ghost
               </span>
             )}
           </div>

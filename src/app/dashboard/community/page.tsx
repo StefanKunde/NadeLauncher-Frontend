@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { Search, Users, Loader2, Star } from 'lucide-react';
+import { Search, Users, Loader2, Star, ChevronDown } from 'lucide-react';
 import { communityApi, collectionsApi } from '@/lib/api';
 import { useAuthStore } from '@/store/auth-store';
 import { MAPS, MAP_COLORS } from '@/lib/constants';
@@ -130,30 +130,36 @@ export default function CommunityPage() {
           />
         </div>
 
-        <select
-          value={mapFilter}
-          onChange={(e) => setMapFilter(e.target.value)}
-          className="pl-3 pr-3 py-2 bg-[#1a1a2e] border border-[#2a2a3e] rounded-lg text-white text-sm focus:border-[#6c5ce7] focus:outline-none cursor-pointer"
-        >
-          <option value="">All Maps</option>
-          {MAPS.map((m) => (
-            <option key={m.name} value={m.name}>
-              {m.displayName}
-            </option>
-          ))}
-        </select>
+        <div className="relative">
+          <select
+            value={mapFilter}
+            onChange={(e) => setMapFilter(e.target.value)}
+            className="appearance-none pl-3 pr-9 py-2 bg-[#1a1a2e] border border-[#2a2a3e] rounded-lg text-white text-sm focus:border-[#6c5ce7] focus:outline-none cursor-pointer"
+          >
+            <option value="">All Maps</option>
+            {MAPS.map((m) => (
+              <option key={m.name} value={m.name}>
+                {m.displayName}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6b6b8a] pointer-events-none" />
+        </div>
 
-        <select
-          value={sort}
-          onChange={(e) => setSort(e.target.value as SortOption)}
-          className="pl-3 pr-3 py-2 bg-[#1a1a2e] border border-[#2a2a3e] rounded-lg text-white text-sm focus:border-[#6c5ce7] focus:outline-none cursor-pointer"
-        >
-          {SORT_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
+        <div className="relative">
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value as SortOption)}
+            className="appearance-none pl-3 pr-9 py-2 bg-[#1a1a2e] border border-[#2a2a3e] rounded-lg text-white text-sm focus:border-[#6c5ce7] focus:outline-none cursor-pointer"
+          >
+            {SORT_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6b6b8a] pointer-events-none" />
+        </div>
       </div>
 
       {/* Results */}
@@ -181,7 +187,7 @@ export default function CommunityPage() {
           </div>
 
           {/* List */}
-          <div className="space-y-1">
+          <div className="space-y-2">
             {collections.map((col) => (
               <Link key={col.id} href={`/dashboard/community/${col.id}`}>
                 {/* Desktop row */}

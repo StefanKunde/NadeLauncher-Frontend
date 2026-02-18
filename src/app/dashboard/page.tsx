@@ -86,13 +86,30 @@ export default function DashboardPage() {
         </p>
       </motion.div>
 
-      {/* Practice Server */}
+      {/* Practice Server + Quick Tip */}
       <motion.div variants={fadeUp} custom={1} className="mb-10">
-        <div className="flex items-center gap-2.5 mb-4">
-          <h2 className="text-xl font-semibold text-[#e8e8e8]">Practice Server</h2>
+        <h2 className="text-xl font-semibold text-[#e8e8e8] mb-1">Practice Server</h2>
+        <p className="mb-5 text-sm text-[#6b6b8a]">Start a private CS2 practice session with ghost-guided lineups</p>
+        <div className="flex flex-col lg:flex-row gap-4 items-start">
+          <div className="flex-1 min-w-0">
+            <PracticeSessionCard />
+          </div>
+          {!tipDismissed && (
+            <div className="lg:w-64 shrink-0 w-full rounded-xl bg-[#12121a] border border-[#2a2a3e]/30 p-4 relative">
+              <button
+                onClick={dismissTip}
+                className="absolute top-2.5 right-2.5 p-1 rounded text-[#6b6b8a]/40 hover:text-[#6b6b8a] transition-colors"
+              >
+                <X className="h-3 w-3" />
+              </button>
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#f0a500]/10 mb-3">
+                <Lightbulb className="h-3.5 w-3.5 text-[#f0a500]" />
+              </div>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-[#f0a500]/60 mb-1.5">Quick Tip</p>
+              <p className="text-xs text-[#6b6b8a] leading-relaxed">{TIPS[tipIndex]}</p>
+            </div>
+          )}
         </div>
-        <p className="mb-5 text-sm text-[#6b6b8a] -mt-2">Start a private CS2 practice session with ghost-guided lineups</p>
-        <PracticeSessionCard />
       </motion.div>
 
       {/* Getting Started (new users only) */}
@@ -192,28 +209,6 @@ export default function DashboardPage() {
         </div>
       </motion.div>
 
-      {/* Quick Tip — positioned at bottom, subtle and non-intrusive */}
-      {!tipDismissed && (
-        <motion.div variants={fadeUp} custom={hasCollections ? 10 : 11} className="mt-10">
-          <div className="rounded-xl bg-[#12121a] border border-[#2a2a3e]/30 px-4 py-3 flex items-center gap-3">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#f0a500]/8">
-              <Lightbulb className="h-3.5 w-3.5 text-[#f0a500]/70" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs text-[#6b6b8a] leading-relaxed">
-                <span className="text-[#f0a500]/60 font-medium">Tip:</span>{' '}
-                {TIPS[tipIndex]}
-              </p>
-            </div>
-            <button
-              onClick={dismissTip}
-              className="shrink-0 p-1 rounded text-[#6b6b8a]/40 hover:text-[#6b6b8a] transition-colors"
-            >
-              <X className="h-3 w-3" />
-            </button>
-          </div>
-        </motion.div>
-      )}
     </motion.div>
   );
 }

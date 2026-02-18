@@ -508,54 +508,33 @@ export default function PracticeSessionCard() {
 
             {/* Collection Switcher */}
             <div className="rounded-lg bg-[#0a0a12] p-4 mb-4">
-              <div className="flex items-center justify-between">
-                <div className="min-w-0">
-                  <p className="text-xs text-[#6b6b8a] mb-1">Collection</p>
-                  <p className="text-sm font-medium text-[#e8e8e8] truncate">
-                    {session.practiceCollectionName ?? 'No collection'}
-                  </p>
-                </div>
-                <button
-                  onClick={() => setShowCollectionChanger((v) => !v)}
+              <label className="flex items-center gap-1.5 text-xs text-[#6b6b8a] mb-2">
+                <Shield className="h-3.5 w-3.5" />
+                Collection
+              </label>
+              <div className="relative">
+                <select
+                  value={session.practiceCollectionId ?? ''}
+                  onChange={(e) => {
+                    if (e.target.value && e.target.value !== session.practiceCollectionId) {
+                      handleChangeCollection(e.target.value);
+                    }
+                  }}
                   disabled={changingCollection}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#2a2a3e] hover:border-[#4a9fd4] transition-colors text-xs text-[#6b6b8a] hover:text-[#e8e8e8] shrink-0 ml-3"
+                  className="w-full appearance-none rounded-lg border border-[#2a2a3e] bg-[#12121a] pl-3 pr-9 py-2 text-sm text-[#e8e8e8] focus:outline-none focus:border-[#4a9fd4]/60 transition-colors cursor-pointer hover:border-[#3a3a5e] disabled:opacity-60"
                 >
-                  {changingCollection ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <RefreshCw className="h-3.5 w-3.5" />
-                  )}
-                  Change
-                </button>
-              </div>
-              <AnimatePresence>
-                {showCollectionChanger && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="mt-3 pt-3 border-t border-[#1a1a2e] space-y-1.5">
-                      {activeCollections.map((c) => (
-                        <button
-                          key={c.id}
-                          onClick={() => handleChangeCollection(c.id)}
-                          disabled={changingCollection}
-                          className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                            session.practiceCollectionId === c.id
-                              ? 'bg-[#4a9fd420] text-[#4a9fd4] border border-[#4a9fd440]'
-                              : 'text-[#6b6b8a] hover:bg-[#1a1a2e] hover:text-[#e8e8e8]'
-                          }`}
-                        >
-                          {c.name} <span className="text-[#6b6b8a]">({c.lineupCount})</span>
-                        </button>
-                      ))}
-                    </div>
-                  </motion.div>
+                  {activeCollections.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name} ({c.lineupCount})
+                    </option>
+                  ))}
+                </select>
+                {changingCollection ? (
+                  <Loader2 className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#6b6b8a] animate-spin pointer-events-none" />
+                ) : (
+                  <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#6b6b8a] pointer-events-none" />
                 )}
-              </AnimatePresence>
+              </div>
             </div>
 
             {/* Connection Details */}
@@ -1089,7 +1068,7 @@ export default function PracticeSessionCard() {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-xl overflow-hidden border border-[#2a2a3e]/50 bg-[#12121a]"
+      className="rounded-xl overflow-hidden border border-[#2a2a3e]/50 bg-[#12121a] max-w-lg"
     >
       {/* Top gradient accent */}
       <div className="h-[3px] bg-gradient-to-r from-[#4a9fd4] via-[#4a9fd4]/60 to-transparent" />
@@ -1208,34 +1187,22 @@ export default function PracticeSessionCard() {
               <button
                 onClick={handleCreate}
                 disabled={creating}
-                className="group relative w-full overflow-hidden rounded-xl px-4 py-4 text-sm font-bold text-white transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-0.5 active:translate-y-0"
+                className="w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:brightness-110"
                 style={{
                   background: creating
                     ? '#2a2a3e'
                     : 'linear-gradient(135deg, #4a9fd4, #3a7fb8)',
                   boxShadow: creating
                     ? 'none'
-                    : '0 4px 20px rgba(74, 159, 212, 0.25), 0 0 40px rgba(74, 159, 212, 0.08)',
+                    : '0 2px 12px rgba(74, 159, 212, 0.15)',
                 }}
               >
-                {/* Shimmer effect */}
-                {!creating && (
-                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                    style={{
-                      background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(255,255,255,0.05) 100%)',
-                    }}
-                  />
+                {creating ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Play className="h-4 w-4" />
                 )}
-                <div className="relative flex items-center justify-center gap-2.5">
-                  {creating ? (
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                  ) : (
-                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/15">
-                      <Play className="h-4 w-4" />
-                    </div>
-                  )}
-                  <span className="text-[15px]">{creating ? 'Starting...' : 'Start Practice'}</span>
-                </div>
+                {creating ? 'Starting...' : 'Start Practice'}
               </button>
 
               {usage && !usage.isPremium && (

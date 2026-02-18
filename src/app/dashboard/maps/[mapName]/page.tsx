@@ -697,96 +697,101 @@ export default function MapDetailPage() {
               );
             })()}
 
-            <div className="flex gap-2 items-start">
-              <div className="max-w-[700px] flex-1 rounded-xl border border-[#2a2a3e]/50 bg-[#12121a] overflow-hidden">
-                <MapRadar
-                  mapName={mapName}
-                  lineups={filteredLineups}
-                  selectedLineupId={selectedLineup?.id}
-                  onLineupClick={(lineup) => setSelectedLineup(lineup)}
-                  mini={false}
-                />
-              </div>
+            <div className="flex flex-col 2xl:flex-row gap-4 items-start">
+              {/* Radar + Map Nav */}
+              <div className="flex gap-2 items-start shrink-0 2xl:max-w-[55%]">
+                <div className="flex-1 min-w-[300px] rounded-xl border border-[#2a2a3e]/50 bg-[#12121a] overflow-hidden">
+                  <MapRadar
+                    mapName={mapName}
+                    lineups={filteredLineups}
+                    selectedLineupId={selectedLineup?.id}
+                    onLineupClick={(lineup) => setSelectedLineup(lineup)}
+                    mini={false}
+                  />
+                </div>
 
-              {/* Map Navigation Strip */}
-              <div className="hidden md:flex flex-col gap-1.5 shrink-0">
-                {MAPS.map((m) => {
-                  const isActive = m.name === mapName;
-                  const mapColor = MAP_COLORS[m.name] || '#f0a500';
-                  return (
-                    <Link
-                      key={m.name}
-                      href={`/dashboard/maps/${m.name}`}
-                      title={m.displayName}
-                      className={`relative w-[72px] h-[60px] rounded-lg overflow-hidden border-2 transition-all duration-200 group ${
-                        isActive
-                          ? 'border-[#f0a500] shadow-[0_0_10px_rgba(240,165,0,0.25)]'
-                          : 'border-[#2a2a3e]/50 hover:border-[#6b6b8a]/50 hover:shadow-lg hover:shadow-black/30'
-                      }`}
-                    >
-                      <Image
-                        src={m.screenshot}
-                        alt={m.displayName}
-                        fill
-                        className={`object-cover transition-all duration-200 ${isActive ? 'brightness-90' : 'brightness-[0.35] group-hover:brightness-[0.6]'}`}
-                        sizes="72px"
-                      />
-                      {isActive && (
-                        <div className="absolute inset-0 ring-1 ring-inset ring-[#f0a500]/30 rounded-[6px]" />
-                      )}
-                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent px-1.5 pb-1 pt-3">
-                        <p className={`text-[9px] font-bold text-center leading-tight tracking-wide ${isActive ? 'text-[#f0a500]' : 'text-white/80 group-hover:text-white'}`}>
-                          {m.displayName}
-                        </p>
-                      </div>
-                      {isActive && (
-                        <div
-                          className="absolute inset-x-0 top-0 h-[2px]"
-                          style={{ background: `linear-gradient(to right, transparent, ${mapColor}, transparent)` }}
+                {/* Map Navigation Strip */}
+                <div className="hidden md:flex flex-col gap-1.5 shrink-0">
+                  {MAPS.map((m) => {
+                    const isActive = m.name === mapName;
+                    const mapColor = MAP_COLORS[m.name] || '#f0a500';
+                    return (
+                      <Link
+                        key={m.name}
+                        href={`/dashboard/maps/${m.name}`}
+                        title={m.displayName}
+                        className={`relative w-[72px] h-[60px] rounded-lg overflow-hidden border-2 transition-all duration-200 group ${
+                          isActive
+                            ? 'border-[#f0a500] shadow-[0_0_10px_rgba(240,165,0,0.25)]'
+                            : 'border-[#2a2a3e]/50 hover:border-[#6b6b8a]/50 hover:shadow-lg hover:shadow-black/30'
+                        }`}
+                      >
+                        <Image
+                          src={m.screenshot}
+                          alt={m.displayName}
+                          fill
+                          className={`object-cover transition-all duration-200 ${isActive ? 'brightness-90' : 'brightness-[0.35] group-hover:brightness-[0.6]'}`}
+                          sizes="72px"
                         />
-                      )}
-                    </Link>
-                  );
-                })}
+                        {isActive && (
+                          <div className="absolute inset-0 ring-1 ring-inset ring-[#f0a500]/30 rounded-[6px]" />
+                        )}
+                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent px-1.5 pb-1 pt-3">
+                          <p className={`text-[9px] font-bold text-center leading-tight tracking-wide ${isActive ? 'text-[#f0a500]' : 'text-white/80 group-hover:text-white'}`}>
+                            {m.displayName}
+                          </p>
+                        </div>
+                        {isActive && (
+                          <div
+                            className="absolute inset-x-0 top-0 h-[2px]"
+                            style={{ background: `linear-gradient(to right, transparent, ${mapColor}, transparent)` }}
+                          />
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
 
-            <div className="flex items-center justify-between">
-              <p className="text-xs text-[#6b6b8a]">
-                {loadingCollection ? (
-                  <span className="flex items-center gap-1.5">
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                    Loading collection...
-                  </span>
-                ) : (
-                  <>
-                    {filteredLineups.length} nade{filteredLineups.length !== 1 ? 's' : ''}
-                    {sourceFilter.type === 'collection' && (
-                      <span className="text-[#f0a500]"> in {sourceFilter.collectionName}</span>
+              {/* Nade List — beside radar on 2xl, below on smaller */}
+              <div className="flex-1 min-w-0 w-full 2xl:w-auto">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs text-[#6b6b8a]">
+                    {loadingCollection ? (
+                      <span className="flex items-center gap-1.5">
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        Loading collection...
+                      </span>
+                    ) : (
+                      <>
+                        {filteredLineups.length} nade{filteredLineups.length !== 1 ? 's' : ''}
+                        {sourceFilter.type === 'collection' && (
+                          <span className="text-[#f0a500]"> in {sourceFilter.collectionName}</span>
+                        )}
+                      </>
                     )}
-                  </>
-                )}
-              </p>
-            </div>
+                  </p>
+                </div>
 
-
-            <div className="max-h-[500px] overflow-y-auto scrollbar-thin pr-1 rounded-xl border border-[#2a2a3e]/30 bg-[#12121a]/30 p-2">
-              <NadeList
-                lineups={filteredLineups}
-                selectedLineupId={selectedLineup?.id ?? null}
-                onSelectLineup={setSelectedLineup}
-                userCollections={userCollections}
-                addingToCollection={addingToCollection}
-                onAddToCollection={handleAddToCollection}
-                onRemoveFromCollection={handleRemoveFromCollection}
-                userCollectionLineupIds={userCollectionLineupIds}
-                currentCollectionId={sourceFilter.type === 'collection' ? sourceFilter.collectionId : undefined}
-                isCurrentCollectionOwned={
-                  sourceFilter.type === 'collection'
-                    ? userCollections.some((c) => c.id === sourceFilter.collectionId)
-                    : false
-                }
-              />
+                <div className="max-h-[500px] overflow-y-auto scrollbar-thin rounded-xl border border-[#2a2a3e]/30 bg-[#12121a]/30 p-3">
+                  <NadeList
+                    lineups={filteredLineups}
+                    selectedLineupId={selectedLineup?.id ?? null}
+                    onSelectLineup={setSelectedLineup}
+                    userCollections={userCollections}
+                    addingToCollection={addingToCollection}
+                    onAddToCollection={handleAddToCollection}
+                    onRemoveFromCollection={handleRemoveFromCollection}
+                    userCollectionLineupIds={userCollectionLineupIds}
+                    currentCollectionId={sourceFilter.type === 'collection' ? sourceFilter.collectionId : undefined}
+                    isCurrentCollectionOwned={
+                      sourceFilter.type === 'collection'
+                        ? userCollections.some((c) => c.id === sourceFilter.collectionId)
+                        : false
+                    }
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
