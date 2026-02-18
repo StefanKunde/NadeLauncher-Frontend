@@ -338,12 +338,12 @@ export default function MapRadar({
                 <div
                   className="absolute pointer-events-none flex items-center justify-center rounded-full bg-white text-[#0a0a0f] font-bold"
                   style={{
-                    width: 14,
-                    height: 14,
-                    fontSize: 9,
+                    width: 11,
+                    height: 11,
+                    fontSize: 7,
                     lineHeight: 1,
-                    top: -dotSize / 2 - 8,
-                    left: dotSize / 2 - 4,
+                    top: -dotSize / 2 - 6,
+                    left: dotSize / 2 - 3,
                   }}
                 >
                   {group.items.length}
