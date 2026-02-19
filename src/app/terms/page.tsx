@@ -293,6 +293,10 @@ export default function TermsOfServicePage() {
           <section>
             <h2>14. Dispute Resolution</h2>
             <p>
+              The European Commission provides an online dispute resolution (ODR) platform
+              at: <a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noopener noreferrer">https://ec.europa.eu/consumers/odr</a>
+            </p>
+            <p>
               We are neither obligated nor willing to participate in dispute resolution proceedings
               before a consumer arbitration body pursuant to the
               German Consumer Dispute Resolution Act.
