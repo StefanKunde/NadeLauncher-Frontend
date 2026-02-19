@@ -147,6 +147,7 @@ export interface LineupCollection {
     hltvEventId?: number;
   };
   ownerId?: string;
+  slug?: string;
   isPublished?: boolean;
   publishedAt?: string;
   averageRating?: number;
@@ -164,6 +165,7 @@ export interface CommunityCollection {
   coverImage?: string;
   lineupCount: number;
   ownerId: string;
+  slug?: string;
   ownerName: string;
   ownerAvatar?: string;
   averageRating: number;

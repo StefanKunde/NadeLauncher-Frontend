@@ -301,7 +301,7 @@ export default function CommunityDetailPage() {
           <span className="text-xs text-[#6b6b8a]">{subscriberCount}</span>
         </div>
 
-        {/* Rating */}
+        {/* Rating + Subscribe */}
         <div className="flex items-center gap-1.5">
           <StarRating value={Math.round(averageRating)} count={ratingCount} />
         </div>
@@ -311,12 +311,10 @@ export default function CommunityDetailPage() {
             <StarRating value={userRating} onChange={handleRate} size="md" />
           </div>
         )}
-
-        {/* Subscribe button */}
         {user && collection.ownerId !== user.id && (
           <button
             onClick={handleSubscribe}
-            className={`ml-auto shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+            className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
               isSubscribed
                 ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30 hover:text-red-300'
                 : 'bg-[#22c55e] text-white hover:bg-[#16a34a]'

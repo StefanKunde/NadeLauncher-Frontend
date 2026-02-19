@@ -610,7 +610,7 @@ export default function GuidePage() {
         custom={0}
         className="hidden 2xl:block w-[340px] shrink-0"
       >
-        <div className="sticky top-6 space-y-5">
+        <div className="sticky top-0 space-y-5">
           {/* ─ Workflow Timeline Card ─ */}
           <div className="rounded-2xl border border-[#2a2a3e]/50 bg-[#12121a] overflow-hidden">
             {/* Header glow line */}

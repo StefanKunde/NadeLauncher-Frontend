@@ -245,7 +245,7 @@ export default function CommunityPage() {
           {/* List */}
           <div className="flex flex-col gap-3">
             {collections.map((col) => (
-              <Link key={col.id} href={`/dashboard/community/${col.id}`} className="block">
+              <Link key={col.id} href={`/dashboard/community/${col.slug || col.id}`} className="block">
                 {/* Desktop row */}
                 <div className="hidden md:flex items-center gap-3 px-4 py-2.5 rounded-lg bg-[#12121a] border border-transparent hover:border-[#6c5ce7]/40 hover:bg-[#1a1a2e] transition-all cursor-pointer group">
                   {/* Map badge */}

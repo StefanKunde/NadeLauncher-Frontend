@@ -685,6 +685,9 @@ export default function PracticeSessionCard() {
           <div className="rounded-lg bg-[#0a0a12] p-3 mb-4">
             <p className="text-xs text-[#6b6b8a]">
               Map: {MAPS.find((m) => m.name === session.mapName)?.displayName ?? session.mapName}
+              {session.practiceCollectionName && (
+                <><br />Collection: <span className="text-[#f0a500]">{session.practiceCollectionName}</span></>
+              )}
             </p>
           </div>
 
@@ -841,6 +844,7 @@ export default function PracticeSessionCard() {
                 <h3 className="text-lg font-semibold text-[#e8e8e8]">Server Ready</h3>
                 <p className="text-xs text-[#6b6b8a]">
                   {MAPS.find((m) => m.name === session.mapName)?.displayName ?? session.mapName}
+                  {session.practiceCollectionName && <> · <span className="text-[#f0a500]">{session.practiceCollectionName}</span></>}
                   {' — '}Waiting for you to connect
                 </p>
               </div>
