@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Toaster } from "react-hot-toast";
+import { CookieConsent } from "@/components/ui/CookieConsent";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -41,6 +42,7 @@ export default function RootLayout({
           </div>
         )}
         {children}
+        <CookieConsent />
         <Toaster
           position="bottom-right"
           toastOptions={{
