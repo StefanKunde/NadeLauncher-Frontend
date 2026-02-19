@@ -16,6 +16,9 @@ import {
   Crown,
   Menu,
   X,
+  Star,
+  Users,
+  Crosshair,
 } from 'lucide-react';
 import Image from 'next/image';
 import GrenadeIcon from '@/components/ui/GrenadeIcon';
@@ -131,6 +134,40 @@ const PRO_FEATURES = [
   'Curated pro lineups from pro matches',
   'Build custom collections from pro lineups',
   'Pro team & event collections',
+];
+
+const PRO_TEAMS = [
+  { name: 'Vitality', color: '#f5d130' },
+  { name: 'NAVI', color: '#f0c800' },
+  { name: 'FaZe', color: '#e44545' },
+  { name: 'G2', color: '#e8e8e8' },
+  { name: 'Spirit', color: '#3fa9f5' },
+  { name: 'Heroic', color: '#e86c30' },
+  { name: 'MOUZ', color: '#d43a3a' },
+  { name: 'Astralis', color: '#e04040' },
+];
+
+const PRO_HIGHLIGHTS = [
+  {
+    icon: Trophy,
+    title: 'Real Pro Matches',
+    desc: 'Every lineup extracted from actual Tier-1 professional matches — the same utility top teams use on stage',
+  },
+  {
+    icon: Users,
+    title: 'Organized by Team',
+    desc: 'Browse collections by team and event — practice the exact executes your favorite team runs',
+  },
+  {
+    icon: Crosshair,
+    title: 'AI-Assisted Analysis',
+    desc: 'Lineups are enhanced with positional analysis so you understand why pros throw from each spot',
+  },
+  {
+    icon: Star,
+    title: 'Build Your Own',
+    desc: 'Cherry-pick lineups from any pro collection to build your own custom setups for ranked play',
+  },
 ];
 
 const STATS = [
@@ -570,7 +607,154 @@ export default function HomePage() {
       </section>
 
       {/* ================================================================
-          6. PRICING SECTION
+          6. PRO LINEUPS SHOWCASE
+          ================================================================ */}
+      <section className="relative py-28 md:py-32 bg-[#0c0c14] overflow-hidden">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-px bg-gradient-to-r from-transparent via-[#2a2a3e] to-transparent" />
+
+        {/* Ambient gold glow */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              'radial-gradient(ellipse 50% 60% at 50% 30%, rgba(240,165,0,0.06) 0%, transparent 70%)',
+          }}
+        />
+
+        <div className="relative z-10 max-w-7xl mx-auto px-6">
+          {/* Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-6"
+          >
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#f0a500]/30 bg-[#f0a500]/5 mb-6">
+              <Crown className="w-4 h-4 text-[#f0a500]" />
+              <span className="text-sm font-semibold text-[#f0a500] uppercase tracking-wider">Pro Feature</span>
+            </div>
+            <h2 className="text-3xl md:text-5xl font-bold mb-4">
+              Learn from the <span className="text-gradient-gold">Best Players</span> in the World
+            </h2>
+            <p className="text-[#6b6b8a] text-lg max-w-2xl mx-auto">
+              Practice the exact same utility that top professional teams use on stage.
+              Curated from real Tier-1 matches and organized by team, event, and strategy.
+            </p>
+          </motion.div>
+
+          {/* Pro team badges row */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.15 }}
+            className="flex flex-wrap items-center justify-center gap-3 mb-16"
+          >
+            {PRO_TEAMS.map((team, i) => (
+              <motion.div
+                key={team.name}
+                initial={{ opacity: 0, scale: 0.8 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.3, delay: 0.2 + i * 0.05 }}
+                className="glass rounded-full px-5 py-2 flex items-center gap-2 border border-[#2a2a3e] hover:border-[#f0a500]/40 transition-colors group"
+              >
+                <div className="w-2.5 h-2.5 rounded-full" style={{ background: team.color }} />
+                <span className="text-sm font-semibold text-[#9595b0] group-hover:text-[#e8e8e8] transition-colors">
+                  {team.name}
+                </span>
+              </motion.div>
+            ))}
+            <div className="glass rounded-full px-5 py-2 border border-[#2a2a3e]">
+              <span className="text-sm font-semibold text-[#6b6b8a]">& more</span>
+            </div>
+          </motion.div>
+
+          {/* Value prop cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-16">
+            {PRO_HIGHLIGHTS.map((item, i) => {
+              const Icon = item.icon;
+              return (
+                <motion.div
+                  key={item.title}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: i * 0.1 }}
+                  className="glass rounded-xl p-6 card-hover group border border-[#2a2a3e] hover:border-[#f0a500]/30 transition-colors"
+                >
+                  <div className="w-12 h-12 rounded-full bg-[#f0a500]/10 flex items-center justify-center mb-4 group-hover:bg-[#f0a500]/20 transition-colors">
+                    <Icon className="w-6 h-6 text-[#f0a500]" />
+                  </div>
+                  <h3 className="text-base font-bold text-[#e8e8e8] mb-2">{item.title}</h3>
+                  <p className="text-[#6b6b8a] text-sm leading-relaxed">{item.desc}</p>
+                </motion.div>
+              );
+            })}
+          </div>
+
+          {/* Example collection preview */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="max-w-3xl mx-auto"
+          >
+            <div className="glass rounded-2xl border border-[#f0a500]/20 overflow-hidden">
+              <div className="bg-gradient-to-r from-[#f0a500]/10 to-transparent px-6 py-4 border-b border-[#2a2a3e]/60 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Crown className="w-5 h-5 text-[#f0a500]" />
+                  <span className="font-bold text-[#e8e8e8]">Example: Vitality Inferno B Execute</span>
+                </div>
+                <span className="text-xs font-medium text-[#f0a500] bg-[#f0a500]/10 px-3 py-1 rounded-full">Pro Collection</span>
+              </div>
+              <div className="p-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {[
+                    { type: 'smoke' as const, name: 'CT Smoke — blocks CT rotation', color: '#88bbee' },
+                    { type: 'smoke' as const, name: 'Coffin Smoke — isolates site', color: '#88bbee' },
+                    { type: 'molotov' as const, name: 'Dark Molotov — clears close angle', color: '#ff6633' },
+                    { type: 'flash' as const, name: 'B Site Pop Flash — entry support', color: '#ffee44' },
+                  ].map((nade) => (
+                    <div key={nade.name} className="flex items-center gap-3 px-4 py-3 rounded-lg bg-[#0a0a0f]/60 border border-[#2a2a3e]/40">
+                      <GrenadeIcon type={nade.type} size={20} glow />
+                      <span className="text-sm text-[#9595b0]">{nade.name}</span>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-[#6b6b8a] text-xs mt-4 text-center">
+                  One complete execute — all the utility your team needs, practiced in sequence
+                </p>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* CTA */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="text-center mt-12"
+          >
+            <a
+              href={steamLoginUrl}
+              className="btn-primary text-base px-8 py-3.5 font-bold inline-flex items-center gap-2"
+            >
+              Explore Pro Lineups
+              <ArrowRight className="w-5 h-5" />
+            </a>
+            <p className="text-[#6b6b8a] text-sm mt-4">
+              Included with Pro subscription &bull; &euro;4.99/month
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ================================================================
+          7. PRICING SECTION
           ================================================================ */}
       <section id="pricing" className="relative py-28 md:py-32 bg-[#0c0c14]">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-px bg-gradient-to-r from-transparent via-[#2a2a3e] to-transparent" />
