@@ -63,7 +63,7 @@ const FAQ_SECTIONS = [
       },
       {
         q: 'Where do pro lineups come from?',
-        a: 'Pro lineups are curated from professional matches and demos, enhanced with AI-assisted analysis to ensure accuracy and consistency.',
+        a: 'Pro lineups are curated from professional matches and demos, enhanced with AI-assisted analysis.',
       },
       {
         q: 'Can I share my collections?',
@@ -418,7 +418,7 @@ function PremiumPageInner() {
                         transition={{ duration: 0.25, ease: 'easeInOut' }}
                         className="overflow-hidden"
                       >
-                        <p className="px-5 pl-[2.35rem] pt-1 pb-4 text-sm text-[#6b6b8a] leading-relaxed">{item.a}</p>
+                        <p className="px-5 pl-[2.35rem] pt-2.5 pb-4 text-sm text-[#6b6b8a] leading-relaxed">{item.a}</p>
                       </motion.div>
                     </div>
                   );
