@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Crown, Check, ChevronDown, Sparkles, Clock, Loader2, HelpCircle } from 'lucide-react';
+import { Crown, Check, ChevronDown, Sparkles, Clock, Loader2, HelpCircle, X } from 'lucide-react';
 import { useAuthStore } from '@/store/auth-store';
 import { authApi, stripeApi } from '@/lib/api';
 import toast from 'react-hot-toast';
@@ -372,6 +372,12 @@ function PremiumPageInner() {
         <div className="fixed inset-0 z-[100] flex items-center justify-center">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => !upgradeLoading && setShowUpgradeModal(false)} />
           <div className="relative w-full max-w-md mx-4 rounded-2xl border border-[#2a2a3e] bg-[#12121a] p-6 shadow-2xl shadow-black/50">
+            <button
+              onClick={() => !upgradeLoading && setShowUpgradeModal(false)}
+              className="absolute top-4 right-4 text-[#6b6b8a] hover:text-[#e8e8e8] transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
             <div className="flex items-center gap-3 mb-5">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#f0a500]/20 to-[#f0a500]/5 border border-[#f0a500]/15">
                 <Crown className="h-5 w-5 text-[#f0a500]" />
@@ -389,7 +395,7 @@ function PremiumPageInner() {
               </div>
               <div className="flex items-center gap-2">
                 <Check className="h-4 w-4 text-[#f0a500] shrink-0" />
-                <span>Curated pro lineups from live matches</span>
+                <span>Curated pro lineups from pro matches and current meta</span>
               </div>
               <div className="flex items-center gap-2">
                 <Check className="h-4 w-4 text-[#f0a500] shrink-0" />
