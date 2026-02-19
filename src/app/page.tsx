@@ -118,6 +118,8 @@ const FREE_FEATURES = [
   'Practice on CS2 servers',
   '7 competitive maps',
   'In-game markers & teleport',
+  'Ghost replay guidance',
+  'Collections & in-game management',
   '1 collection per map (up to 20 lineups)',
   '30 min weekly practice time',
 ];
@@ -127,9 +129,7 @@ const PRO_FEATURES = [
   'Unlimited collections & lineups',
   'Unlimited practice time',
   'Curated pro lineups & collections',
-  'Pro demo pipeline',
-  'Ghost replay',
-  'In-game collection management',
+  'Pro team & event collections',
 ];
 
 const STATS = [
@@ -639,7 +639,7 @@ export default function HomePage() {
                 <h3 className="text-xl font-bold text-[#f0a500]">Pro</h3>
               </div>
               <div className="mb-6">
-                <span className="text-4xl font-extrabold text-gradient-gold">&euro;6.99</span>
+                <span className="text-4xl font-extrabold text-gradient-gold">&euro;4.99</span>
                 <span className="text-[#6b6b8a] ml-1">/month</span>
               </div>
 
