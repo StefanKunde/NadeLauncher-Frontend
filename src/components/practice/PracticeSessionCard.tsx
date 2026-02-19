@@ -147,6 +147,12 @@ function CommandsList() {
       <p className="mt-3 text-xs text-[#6b6b8a] italic">
         Tip: You can also use <code className="text-[#88bbee]">.command</code> instead of <code className="text-[#88bbee]">!command</code>
       </p>
+      <Link
+        href="/dashboard/guide"
+        className="mt-2 inline-flex items-center gap-1 text-xs text-[#f0a500] hover:text-[#f0b530] transition-colors"
+      >
+        View full guide for more commands & tips →
+      </Link>
     </div>
   );
 }

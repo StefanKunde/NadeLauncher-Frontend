@@ -344,6 +344,10 @@ const GUIDE_SECTIONS = [
         q: 'Do all lineups have ghost replays?',
         a: `Only lineups that have a recorded movement path show the ghost. Stationary throws (where you don't move) typically don't need a ghost — the release position beam is enough. Lineups that require movement (run throws, jump throws, W-jump throws) always have a ghost replay when saved with !save.`,
       },
+      {
+        q: '!savelast ghost replays are limited to ~3 seconds',
+        a: `Ghost replays from !savelast only record up to ~3 seconds of movement before the throw. This is enough for most simple lineups, but complex throws that require a longer run-up may get cut off.\n\nFor lineups with longer movement paths, use !save instead. With !save you manually set the start position, so the full path from start to throw is always recorded. If you want to be safe, always use !save for complex or movement-heavy lineups.`,
+      },
     ],
   },
   {
@@ -386,7 +390,7 @@ const GUIDE_SECTIONS = [
       },
       {
         q: 'Navigation commands',
-        a: `• !back — Teleport back to your last throw position\n• !maps — Open map & collection selection menu\n• !map <name> — Change to a specific map (e.g., !map dust2)\n• !markers — Refresh/reload all lineup markers`,
+        a: `• !back — Teleport back to your last throw position\n• !maps — Open map & collection selection menu\n• !markers — Refresh/reload all lineup markers`,
       },
       {
         q: 'Visual & Filter commands',

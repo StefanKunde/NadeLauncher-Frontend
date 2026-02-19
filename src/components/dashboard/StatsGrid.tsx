@@ -164,14 +164,14 @@ export default function StatsGrid({ practiceStats, myCollections, subscriptions,
         {topCollections.length > 0 && (
           <div className="mt-3 space-y-1.5">
             {topCollections.map((c) => (
-              <div key={c.id} className="flex items-center gap-2">
+              <Link key={c.id} href={`/dashboard/collections/${c.id}`} className="flex items-center gap-2 group">
                 <div
                   className="h-1.5 w-1.5 rounded-full shrink-0"
                   style={{ backgroundColor: MAP_COLORS[c.mapName] || '#f0a500' }}
                 />
-                <span className="text-xs text-[#8888aa] truncate flex-1">{c.name}</span>
+                <span className="text-xs text-[#8888aa] group-hover:text-[#e8e8e8] transition-colors truncate flex-1">{c.name}</span>
                 <span className="text-[10px] text-[#6b6b8a] tabular-nums shrink-0">{c.lineupCount}</span>
-              </div>
+              </Link>
             ))}
           </div>
         )}
@@ -190,8 +190,8 @@ export default function StatsGrid({ practiceStats, myCollections, subscriptions,
         {publishedCollections.length > 0 ? (
           <div className="mt-3 space-y-2">
             {publishedCollections.slice(0, 3).map((c) => (
-              <div key={c.id} className="flex items-center gap-2">
-                <span className="text-xs text-[#8888aa] truncate flex-1">{c.name}</span>
+              <Link key={c.id} href={`/dashboard/collections/${c.id}`} className="flex items-center gap-2 group">
+                <span className="text-xs text-[#8888aa] group-hover:text-[#e8e8e8] transition-colors truncate flex-1">{c.name}</span>
                 <div className="flex items-center gap-1.5 shrink-0">
                   {(c.ratingCount ?? 0) > 0 && (
                     <div className="flex items-center gap-0.5">
@@ -206,7 +206,7 @@ export default function StatsGrid({ practiceStats, myCollections, subscriptions,
                     <span className="text-[10px] text-[#6b6b8a] tabular-nums">{c.subscriberCount ?? 0}</span>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         ) : (
@@ -221,14 +221,14 @@ export default function StatsGrid({ practiceStats, myCollections, subscriptions,
         {topSubscriptions.length > 0 ? (
           <div className="mt-3 space-y-1.5">
             {topSubscriptions.map((s) => (
-              <div key={s.id} className="flex items-center gap-2">
+              <Link key={s.id} href={`/dashboard/community/${s.collection.id}`} className="flex items-center gap-2 group">
                 <div
                   className="h-1.5 w-1.5 rounded-full shrink-0"
                   style={{ backgroundColor: MAP_COLORS[s.collection.mapName] || '#6c5ce7' }}
                 />
-                <span className="text-xs text-[#8888aa] truncate flex-1">{s.collection.name}</span>
+                <span className="text-xs text-[#8888aa] group-hover:text-[#e8e8e8] transition-colors truncate flex-1">{s.collection.name}</span>
                 <span className="text-[10px] text-[#6b6b8a] tabular-nums shrink-0">{s.collection.lineupCount}</span>
-              </div>
+              </Link>
             ))}
           </div>
         ) : (
