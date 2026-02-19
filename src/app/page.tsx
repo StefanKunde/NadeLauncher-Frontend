@@ -64,42 +64,42 @@ const FEATURES = [
   {
     icon: Target,
     title: 'Precise Lineups',
-    desc: 'Pixel-perfect positions with exact angles and coordinates on 2D radar maps',
+    desc: 'Pixel-perfect positions with exact angles and coordinates on interactive 2D radar maps',
   },
   {
     icon: Map,
     title: '7 Competitive Maps',
-    desc: 'Full coverage of the Active Duty map pool with interactive 2D radar views',
+    desc: 'Full coverage of the Active Duty map pool — updates automatically when the pool changes',
   },
   {
     icon: Gamepad2,
-    title: 'In-Game Practice',
-    desc: 'Dedicated CS2 server plugin with teleport, rethrow, and auto-detect throw types',
+    title: 'On-Demand Private Server',
+    desc: 'Spin up your own private CS2 practice server instantly — no installs, no setup, just connect',
   },
   {
     icon: Zap,
     title: 'Instant Teleport',
-    desc: 'Point at any 3D marker and press E to instantly teleport to the lineup position',
+    desc: 'Point at any 3D marker and press E to instantly teleport to the throw position with correct angles',
   },
   {
     icon: Shield,
-    title: 'Pro Demo Pipeline',
-    desc: 'Lineups auto-extracted from Tier-1 pro matches — always stay up to date',
+    title: 'Smart Throw Detection',
+    desc: 'Automatically detects 8 throw types including jump throw, run throw, and W-jump — plus throw strength',
   },
   {
     icon: Play,
     title: 'Ghost Replay',
-    desc: 'Watch 3D ghost replays of grenade trajectories to perfect your positioning and timing',
+    desc: 'A ghost model replays the exact player movement like a real player — follow along and throw when it throws',
   },
   {
     icon: Trophy,
-    title: 'Collections & Library',
-    desc: 'Create and manage personal lineup collections — organize directly in-game or on the web',
+    title: 'Collections & Community',
+    desc: 'Build personal collections, share them with the community, and subscribe to collections from other players',
   },
   {
     icon: Crown,
     title: 'Pro Collections',
-    desc: 'Curated lineups from Tier-1 pro teams and major events — always up to date with the meta',
+    desc: 'Curated lineups from professional matches, organized by team and event — enhanced with AI-assisted analysis',
   },
 ];
 
@@ -114,12 +114,12 @@ const MAPS = [
 ];
 
 const FREE_FEATURES = [
-  'Browse community lineups',
-  'Practice on CS2 servers',
-  '7 competitive maps',
-  'In-game markers & teleport',
-  'Ghost replay guidance',
-  'Collections & in-game management',
+  'On-demand private practice server',
+  'Browse & subscribe to community lineups',
+  '7 Active Duty maps',
+  '3D markers, teleport & ghost replay',
+  'Auto-detect throw types & strength',
+  'Save lineups in-game (!save, !savelast)',
   '1 collection per map (up to 20 lineups)',
   '30 min weekly practice time',
 ];
@@ -128,7 +128,8 @@ const PRO_FEATURES = [
   'Everything in Free',
   'Unlimited collections & lineups',
   'Unlimited practice time',
-  'Curated pro lineups & collections',
+  'Curated pro lineups from pro matches',
+  'Build custom collections from pro lineups',
   'Pro team & event collections',
 ];
 
@@ -323,8 +324,8 @@ export default function HomePage() {
             transition={{ duration: 0.7, delay: 0.15 }}
             className="text-[#6b6b8a] text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed"
           >
-            Practice smokes, flashes, molotovs and HE grenades with precision.
-            Save lineups, teleport to positions, and dominate every competitive map.
+            Practice smokes, flashes, molotovs and HE grenades on your own private server.
+            Teleport to positions, follow ghost replays, and master every competitive map.
           </motion.p>
 
           {/* CTA buttons */}
@@ -692,7 +693,7 @@ export default function HomePage() {
               Ready to <span className="text-gradient-gold">Level Up</span> Your Game?
             </h2>
             <p className="text-[#6b6b8a] text-lg mb-10 max-w-xl mx-auto">
-              Join thousands of players perfecting their utility. It&apos;s free to start.
+              Start perfecting your utility game today. It&apos;s free to get started.
             </p>
             <a
               href={steamLoginUrl}
