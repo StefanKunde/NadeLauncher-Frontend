@@ -203,7 +203,8 @@ export default function FilterSidebar({
     if (c.mapName === currentMapName) {
       onSourceFilterChange({ type: 'collection', collectionId: c.id, collectionName: matchLabel });
     } else {
-      router.push(`/dashboard/maps/${c.mapName}?collection=${c.id}`);
+      const param = c.slug || c.id;
+      router.push(`/dashboard/maps/${c.mapName}?collection=${encodeURIComponent(param)}`);
     }
   };
 

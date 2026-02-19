@@ -39,7 +39,7 @@ export default function MapDetailPage() {
 
   // Filters
   const [grenadeFilter, setGrenadeFilter] = useState<GrenadeFilter>('all');
-  const [sourceFilter, setSourceFilter] = useState<SourceFilter>({ type: 'all' });
+  const [sourceFilter, setSourceFilterRaw] = useState<SourceFilter>({ type: 'all' });
 
   // Selection
   const [selectedLineup, setSelectedLineup] = useState<Lineup | null>(null);
@@ -83,6 +83,21 @@ export default function MapDetailPage() {
   const [publishing, setPublishing] = useState(false);
   const [publishingCollection, setPublishingCollection] = useState<LineupCollection | null>(null);
   const [unpublishingCollection, setUnpublishingCollection] = useState<LineupCollection | null>(null);
+
+  // Wrapper: update sourceFilter state AND sync URL param with slug
+  const setSourceFilter = useCallback((filter: SourceFilter) => {
+    setSourceFilterRaw(filter);
+    if (filter.type === 'collection') {
+      // Look up slug from all available collections
+      const col = [...(allCollections ?? []), ...(userCollections ?? [])]
+        .find((c) => c.id === filter.collectionId);
+      const param = col?.slug || filter.collectionId;
+      const url = `/dashboard/maps/${mapName}?collection=${encodeURIComponent(param)}`;
+      router.replace(url, { scroll: false });
+    } else {
+      router.replace(`/dashboard/maps/${mapName}`, { scroll: false });
+    }
+  }, [allCollections, userCollections, mapName, router]);
 
   // ── Data Loading ───────────────────────────────────────────────
   const loadData = useCallback(async () => {
@@ -169,13 +184,16 @@ export default function MapDetailPage() {
     if (loading) return;
     if (sourceFilter.type === 'collection') return;
 
-    // URL query param pre-selection (e.g. from dashboard stats or cross-map navigation)
+    const all = [...allCollections, ...userCollections];
+
+    // URL query param pre-selection (supports both ID and slug)
     const collectionParam = searchParams.get('collection');
     if (collectionParam) {
-      const target = allCollections.find((c) => c.id === collectionParam)
-        ?? userCollections.find((c) => c.id === collectionParam);
+      const target = all.find((c) => c.id === collectionParam)
+        ?? all.find((c) => c.slug === collectionParam);
       if (target) {
-        setSourceFilter({ type: 'collection', collectionId: target.id, collectionName: target.name });
+        // Use raw setter — URL already has the param, no need to push again
+        setSourceFilterRaw({ type: 'collection', collectionId: target.id, collectionName: target.name });
         return;
       }
     }
@@ -194,7 +212,7 @@ export default function MapDetailPage() {
       const first = userCollections[0];
       setSourceFilter({ type: 'collection', collectionId: first.id, collectionName: first.name });
     }
-  }, [loading, allCollections, userCollections, sourceFilter.type, user, searchParams]);
+  }, [loading, allCollections, userCollections, sourceFilter.type, user, searchParams, setSourceFilter]);
 
   // On-demand loading when selecting a collection not yet loaded
   useEffect(() => {

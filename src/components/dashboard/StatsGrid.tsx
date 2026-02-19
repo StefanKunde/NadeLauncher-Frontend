@@ -164,7 +164,7 @@ export default function StatsGrid({ practiceStats, myCollections, subscriptions,
         {topCollections.length > 0 && (
           <div className="mt-3 space-y-1.5">
             {topCollections.map((c) => (
-              <Link key={c.id} href={`/dashboard/maps/${c.mapName}?collection=${c.id}`} className="flex items-center gap-2 group">
+              <Link key={c.id} href={`/dashboard/maps/${c.mapName}?collection=${encodeURIComponent(c.slug || c.id)}`} className="flex items-center gap-2 group">
                 <div
                   className="h-1.5 w-1.5 rounded-full shrink-0"
                   style={{ backgroundColor: MAP_COLORS[c.mapName] || '#f0a500' }}
@@ -190,7 +190,7 @@ export default function StatsGrid({ practiceStats, myCollections, subscriptions,
         {publishedCollections.length > 0 ? (
           <div className="mt-3 space-y-2">
             {publishedCollections.slice(0, 3).map((c) => (
-              <Link key={c.id} href={`/dashboard/maps/${c.mapName}?collection=${c.id}`} className="flex items-center gap-2 group">
+              <Link key={c.id} href={`/dashboard/maps/${c.mapName}?collection=${encodeURIComponent(c.slug || c.id)}`} className="flex items-center gap-2 group">
                 <span className="text-xs text-[#8888aa] group-hover:text-[#e8e8e8] transition-colors truncate flex-1">{c.name}</span>
                 <div className="flex items-center gap-1.5 shrink-0">
                   {(c.ratingCount ?? 0) > 0 && (
