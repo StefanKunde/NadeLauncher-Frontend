@@ -15,6 +15,7 @@ import {
   Settings,
   MousePointer,
   Eye,
+  Lightbulb,
 } from 'lucide-react';
 
 /* ─── animation helpers ─── */
@@ -31,6 +32,34 @@ const stagger = { visible: { transition: { staggerChildren: 0.04 } } };
 /* ─── guide section data ─── */
 const GUIDE_SECTIONS = [
   {
+    id: 'tips',
+    icon: Lightbulb,
+    title: 'Tips & Workflows',
+    subtitle: 'Get the most out of NadePro',
+    items: [
+      {
+        q: 'Build your ultimate collection',
+        a: `Create your own collection for each map and fill it with the best lineups from every source:\n\n1. Browse Pro Collections to find proven lineups from professional matches\n2. Check Community Collections for creative setups from other players\n3. Add the ones you like to your own collection — in-game via the nade menu or on the website\n4. Discover your own throws in-game and save them with !save or !savelast\n\nOver time you'll have a personal collection of only the lineups that work best for your playstyle.`,
+      },
+      {
+        q: 'Practice with purpose',
+        a: `Instead of randomly throwing nades, try focused practice sessions:\n\n• Pick a specific map side (e.g., T-side Mirage) and practice all your executes\n• Use !filter smoke to focus only on smokes, then switch to flashes\n• Practice the same lineup repeatedly until you can hit it without the ghost replay\n• Use !rethrow to instantly repeat a throw and compare your consistency`,
+      },
+      {
+        q: 'Organize by strategy',
+        a: `Create separate collections for different strategies or situations:\n\n• "Mirage A Execute" — all smokes and flashes for an A take\n• "Inferno Retakes" — post-plant molotovs and flashes\n• "Dust2 Favorites" — your go-to lineups for ranked\n\nThis way you can load exactly the set you want to practice instead of scrolling through everything.`,
+      },
+      {
+        q: 'Learn from pro matches',
+        a: `Pro collections contain lineups extracted from actual professional matches. Use them to:\n\n• Learn the default smoke setups that pros rely on\n• Discover off-angle flashes you wouldn't think of\n• Understand how teams coordinate utility with team & event collections\n• Copy the best ones into your own collection and adapt them to your playstyle`,
+      },
+      {
+        q: 'Share your knowledge',
+        a: `Found a great set of lineups? Publish your collection to the community so other players can subscribe and practice them. Building a reputation with quality lineups helps the entire NadePro community improve.`,
+      },
+    ],
+  },
+  {
     id: 'getting-started',
     icon: Monitor,
     title: 'Getting Started',
@@ -38,15 +67,19 @@ const GUIDE_SECTIONS = [
     items: [
       {
         q: 'How do I start a practice session?',
-        a: `Go to the Dashboard or any map page and select a collection to practice. Click the "Practice" button — NadePro will spin up a private CS2 server for you within seconds. Once ready, the connect command appears automatically.`,
+        a: `Go to the Dashboard or any map page and select a collection to practice. Click the "Practice" button — NadePro will spin up a private CS2 server for you. Once ready, the connect command appears automatically.`,
       },
       {
         q: 'How do I connect to the server?',
         a: `Open the CS2 console (~) and paste the connect command shown on the website. The server will load the selected map with all your lineup markers ready to practice.`,
       },
       {
+        q: 'Can other players join my server?',
+        a: `No. Your practice server is completely private. Only you can connect to it.`,
+      },
+      {
         q: 'What settings are pre-configured?',
-        a: `Everything is set up automatically for comfortable practice:\n\n• Infinite money & buy anywhere\n• Infinite ammo (sv_infinite_ammo 1)\n• God mode — you can't die\n• Auto-respawn on death\n• No freeze time, no bots\n• Grenade trajectory visible for 20 seconds\n• Impact marks visible for 10 seconds\n• Grenade preview enabled`,
+        a: `Everything is set up automatically for comfortable practice:\n\n• Infinite money & buy anywhere\n• Infinite ammo (sv_infinite_ammo 1)\n• God mode — you can't die\n• Auto-respawn on death\n• No freeze time, no bots\n• Grenade trajectory visible\n• Impact marks visible\n• Grenade preview enabled`,
       },
     ],
   },
@@ -58,7 +91,7 @@ const GUIDE_SECTIONS = [
     items: [
       {
         q: 'How do markers work?',
-        a: `Each lineup is shown as a floating 3D grenade model on the map at its throw position. Markers are color-coded by grenade type:\n\n• Smoke — green\n• Flash — yellow\n• HE Grenade — red\n• Molotov — orange\n\nWalk up to a marker (within ~200 units) and look at it to highlight it.`,
+        a: `Each lineup is shown as a floating 3D grenade model on the map at its throw position. Markers are color-coded by grenade type:\n\n• Smoke — green\n• Flash — yellow\n• HE Grenade — red\n• Molotov — orange\n\nWalk close to a marker and look at it to highlight it.`,
       },
       {
         q: 'How do I teleport to a lineup?',
@@ -66,11 +99,11 @@ const GUIDE_SECTIONS = [
       },
       {
         q: 'What is the release position beam?',
-        a: `After teleporting to a lineup, you'll see a gold/yellow vertical beam at the exact spot where you need to release the grenade. As you walk closer, the beam changes from gold to green. A sound cue plays when you're at the right position. A cyan aim line also shows you the throw direction.`,
+        a: `After teleporting to a lineup, you'll see a gold/yellow vertical beam at the exact spot where you need to release the grenade. As you walk closer, the beam changes from gold to green. A sound cue plays when you're at the right position.`,
       },
       {
         q: 'How do I open the edit menu on a marker?',
-        a: `Hold E for about 1 second on a highlighted marker instead of tapping it. This opens the edit menu where you can rename the lineup, add a description, change throw type, add it to another collection, or delete it (if you own it).`,
+        a: `Hold E for about 1 second on a highlighted marker instead of tapping it. This opens the edit menu where you can rename the lineup, add a description, add it to another collection, or delete it (if you own it).`,
       },
     ],
   },
@@ -178,7 +211,7 @@ const GUIDE_SECTIONS = [
       },
       {
         q: 'Navigation commands',
-        a: `• !goto <id> — Teleport to a specific lineup by ID\n• !back — Teleport back to your last throw position\n• !maps — Open map & collection selection menu\n• !map <name> — Change to a specific map (e.g., !map dust2)\n• !markers — Refresh/reload all lineup markers`,
+        a: `• !back — Teleport back to your last throw position\n• !maps — Open map & collection selection menu\n• !map <name> — Change to a specific map (e.g., !map dust2)\n• !markers — Refresh/reload all lineup markers`,
       },
       {
         q: 'Visual & Filter commands',
@@ -186,7 +219,7 @@ const GUIDE_SECTIONS = [
       },
       {
         q: 'Practice utility commands',
-        a: `• !noflash — Toggle flashbang immunity on/off\n• !clear / !c — Remove all active smoke, molotov, and decoy effects\n• !ff [seconds] — Fast-forward time (default 6 sec, max 120 sec)\n• !kick <name> — Kick a player by partial name match`,
+        a: `• !noflash — Toggle flashbang immunity on/off\n• !clear / !c — Remove all active smoke, molotov, and decoy effects\n• !ff [seconds] — Fast-forward time (default 6 sec, max 120 sec)`,
       },
     ],
   },
@@ -218,7 +251,7 @@ const GUIDE_SECTIONS = [
     items: [
       {
         q: 'Recommended keybinds',
-        a: `Add these to your CS2 autoexec or type them in console:\n\n• bind "mouse5" "noclip" — Toggle noclip to fly around the map quickly\n• bind "mouse4" "sv_rethrow_last_grenade" — Quick rethrow on mouse button\n\nNoclip is especially useful for quickly flying to different throw positions instead of walking.`,
+        a: `Add these to your CS2 autoexec or type them in console:\n\n• bind "mouse5" "noclip" — Toggle noclip to fly around the map quickly\n• bind "mouse4" "say !rethrow" — Quick rethrow on mouse button\n\nNoclip is especially useful for quickly flying to different throw positions instead of walking.`,
       },
       {
         q: 'Useful console commands',
@@ -294,7 +327,7 @@ export default function GuidePage() {
                 { keys: '!clear', desc: 'Remove smoke/fire effects' },
               ].map((item) => (
                 <div key={item.keys} className="flex items-center gap-3 rounded-lg bg-[#0a0a12] border border-[#2a2a3e]/20 px-3 py-2.5">
-                  <code className="shrink-0 rounded-md bg-[#1a1a2e] border border-[#2a2a3e]/50 px-2 py-0.5 text-[11px] font-mono font-bold text-[#f0a500]">
+                  <code className="shrink-0 w-[4.5rem] text-center rounded-md bg-[#1a1a2e] border border-[#2a2a3e]/50 px-2 py-0.5 text-[11px] font-mono font-bold text-[#f0a500]">
                     {item.keys}
                   </code>
                   <span className="text-xs text-[#b8b8cc]">{item.desc}</span>
