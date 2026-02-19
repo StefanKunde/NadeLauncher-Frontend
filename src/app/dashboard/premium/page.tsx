@@ -90,6 +90,7 @@ function PremiumPageInner() {
   const searchParams = useSearchParams();
   const [openFaq, setOpenFaq] = useState<string | null>(null);
   const [upgradeLoading, setUpgradeLoading] = useState(false);
+  const [withdrawalConsent, setWithdrawalConsent] = useState(false);
 
   const isPremium = user?.isPremium ?? false;
   const premiumExpiresAt = user?.premiumExpiresAt ? new Date(user.premiumExpiresAt) : null;
@@ -287,10 +288,23 @@ function PremiumPageInner() {
               </>
             ) : (
               <>
+                <label className="flex items-start gap-2.5 mb-4 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={withdrawalConsent}
+                    onChange={(e) => setWithdrawalConsent(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-[#2a2a3e] bg-[#1a1a2e] text-[#f0a500] focus:ring-[#f0a500]/30 accent-[#f0a500]"
+                  />
+                  <span className="text-[11px] leading-relaxed text-[#6b6b8a] group-hover:text-[#8888aa] transition-colors">
+                    I agree that the service begins immediately and I acknowledge that I lose my{' '}
+                    <a href="/terms#withdrawal" className="text-[#f0a500] hover:underline" target="_blank" rel="noopener noreferrer">right of withdrawal</a>{' '}
+                    once the service has been fully provided.
+                  </span>
+                </label>
                 <button
                   onClick={handleUpgrade}
-                  disabled={upgradeLoading}
-                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#f0a500] to-[#d4920a] py-3 text-sm font-bold text-[#0a0a0f] hover:brightness-110 transition-all disabled:opacity-50 shadow-lg shadow-[#f0a500]/15"
+                  disabled={upgradeLoading || !withdrawalConsent}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#f0a500] to-[#d4920a] py-3 text-sm font-bold text-[#0a0a0f] hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[#f0a500]/15"
                 >
                   {upgradeLoading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
