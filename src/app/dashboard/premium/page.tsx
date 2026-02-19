@@ -90,6 +90,7 @@ function PremiumPageInner() {
   const searchParams = useSearchParams();
   const [openFaq, setOpenFaq] = useState<string | null>(null);
   const [upgradeLoading, setUpgradeLoading] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [withdrawalConsent, setWithdrawalConsent] = useState(false);
 
   const isPremium = user?.isPremium ?? false;
@@ -288,32 +289,12 @@ function PremiumPageInner() {
               </>
             ) : (
               <>
-                <label className="flex items-start gap-2.5 mb-4 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    checked={withdrawalConsent}
-                    onChange={(e) => setWithdrawalConsent(e.target.checked)}
-                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-[#2a2a3e] bg-[#1a1a2e] text-[#f0a500] focus:ring-[#f0a500]/30 accent-[#f0a500]"
-                  />
-                  <span className="text-[11px] leading-relaxed text-[#6b6b8a] group-hover:text-[#8888aa] transition-colors">
-                    I agree that the service begins immediately and I acknowledge that I lose my{' '}
-                    <a href="/terms#withdrawal" className="text-[#f0a500] hover:underline" target="_blank" rel="noopener noreferrer">right of withdrawal</a>{' '}
-                    once the service has been fully provided.
-                  </span>
-                </label>
                 <button
-                  onClick={handleUpgrade}
-                  disabled={upgradeLoading || !withdrawalConsent}
-                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#f0a500] to-[#d4920a] py-3 text-sm font-bold text-[#0a0a0f] hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[#f0a500]/15"
+                  onClick={() => { setWithdrawalConsent(false); setShowUpgradeModal(true); }}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#f0a500] to-[#d4920a] py-3 text-sm font-bold text-[#0a0a0f] hover:brightness-110 transition-all shadow-lg shadow-[#f0a500]/15"
                 >
-                  {upgradeLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <>
-                      <Crown className="h-4 w-4" />
-                      Upgrade to Pro
-                    </>
-                  )}
+                  <Crown className="h-4 w-4" />
+                  Upgrade to Pro
                 </button>
                 <p className="mt-3 text-center text-xs text-[#6b6b8a]">
                   Cancel anytime &bull; Billed monthly
@@ -385,6 +366,74 @@ function PremiumPageInner() {
           <a href="/dashboard/guide" className="text-[#f0a500] hover:underline">Check the In-Game Guide</a>.
         </p>
       </motion.div>
+
+      {/* Upgrade confirmation modal */}
+      {showUpgradeModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => !upgradeLoading && setShowUpgradeModal(false)} />
+          <div className="relative w-full max-w-md mx-4 rounded-2xl border border-[#2a2a3e] bg-[#12121a] p-6 shadow-2xl shadow-black/50">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#f0a500]/20 to-[#f0a500]/5 border border-[#f0a500]/15">
+                <Crown className="h-5 w-5 text-[#f0a500]" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-[#e8e8e8]">Upgrade to Pro</h3>
+                <p className="text-xs text-[#6b6b8a]">&euro;4.99 / month &bull; Cancel anytime</p>
+              </div>
+            </div>
+
+            <div className="rounded-lg bg-[#0a0a0f] border border-[#2a2a3e]/50 p-4 mb-5 space-y-2 text-sm text-[#b8b8cc]">
+              <div className="flex items-center gap-2">
+                <Check className="h-4 w-4 text-[#f0a500] shrink-0" />
+                <span>Unlimited practice time & collections</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Check className="h-4 w-4 text-[#f0a500] shrink-0" />
+                <span>Curated pro lineups from live matches</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Check className="h-4 w-4 text-[#f0a500] shrink-0" />
+                <span>Pro team & event collections</span>
+              </div>
+            </div>
+
+            <label className="flex items-start gap-2.5 mb-5 cursor-pointer group">
+              <input
+                type="checkbox"
+                checked={withdrawalConsent}
+                onChange={(e) => setWithdrawalConsent(e.target.checked)}
+                className="mt-0.5 h-4 w-4 shrink-0 rounded border-[#2a2a3e] bg-[#1a1a2e] text-[#f0a500] focus:ring-[#f0a500]/30 accent-[#f0a500]"
+              />
+              <span className="text-[11px] leading-relaxed text-[#6b6b8a] group-hover:text-[#8888aa] transition-colors">
+                I agree that the service begins immediately and I acknowledge that I lose my{' '}
+                <a href="/terms" className="text-[#f0a500] hover:underline" target="_blank" rel="noopener noreferrer">right of withdrawal</a>{' '}
+                once the service has been fully provided.
+              </span>
+            </label>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowUpgradeModal(false)}
+                disabled={upgradeLoading}
+                className="flex-1 rounded-lg border border-[#2a2a3e] bg-[#1a1a2e] py-2.5 text-sm font-medium text-[#b8b8cc] hover:bg-[#2a2a3e] transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUpgrade}
+                disabled={upgradeLoading || !withdrawalConsent}
+                className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#f0a500] to-[#d4920a] py-2.5 text-sm font-bold text-[#0a0a0f] hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {upgradeLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  'Continue to Payment'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 }
