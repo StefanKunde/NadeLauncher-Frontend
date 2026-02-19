@@ -186,7 +186,7 @@ const EXAMPLE_WORKFLOWS: ExampleWorkflow[] = [
   },
 ];
 
-const ROTATE_INTERVAL = 8000; // ms between auto-rotations
+const ROTATE_INTERVAL = 15000; // ms between auto-rotations
 
 /* ─── guide section data ─── */
 const GUIDE_SECTIONS = [
