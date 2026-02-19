@@ -181,6 +181,9 @@ export default function PracticeSessionCard() {
   const [showCollectionChanger, setShowCollectionChanger] = useState(false);
   const [changingCollection, setChangingCollection] = useState(false);
   const [activeCollections, setActiveCollections] = useState<LineupCollection[]>([]);
+  const [cooldown, setCooldown] = useState(0);
+  const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  useEffect(() => () => { if (cooldownRef.current) clearInterval(cooldownRef.current); }, []);
 
   // WebSocket connection for real-time updates
   const { sendHeartbeat } = useSessionSocket({
@@ -422,7 +425,7 @@ export default function PracticeSessionCard() {
   const handleCreate = async () => {
     setCreating(true);
     setError(null);
-    setLastEndReason(null); // Clear any previous end reason
+    setLastEndReason(null);
     try {
       const created = await sessionsApi.create(selectedMap, selectedCollection || undefined);
       setSession(created);
@@ -431,11 +434,30 @@ export default function PracticeSessionCard() {
         err && typeof err === 'object' && 'response' in err
           ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
           : undefined;
+      // Parse cooldown seconds from backend message if present
+      const cooldownMatch = msg?.match(/wait (\d+) seconds/);
+      if (cooldownMatch) {
+        startCooldown(parseInt(cooldownMatch[1], 10));
+      }
       setError(msg ?? 'Failed to create session. Please try again.');
     } finally {
       setCreating(false);
     }
   };
+
+  const startCooldown = useCallback((seconds: number) => {
+    setCooldown(seconds);
+    if (cooldownRef.current) clearInterval(cooldownRef.current);
+    cooldownRef.current = setInterval(() => {
+      setCooldown((prev) => {
+        if (prev <= 1) {
+          if (cooldownRef.current) clearInterval(cooldownRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }, []);
 
   const handleEnd = async () => {
     if (!session) return;
@@ -443,6 +465,7 @@ export default function PracticeSessionCard() {
     try {
       await sessionsApi.end(session.id);
       setSession(null);
+      startCooldown(30);
       await fetchState();
     } catch {
       setError('Failed to end session.');
@@ -1229,23 +1252,25 @@ export default function PracticeSessionCard() {
               {/* Start button */}
               <button
                 onClick={handleCreate}
-                disabled={creating}
+                disabled={creating || cooldown > 0}
                 className="w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:brightness-110"
                 style={{
-                  background: creating
+                  background: creating || cooldown > 0
                     ? '#2a2a3e'
                     : 'linear-gradient(135deg, #4a9fd4, #3a7fb8)',
-                  boxShadow: creating
+                  boxShadow: creating || cooldown > 0
                     ? 'none'
                     : '0 2px 12px rgba(74, 159, 212, 0.15)',
                 }}
               >
                 {creating ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
+                ) : cooldown > 0 ? (
+                  <Clock className="h-4 w-4" />
                 ) : (
                   <Play className="h-4 w-4" />
                 )}
-                {creating ? 'Starting...' : 'Start Practice'}
+                {creating ? 'Starting...' : cooldown > 0 ? `Wait ${cooldown}s` : 'Start Practice'}
               </button>
 
               {usage && !usage.isPremium && (
