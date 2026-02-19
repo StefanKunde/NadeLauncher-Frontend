@@ -11,13 +11,14 @@ import toast from 'react-hot-toast';
 const COMPARISON_ROWS = [
   { feature: 'Lineup browser & 2D radar maps', free: true, pro: true },
   { feature: 'Community lineups', free: true, pro: true },
-  { feature: 'In-game practice (CS2 plugin)', free: true, pro: true },
+  { feature: 'On-demand practice server (CS2 plugin)', free: true, pro: true },
   { feature: 'Ghost replay guidance', free: true, pro: true },
   { feature: 'Collections & in-game management', free: true, pro: true },
   { feature: 'Own lineups per collection', free: 'Up to 20', pro: 'Unlimited' },
   { feature: 'Collections per map', free: '1', pro: 'Unlimited' },
   { feature: 'Weekly practice time', free: '30 min', pro: 'Unlimited' },
   { feature: 'Curated pro lineups', free: false, pro: true },
+  { feature: 'Build custom collections from pro lineups', free: false, pro: true },
   { feature: 'Pro team & event collections', free: false, pro: true },
 ];
 
@@ -88,7 +89,7 @@ const FAQ_SECTIONS = [
       },
       {
         q: 'Do I keep my lineups if I downgrade?',
-        a: 'Your lineups are kept, but collections beyond the free limit become read-only until you upgrade again.',
+        a: 'Your lineups are kept, but collections beyond the free limit are not accessible until you upgrade again.',
       },
     ],
   },
@@ -417,7 +418,7 @@ function PremiumPageInner() {
                         transition={{ duration: 0.25, ease: 'easeInOut' }}
                         className="overflow-hidden"
                       >
-                        <p className="px-5 pl-[2.35rem] pb-4 text-sm text-[#6b6b8a] leading-relaxed">{item.a}</p>
+                        <p className="px-5 pl-[2.35rem] pt-1 pb-4 text-sm text-[#6b6b8a] leading-relaxed">{item.a}</p>
                       </motion.div>
                     </div>
                   );
