@@ -172,6 +172,7 @@ export interface CommunityCollection {
   ratingCount: number;
   subscriberCount: number;
   publishedAt: string;
+  updatedAt: string;
   isSubscribed?: boolean;
   userRating?: number;
 }

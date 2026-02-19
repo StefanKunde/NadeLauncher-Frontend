@@ -238,6 +238,7 @@ export default function CommunityPage() {
             >
               Rating <SortIcon column="top_rated" />
             </button>
+            <span className="w-24 text-center">Updated</span>
             <span className="w-32">By</span>
             <span className="w-24" />
           </div>
@@ -285,6 +286,11 @@ export default function CommunityPage() {
                   <div className="w-24 flex justify-center">
                     <StarRating value={Math.round(col.averageRating)} count={col.ratingCount} />
                   </div>
+
+                  {/* Updated */}
+                  <span className="w-24 text-center text-xs text-[#6b6b8a]">
+                    {new Date(col.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </span>
 
                   {/* Owner */}
                   <div className="w-32 flex items-center gap-1.5 min-w-0">
@@ -345,6 +351,7 @@ export default function CommunityPage() {
                     <span>{col.lineupCount} nades</span>
                     <span>{col.subscriberCount} subs</span>
                     <StarRating value={Math.round(col.averageRating)} count={col.ratingCount} />
+                    <span>{new Date(col.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                     {col.ownerName && (
                       <span className="ml-auto truncate">by {col.ownerName}</span>
                     )}
