@@ -180,6 +180,11 @@ export const referralsApi = {
     api.get<{ data: ReferralEntry[] }>('/api/referrals').then((r) => r.data.data),
 };
 
+// Account
+export const usersApi = {
+  deleteAccount: () => api.delete('/api/users/me'),
+};
+
 // Stripe
 export const stripeApi = {
   createCheckout: () =>
