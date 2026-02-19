@@ -16,6 +16,14 @@ import {
   MousePointer,
   Eye,
   Lightbulb,
+  Search,
+  Play,
+  Plug,
+  MapPin,
+  Target,
+  FolderPlus,
+  Share2,
+  ArrowDown,
 } from 'lucide-react';
 
 /* ─── animation helpers ─── */
@@ -28,6 +36,82 @@ const fadeUp = {
   }),
 };
 const stagger = { visible: { transition: { staggerChildren: 0.04 } } };
+
+/* ─── optimal workflow steps ─── */
+const WORKFLOW_STEPS = [
+  {
+    icon: Search,
+    title: 'Browse',
+    desc: 'Explore pro & community collections',
+    accent: 'from-[#22c55e]/20 to-[#22c55e]/5',
+    ring: 'ring-[#22c55e]/20',
+    dot: 'bg-[#22c55e]',
+    text: 'text-[#22c55e]',
+  },
+  {
+    icon: Play,
+    title: 'Launch',
+    desc: 'Start your private practice server',
+    accent: 'from-[#22c55e]/20 to-[#22c55e]/5',
+    ring: 'ring-[#22c55e]/20',
+    dot: 'bg-[#22c55e]',
+    text: 'text-[#22c55e]',
+  },
+  {
+    icon: Plug,
+    title: 'Connect',
+    desc: 'Join from CS2 console',
+    accent: 'from-[#22c55e]/20 to-[#22c55e]/5',
+    ring: 'ring-[#22c55e]/20',
+    dot: 'bg-[#22c55e]',
+    text: 'text-[#22c55e]',
+  },
+  {
+    icon: MapPin,
+    title: 'Explore',
+    desc: 'Navigate markers on the map',
+    accent: 'from-[#3b82f6]/20 to-[#3b82f6]/5',
+    ring: 'ring-[#3b82f6]/20',
+    dot: 'bg-[#3b82f6]',
+    text: 'text-[#3b82f6]',
+  },
+  {
+    icon: Target,
+    title: 'Practice',
+    desc: 'Follow ghost replays & throw',
+    accent: 'from-[#3b82f6]/20 to-[#3b82f6]/5',
+    ring: 'ring-[#3b82f6]/20',
+    dot: 'bg-[#3b82f6]',
+    text: 'text-[#3b82f6]',
+  },
+  {
+    icon: Save,
+    title: 'Save',
+    desc: 'Store your best lineups',
+    accent: 'from-[#f0a500]/20 to-[#f0a500]/5',
+    ring: 'ring-[#f0a500]/20',
+    dot: 'bg-[#f0a500]',
+    text: 'text-[#f0a500]',
+  },
+  {
+    icon: FolderPlus,
+    title: 'Curate',
+    desc: 'Build your ultimate collection',
+    accent: 'from-[#f0a500]/20 to-[#f0a500]/5',
+    ring: 'ring-[#f0a500]/20',
+    dot: 'bg-[#f0a500]',
+    text: 'text-[#f0a500]',
+  },
+  {
+    icon: Share2,
+    title: 'Share',
+    desc: 'Publish to the community',
+    accent: 'from-[#a855f7]/20 to-[#a855f7]/5',
+    ring: 'ring-[#a855f7]/20',
+    dot: 'bg-[#a855f7]',
+    text: 'text-[#a855f7]',
+  },
+];
 
 /* ─── guide section data ─── */
 const GUIDE_SECTIONS = [
@@ -283,123 +367,192 @@ export default function GuidePage() {
       initial="hidden"
       animate="visible"
       variants={stagger}
-      className="max-w-4xl"
+      className="flex gap-8"
     >
-      {/* Hero Header */}
-      <motion.div variants={fadeUp} custom={0} className="mb-10">
-        <div className="relative rounded-2xl overflow-hidden border border-[#2a2a3e]/50 bg-[#12121a]">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#22c55e]/5 via-transparent to-[#22c55e]/2" />
-          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#22c55e]/40 to-transparent" />
+      {/* ── Left: Main guide content ── */}
+      <div className="max-w-4xl flex-1 min-w-0">
+        {/* Hero Header */}
+        <motion.div variants={fadeUp} custom={0} className="mb-10">
+          <div className="relative rounded-2xl overflow-hidden border border-[#2a2a3e]/50 bg-[#12121a]">
+            <div className="absolute inset-0 bg-gradient-to-br from-[#22c55e]/5 via-transparent to-[#22c55e]/2" />
+            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#22c55e]/40 to-transparent" />
 
-          <div className="relative px-6 py-8 sm:px-8 sm:py-10 flex flex-col sm:flex-row items-start sm:items-center gap-5">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#22c55e]/20 to-[#22c55e]/5 border border-[#22c55e]/15">
-              <BookOpen className="h-7 w-7 text-[#22c55e]" />
-            </div>
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-[#e8e8e8] mb-1">In-Game Guide</h1>
-              <p className="text-[#6b6b8a] text-sm sm:text-base">
-                Everything you need to know about using NadePro in CS2
-              </p>
+            <div className="relative px-6 py-8 sm:px-8 sm:py-10 flex flex-col sm:flex-row items-start sm:items-center gap-5">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#22c55e]/20 to-[#22c55e]/5 border border-[#22c55e]/15">
+                <BookOpen className="h-7 w-7 text-[#22c55e]" />
+              </div>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-[#e8e8e8] mb-1">In-Game Guide</h1>
+                <p className="text-[#6b6b8a] text-sm sm:text-base">
+                  Everything you need to know about using NadePro in CS2
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-      </motion.div>
+        </motion.div>
 
-      {/* Quick Reference Card */}
-      <motion.div variants={fadeUp} custom={1} className="mb-10">
-        <div className="rounded-xl border border-[#2a2a3e]/50 bg-[#12121a] overflow-hidden">
-          <div className="h-[2px] bg-gradient-to-r from-[#f0a500] via-[#f0a500]/30 to-transparent" />
-          <div className="px-5 py-5">
-            <div className="flex items-center gap-2 mb-4">
-              <Eye className="h-4 w-4 text-[#f0a500]" />
-              <h2 className="text-sm font-semibold text-[#e8e8e8]">Quick Reference</h2>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {[
-                { keys: 'E', desc: 'Teleport to marker / Select menu' },
-                { keys: 'Hold E', desc: 'Open edit menu on marker' },
-                { keys: '!save', desc: 'Save lineup from position' },
-                { keys: '!savelast', desc: 'Save last thrown nade' },
-                { keys: '!maps', desc: 'Switch map & collection' },
-                { keys: '!filter', desc: 'Filter by grenade type' },
-                { keys: '!rethrow', desc: 'Re-throw last grenade' },
-                { keys: '!noflash', desc: 'Toggle flash immunity' },
-                { keys: '!clear', desc: 'Remove smoke/fire effects' },
-              ].map((item) => (
-                <div key={item.keys} className="flex items-center gap-3 rounded-lg bg-[#0a0a12] border border-[#2a2a3e]/20 px-3 py-2.5">
-                  <code className="shrink-0 w-[4.5rem] text-center rounded-md bg-[#1a1a2e] border border-[#2a2a3e]/50 px-2 py-0.5 text-[11px] font-mono font-bold text-[#f0a500]">
-                    {item.keys}
-                  </code>
-                  <span className="text-xs text-[#b8b8cc]">{item.desc}</span>
-                </div>
-              ))}
+        {/* Quick Reference Card */}
+        <motion.div variants={fadeUp} custom={1} className="mb-10">
+          <div className="rounded-xl border border-[#2a2a3e]/50 bg-[#12121a] overflow-hidden">
+            <div className="h-[2px] bg-gradient-to-r from-[#f0a500] via-[#f0a500]/30 to-transparent" />
+            <div className="px-5 py-5">
+              <div className="flex items-center gap-2 mb-4">
+                <Eye className="h-4 w-4 text-[#f0a500]" />
+                <h2 className="text-sm font-semibold text-[#e8e8e8]">Quick Reference</h2>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {[
+                  { keys: 'E', desc: 'Teleport to marker / Select menu' },
+                  { keys: 'Hold E', desc: 'Open edit menu on marker' },
+                  { keys: '!save', desc: 'Save lineup from position' },
+                  { keys: '!savelast', desc: 'Save last thrown nade' },
+                  { keys: '!maps', desc: 'Switch map & collection' },
+                  { keys: '!filter', desc: 'Filter by grenade type' },
+                  { keys: '!rethrow', desc: 'Re-throw last grenade' },
+                  { keys: '!noflash', desc: 'Toggle flash immunity' },
+                  { keys: '!clear', desc: 'Remove smoke/fire effects' },
+                ].map((item) => (
+                  <div key={item.keys} className="flex items-center gap-3 rounded-lg bg-[#0a0a12] border border-[#2a2a3e]/20 px-3 py-2.5">
+                    <code className="shrink-0 w-[4.5rem] text-center rounded-md bg-[#1a1a2e] border border-[#2a2a3e]/50 px-2 py-0.5 text-[11px] font-mono font-bold text-[#f0a500]">
+                      {item.keys}
+                    </code>
+                    <span className="text-xs text-[#b8b8cc]">{item.desc}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      </motion.div>
+        </motion.div>
 
-      {/* Guide Sections */}
-      <div className="space-y-6">
-        {GUIDE_SECTIONS.map((section, sIdx) => (
-          <motion.div key={section.id} variants={fadeUp} custom={sIdx + 2}>
-            {/* Section header */}
-            <div className="flex items-center gap-2 mb-3">
-              <section.icon className="h-3.5 w-3.5 text-[#22c55e]/60" />
-              <span className="text-xs font-semibold uppercase tracking-wider text-[#22c55e]/60">
-                {section.title}
-              </span>
-              <span className="text-[10px] text-[#6b6b8a]/40 ml-1">{section.subtitle}</span>
-            </div>
+        {/* Guide Sections */}
+        <div className="space-y-6">
+          {GUIDE_SECTIONS.map((section, sIdx) => (
+            <motion.div key={section.id} variants={fadeUp} custom={sIdx + 2}>
+              {/* Section header */}
+              <div className="flex items-center gap-2 mb-3">
+                <section.icon className="h-3.5 w-3.5 text-[#22c55e]/60" />
+                <span className="text-xs font-semibold uppercase tracking-wider text-[#22c55e]/60">
+                  {section.title}
+                </span>
+                <span className="text-[10px] text-[#6b6b8a]/40 ml-1">{section.subtitle}</span>
+              </div>
 
-            {/* Section card */}
-            <div className="rounded-xl border border-[#2a2a3e]/50 bg-[#12121a] overflow-hidden divide-y divide-[#2a2a3e]/30">
-              {section.items.map((item, i) => {
-                const key = `${section.id}-${i}`;
-                const isOpen = openItems.has(key);
-                return (
-                  <div key={i}>
-                    <button
-                      onClick={() => toggleItem(key)}
-                      className={`flex w-full items-center gap-3 px-5 py-4 text-left transition-all duration-200 ${
-                        isOpen ? 'bg-[#1a1a2e]/60' : 'hover:bg-[#1a1a2e]/30'
-                      }`}
-                    >
-                      <div
-                        className={`h-1.5 w-1.5 rounded-full shrink-0 transition-colors duration-200 ${
-                          isOpen ? 'bg-[#22c55e]' : 'bg-[#2a2a3e]'
+              {/* Section card */}
+              <div className="rounded-xl border border-[#2a2a3e]/50 bg-[#12121a] overflow-hidden divide-y divide-[#2a2a3e]/30">
+                {section.items.map((item, i) => {
+                  const key = `${section.id}-${i}`;
+                  const isOpen = openItems.has(key);
+                  return (
+                    <div key={i}>
+                      <button
+                        onClick={() => toggleItem(key)}
+                        className={`flex w-full items-center gap-3 px-5 py-4 text-left transition-all duration-200 ${
+                          isOpen ? 'bg-[#1a1a2e]/60' : 'hover:bg-[#1a1a2e]/30'
                         }`}
-                      />
-                      <span className={`flex-1 text-sm font-medium transition-colors duration-200 ${
-                        isOpen ? 'text-[#e8e8e8]' : 'text-[#b8b8cc]'
-                      }`}>
-                        {item.q}
-                      </span>
-                      <motion.div
-                        animate={{ rotate: isOpen ? 180 : 0 }}
-                        transition={{ duration: 0.2 }}
                       >
-                        <ChevronDown className={`h-4 w-4 shrink-0 transition-colors duration-200 ${
-                          isOpen ? 'text-[#22c55e]' : 'text-[#6b6b8a]/50'
-                        }`} />
+                        <div
+                          className={`h-1.5 w-1.5 rounded-full shrink-0 transition-colors duration-200 ${
+                            isOpen ? 'bg-[#22c55e]' : 'bg-[#2a2a3e]'
+                          }`}
+                        />
+                        <span className={`flex-1 text-sm font-medium transition-colors duration-200 ${
+                          isOpen ? 'text-[#e8e8e8]' : 'text-[#b8b8cc]'
+                        }`}>
+                          {item.q}
+                        </span>
+                        <motion.div
+                          animate={{ rotate: isOpen ? 180 : 0 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <ChevronDown className={`h-4 w-4 shrink-0 transition-colors duration-200 ${
+                            isOpen ? 'text-[#22c55e]' : 'text-[#6b6b8a]/50'
+                          }`} />
+                        </motion.div>
+                      </button>
+                      <motion.div
+                        initial={false}
+                        animate={{ height: isOpen ? 'auto' : 0, opacity: isOpen ? 1 : 0 }}
+                        transition={{ duration: 0.25, ease: 'easeInOut' }}
+                        className="overflow-hidden"
+                      >
+                        <div className="px-5 pl-[2.35rem] pt-1 pb-4 text-sm text-[#6b6b8a] leading-relaxed whitespace-pre-line">
+                          {item.a}
+                        </div>
                       </motion.div>
-                    </button>
-                    <motion.div
-                      initial={false}
-                      animate={{ height: isOpen ? 'auto' : 0, opacity: isOpen ? 1 : 0 }}
-                      transition={{ duration: 0.25, ease: 'easeInOut' }}
-                      className="overflow-hidden"
-                    >
-                      <div className="px-5 pl-[2.35rem] pt-1 pb-4 text-sm text-[#6b6b8a] leading-relaxed whitespace-pre-line">
-                        {item.a}
+                    </div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Right: Optimal Workflow (sticky, desktop only) ── */}
+      <motion.aside
+        variants={fadeUp}
+        custom={1}
+        className="hidden 2xl:block w-72 shrink-0"
+      >
+        <div className="sticky top-6">
+          <div className="rounded-2xl border border-[#2a2a3e]/50 bg-[#12121a] overflow-hidden">
+            {/* Header glow line */}
+            <div className="h-[2px] bg-gradient-to-r from-[#22c55e] via-[#3b82f6] via-[60%] to-[#a855f7]" />
+
+            <div className="px-5 pt-5 pb-2">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#6b6b8a]/50 mb-1">
+                Optimal Workflow
+              </p>
+              <h3 className="text-sm font-bold text-[#e8e8e8]">
+                From zero to pro
+              </h3>
+            </div>
+
+            {/* Timeline */}
+            <div className="px-5 py-4">
+              {WORKFLOW_STEPS.map((step, i) => {
+                const StepIcon = step.icon;
+                const isLast = i === WORKFLOW_STEPS.length - 1;
+                return (
+                  <div key={step.title} className="relative flex gap-3.5">
+                    {/* Vertical line + dot */}
+                    <div className="flex flex-col items-center">
+                      <div className={`relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${step.accent} ring-1 ${step.ring}`}>
+                        <StepIcon className={`h-4 w-4 ${step.text}`} />
                       </div>
-                    </motion.div>
+                      {!isLast && (
+                        <div className="relative flex flex-col items-center flex-1 min-h-[1.75rem]">
+                          {/* Connecting line */}
+                          <div className="w-px flex-1 bg-gradient-to-b from-[#2a2a3e]/60 to-[#2a2a3e]/20" />
+                          {/* Arrow */}
+                          <ArrowDown className="h-3 w-3 text-[#2a2a3e]/40 -mt-0.5 -mb-0.5 shrink-0" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Content */}
+                    <div className={`pt-1.5 ${isLast ? 'pb-0' : 'pb-5'}`}>
+                      <p className={`text-xs font-bold ${step.text}`}>
+                        {step.title}
+                      </p>
+                      <p className="text-[11px] text-[#6b6b8a] leading-snug mt-0.5">
+                        {step.desc}
+                      </p>
+                    </div>
                   </div>
                 );
               })}
             </div>
-          </motion.div>
-        ))}
-      </div>
+
+            {/* Footer accent */}
+            <div className="mx-5 mb-5 mt-1 rounded-lg bg-gradient-to-r from-[#a855f7]/5 via-[#22c55e]/5 to-[#f0a500]/5 border border-[#2a2a3e]/20 px-3 py-2.5">
+              <p className="text-[10px] text-[#6b6b8a] leading-relaxed text-center">
+                Repeat the cycle to keep improving your utility game
+              </p>
+            </div>
+          </div>
+        </div>
+      </motion.aside>
     </motion.div>
   );
 }
