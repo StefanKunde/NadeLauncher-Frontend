@@ -672,7 +672,7 @@ export default function HomePage() {
           </motion.div>
 
           {/* Value prop cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-16">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {PRO_HIGHLIGHTS.map((item, i) => {
               const Icon = item.icon;
               return (
@@ -693,43 +693,6 @@ export default function HomePage() {
               );
             })}
           </div>
-
-          {/* Example collection preview */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="max-w-3xl mx-auto"
-          >
-            <div className="glass rounded-2xl border border-[#f0a500]/20 overflow-hidden">
-              <div className="bg-gradient-to-r from-[#f0a500]/10 to-transparent px-6 py-4 border-b border-[#2a2a3e]/60 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Crown className="w-5 h-5 text-[#f0a500]" />
-                  <span className="font-bold text-[#e8e8e8]">Example: Vitality Inferno B Execute</span>
-                </div>
-                <span className="text-xs font-medium text-[#f0a500] bg-[#f0a500]/10 px-3 py-1 rounded-full">Pro Collection</span>
-              </div>
-              <div className="p-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {[
-                    { type: 'smoke' as const, name: 'CT Smoke — blocks CT rotation', color: '#88bbee' },
-                    { type: 'smoke' as const, name: 'Coffin Smoke — isolates site', color: '#88bbee' },
-                    { type: 'molotov' as const, name: 'Dark Molotov — clears close angle', color: '#ff6633' },
-                    { type: 'flash' as const, name: 'B Site Pop Flash — entry support', color: '#ffee44' },
-                  ].map((nade) => (
-                    <div key={nade.name} className="flex items-center gap-3 px-4 py-3 rounded-lg bg-[#0a0a0f]/60 border border-[#2a2a3e]/40">
-                      <GrenadeIcon type={nade.type} size={20} glow />
-                      <span className="text-sm text-[#9595b0]">{nade.name}</span>
-                    </div>
-                  ))}
-                </div>
-                <p className="text-[#6b6b8a] text-xs mt-4 text-center">
-                  One complete execute — all the utility your team needs, practiced in sequence
-                </p>
-              </div>
-            </div>
-          </motion.div>
 
           {/* CTA */}
           <motion.div
