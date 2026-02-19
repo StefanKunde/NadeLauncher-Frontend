@@ -521,11 +521,14 @@ export default function MapDetailPage() {
     }
     for (const c of allCollections.filter((c) => c.isSubscribed && !seen.has(c.id))) {
       seen.add(c.id);
-      if (c.autoManaged && !c.ownerId) pro.push({ id: c.id, name: c.name, type: 'pro' });
-      else community.push({ id: c.id, name: c.name, type: 'community' });
+      if (c.autoManaged && !c.ownerId) {
+        if (isPremium) pro.push({ id: c.id, name: c.name, type: 'pro' });
+      } else {
+        community.push({ id: c.id, name: c.name, type: 'community' });
+      }
     }
     return { own, pro, community, all: [...own, ...pro, ...community] };
-  }, [userCollections, allCollections]);
+  }, [userCollections, allCollections, isPremium]);
 
   // ── Render ─────────────────────────────────────────────────────
   if (!map) {
