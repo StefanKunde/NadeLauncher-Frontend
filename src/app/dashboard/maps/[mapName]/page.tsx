@@ -169,10 +169,11 @@ export default function MapDetailPage() {
     if (loading) return;
     if (sourceFilter.type === 'collection') return;
 
-    // URL query param pre-selection (e.g. from cross-map match navigation)
+    // URL query param pre-selection (e.g. from dashboard stats or cross-map navigation)
     const collectionParam = searchParams.get('collection');
     if (collectionParam) {
-      const target = allCollections.find((c) => c.id === collectionParam);
+      const target = allCollections.find((c) => c.id === collectionParam)
+        ?? userCollections.find((c) => c.id === collectionParam);
       if (target) {
         setSourceFilter({ type: 'collection', collectionId: target.id, collectionName: target.name });
         return;
