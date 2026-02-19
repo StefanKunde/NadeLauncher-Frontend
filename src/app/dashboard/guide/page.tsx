@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   BookOpen,
   ChevronDown,
@@ -24,6 +25,9 @@ import {
   FolderPlus,
   Share2,
   ArrowDown,
+  Flame,
+  Users,
+  Swords,
 } from 'lucide-react';
 
 /* ─── animation helpers ─── */
@@ -43,75 +47,146 @@ const WORKFLOW_STEPS = [
     icon: Search,
     title: 'Browse',
     desc: 'Explore pro & community collections',
-    accent: 'from-[#22c55e]/20 to-[#22c55e]/5',
-    ring: 'ring-[#22c55e]/20',
-    dot: 'bg-[#22c55e]',
-    text: 'text-[#22c55e]',
+    example: 'Find "Vitality vs G2" pro match',
+    color: '#22c55e',
   },
   {
     icon: Play,
     title: 'Launch',
     desc: 'Start your private practice server',
-    accent: 'from-[#22c55e]/20 to-[#22c55e]/5',
-    ring: 'ring-[#22c55e]/20',
-    dot: 'bg-[#22c55e]',
-    text: 'text-[#22c55e]',
+    example: 'Click "Practice" on Inferno',
+    color: '#22c55e',
   },
   {
     icon: Plug,
     title: 'Connect',
-    desc: 'Join from CS2 console',
-    accent: 'from-[#22c55e]/20 to-[#22c55e]/5',
-    ring: 'ring-[#22c55e]/20',
-    dot: 'bg-[#22c55e]',
-    text: 'text-[#22c55e]',
+    desc: 'Paste connect command in CS2',
+    example: 'connect 123.45.67.89:27015',
+    color: '#22c55e',
   },
   {
     icon: MapPin,
     title: 'Explore',
-    desc: 'Navigate markers on the map',
-    accent: 'from-[#3b82f6]/20 to-[#3b82f6]/5',
-    ring: 'ring-[#3b82f6]/20',
-    dot: 'bg-[#3b82f6]',
-    text: 'text-[#3b82f6]',
+    desc: 'Teleport to markers on the map',
+    example: 'Browse B site smokes & flashes',
+    color: '#3b82f6',
   },
   {
     icon: Target,
     title: 'Practice',
     desc: 'Follow ghost replays & throw',
-    accent: 'from-[#3b82f6]/20 to-[#3b82f6]/5',
-    ring: 'ring-[#3b82f6]/20',
-    dot: 'bg-[#3b82f6]',
-    text: 'text-[#3b82f6]',
-  },
-  {
-    icon: Save,
-    title: 'Save',
-    desc: 'Store your best lineups',
-    accent: 'from-[#f0a500]/20 to-[#f0a500]/5',
-    ring: 'ring-[#f0a500]/20',
-    dot: 'bg-[#f0a500]',
-    text: 'text-[#f0a500]',
+    example: 'Learn the CT smoke from banana',
+    color: '#3b82f6',
   },
   {
     icon: FolderPlus,
     title: 'Curate',
-    desc: 'Build your ultimate collection',
-    accent: 'from-[#f0a500]/20 to-[#f0a500]/5',
-    ring: 'ring-[#f0a500]/20',
-    dot: 'bg-[#f0a500]',
-    text: 'text-[#f0a500]',
+    desc: 'Add the best nades to your collection',
+    example: 'Hold E → "Add to my B Execute"',
+    color: '#f0a500',
+  },
+  {
+    icon: Save,
+    title: 'Discover',
+    desc: 'Find your own throws & save them',
+    example: '!savelast "New Coffin Molly"',
+    color: '#f0a500',
   },
   {
     icon: Share2,
     title: 'Share',
-    desc: 'Publish to the community',
-    accent: 'from-[#a855f7]/20 to-[#a855f7]/5',
-    ring: 'ring-[#a855f7]/20',
-    dot: 'bg-[#a855f7]',
-    text: 'text-[#a855f7]',
+    desc: 'Practice with mates or publish',
+    example: 'Share collection with your team',
+    color: '#a855f7',
   },
 ];
+
+/* icon float animation — each step gets a slightly different timing */
+const iconFloat = (i: number) => ({
+  y: [0, -3, 0],
+  transition: {
+    duration: 2.5 + i * 0.3,
+    repeat: Infinity,
+    ease: 'easeInOut' as const,
+  },
+});
+
+/* ─── example workflow scenarios ─── */
+type ExampleStep = {
+  icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
+  color: string;
+  label: string;
+  text: string;
+};
+
+type ExampleWorkflow = {
+  title: string;
+  subtitle: string;
+  accent: string;
+  result: string;
+  steps: ExampleStep[];
+};
+
+const EXAMPLE_WORKFLOWS: ExampleWorkflow[] = [
+  {
+    title: 'Inferno B Execute',
+    subtitle: 'Build a complete B take from pro lineups',
+    accent: '#f0a500',
+    result: 'A complete B execute collection with pro-quality smokes, flashes, and molotovs — ready to practice with your team.',
+    steps: [
+      { icon: Search, color: '#22c55e', label: 'Browse', text: 'Open "Vitality vs G2" pro collection on Inferno' },
+      { icon: Target, color: '#3b82f6', label: 'Practice', text: 'Teleport to the CT smoke from banana — follow the ghost replay' },
+      { icon: FolderPlus, color: '#f0a500', label: 'Add', text: 'Hold E → Add to your "Inferno B Execute" collection' },
+      { icon: Swords, color: '#3b82f6', label: 'Repeat', text: 'Pick the coffin molly, site smoke, and entry flash the same way' },
+      { icon: Save, color: '#f0a500', label: 'Create', text: 'Find your own deep banana molly → !savelast and add it too' },
+      { icon: Users, color: '#a855f7', label: 'Share', text: 'Share the collection with your team or publish to community' },
+    ],
+  },
+  {
+    title: 'Mirage Mid-to-A',
+    subtitle: 'Combine pro & community setups for a mid control take',
+    accent: '#3b82f6',
+    result: 'Your personal mid-to-A playbook with window smoke, connector flash, and jungle molly — picked from the best sources.',
+    steps: [
+      { icon: Search, color: '#22c55e', label: 'Browse', text: 'Check "NAVI vs FaZe" pro collection on Mirage' },
+      { icon: Target, color: '#3b82f6', label: 'Learn', text: 'Practice the window smoke from T-spawn with ghost replay' },
+      { icon: FolderPlus, color: '#f0a500', label: 'Collect', text: 'Add the window smoke + connector flash to "My Mirage A"' },
+      { icon: Search, color: '#22c55e', label: 'Explore', text: 'Browse community collections for a creative jungle molly' },
+      { icon: Save, color: '#f0a500', label: 'Discover', text: 'Experiment with a short flash from underpass → !savelast' },
+      { icon: Users, color: '#a855f7', label: 'Team up', text: 'Share the collection — assign nades to teammates for the execute' },
+    ],
+  },
+  {
+    title: 'Dust2 Retake Kit',
+    subtitle: 'Prepare post-plant utility for clutch situations',
+    accent: '#22c55e',
+    result: 'A focused retake collection with site-clearing mollies, pop flashes, and post-plant smokes for both sites.',
+    steps: [
+      { icon: Search, color: '#22c55e', label: 'Browse', text: 'Filter pro collections by "dust2" — look for retake setups' },
+      { icon: MapPin, color: '#3b82f6', label: 'Explore', text: 'Use !filter molotov to see only molotov markers on the map' },
+      { icon: Target, color: '#3b82f6', label: 'Practice', text: 'Learn the A-site platform molly from CT — repeat with !rethrow' },
+      { icon: FolderPlus, color: '#f0a500', label: 'Curate', text: 'Add retake utility for both A and B into "D2 Retakes"' },
+      { icon: Save, color: '#f0a500', label: 'Innovate', text: 'Discover a fast B door pop flash → !save "Quick B Flash"' },
+      { icon: Target, color: '#3b82f6', label: 'Drill', text: 'Practice the full retake sequence — smokes, then mollies, then flash & peek' },
+    ],
+  },
+  {
+    title: 'Anubis Default Setup',
+    subtitle: 'Learn the fundamentals of a newer map from pros',
+    accent: '#a855f7',
+    result: 'A solid default collection covering both sites — learn Anubis utility faster than anyone by standing on the shoulders of pros.',
+    steps: [
+      { icon: Search, color: '#22c55e', label: 'Browse', text: 'Find recent pro matches on Anubis in pro collections' },
+      { icon: Target, color: '#3b82f6', label: 'Study', text: 'Go through each lineup — use ghost replays to understand movement' },
+      { icon: FolderPlus, color: '#f0a500', label: 'Organize', text: 'Create "Anubis A Default" and "Anubis B Default" collections' },
+      { icon: Search, color: '#22c55e', label: 'Cross-ref', text: 'Compare setups from different pro teams — keep the most consistent ones' },
+      { icon: Save, color: '#f0a500', label: 'Adapt', text: 'Find variations that fit your style → !save with descriptive names' },
+      { icon: Share2, color: '#a855f7', label: 'Publish', text: 'Publish to community — help others learn this map too' },
+    ],
+  },
+];
+
+const ROTATE_INTERVAL = 8000; // ms between auto-rotations
 
 /* ─── guide section data ─── */
 const GUIDE_SECTIONS = [
@@ -123,7 +198,7 @@ const GUIDE_SECTIONS = [
     items: [
       {
         q: 'Build your ultimate collection',
-        a: `Create your own collection for each map and fill it with the best lineups from every source:\n\n1. Browse Pro Collections to find proven lineups from professional matches\n2. Check Community Collections for creative setups from other players\n3. Add the ones you like to your own collection — in-game via the nade menu or on the website\n4. Discover your own throws in-game and save them with !save or !savelast\n\nOver time you'll have a personal collection of only the lineups that work best for your playstyle.`,
+        a: <>Create your own collection for each map and fill it with the best lineups from every source:{'\n\n'}1. Browse pro collections on the <Link href="/dashboard/maps" className="text-[#22c55e] hover:underline">Nades page</Link> to find proven lineups from professional matches{'\n'}2. Check <Link href="/dashboard/community" className="text-[#22c55e] hover:underline">community collections</Link> for creative setups from other players{'\n'}3. Add the ones you like to your own collection — in-game via the nade menu or on the website{'\n'}4. Discover your own throws in-game and save them with !save or !savelast{'\n\n'}Over time you&#39;ll have a personal collection of only the lineups that work best for your playstyle.</>,
       },
       {
         q: 'Practice with purpose',
@@ -135,11 +210,11 @@ const GUIDE_SECTIONS = [
       },
       {
         q: 'Learn from pro matches',
-        a: `Pro collections contain lineups extracted from actual professional matches. Use them to:\n\n• Learn the default smoke setups that pros rely on\n• Discover off-angle flashes you wouldn't think of\n• Understand how teams coordinate utility with team & event collections\n• Copy the best ones into your own collection and adapt them to your playstyle`,
+        a: <>Pro collections contain lineups extracted from actual professional matches and enhanced with AI-assisted analysis. Browse them on the <Link href="/dashboard/maps" className="text-[#22c55e] hover:underline">Nades page</Link>:{'\n\n'}• Learn the default smoke setups that pros rely on{'\n'}• Discover off-angle flashes you wouldn&#39;t think of{'\n'}• Understand how teams coordinate utility with team &amp; event collections{'\n'}• Copy the best ones into your own collection and adapt them to your playstyle</>,
       },
       {
         q: 'Share your knowledge',
-        a: `Found a great set of lineups? Publish your collection to the community so other players can subscribe and practice them. Building a reputation with quality lineups helps the entire NadePro community improve.`,
+        a: <>Found a great set of lineups? Publish your collection to the <Link href="/dashboard/community" className="text-[#22c55e] hover:underline">community</Link> so other players can subscribe and practice them. Building a reputation with quality lineups helps the entire NadePro community improve.</>,
       },
     ],
   },
@@ -151,15 +226,23 @@ const GUIDE_SECTIONS = [
     items: [
       {
         q: 'How do I start a practice session?',
-        a: `Go to the Dashboard or any map page and select a collection to practice. Click the "Practice" button — NadePro will spin up a private CS2 server for you. Once ready, the connect command appears automatically.`,
+        a: <>Go to the <Link href="/dashboard" className="text-[#22c55e] hover:underline">Dashboard</Link> or any map on the <Link href="/dashboard/maps" className="text-[#22c55e] hover:underline">Nades page</Link> and select a collection to practice. Click the &quot;Practice&quot; button — NadePro will spin up a private on-demand CS2 server for you. Once ready, the connect command appears automatically.</>,
       },
       {
         q: 'How do I connect to the server?',
         a: `Open the CS2 console (~) and paste the connect command shown on the website. The server will load the selected map with all your lineup markers ready to practice.`,
       },
       {
+        q: 'Do I need to install anything?',
+        a: `No. Just connect to the practice server via the CS2 console. There are no client-side mods or plugins required — everything runs on the server.`,
+      },
+      {
         q: 'Can other players join my server?',
         a: `No. Your practice server is completely private. Only you can connect to it.`,
+      },
+      {
+        q: 'What maps are supported?',
+        a: `All current Active Duty maps are always supported. When the map pool changes, NadePro updates accordingly.`,
       },
       {
         q: 'What settings are pre-configured?',
@@ -275,11 +358,19 @@ const GUIDE_SECTIONS = [
       },
       {
         q: 'How do I add a lineup to my collection from a marker?',
-        a: `Hold E on any lineup marker for about 1 second to open the edit menu. Select "Add to collection" to copy that lineup into one of your own collections. This works with pro lineups and community lineups too (Premium feature).`,
+        a: <>Hold E on any lineup marker for about 1 second to open the edit menu. Select &quot;Add to collection&quot; to copy that lineup into one of your own collections. As a <Link href="/dashboard/premium" className="text-[#f0a500] hover:underline">Premium</Link> user, this works with any lineup from pro or community collections too.</>,
       },
       {
         q: 'Can I manage collections from the website?',
-        a: `Yes. The web dashboard at the Maps page lets you browse all lineups on the interactive radar map, add/remove lineups to collections, and switch which collection to practice. Changes sync automatically with your practice server.`,
+        a: <>Yes. The <Link href="/dashboard/maps" className="text-[#22c55e] hover:underline">Nades page</Link> lets you browse all lineups on the interactive radar map, add/remove lineups to collections, and switch which collection to practice. Changes sync automatically with your practice server.</>,
+      },
+      {
+        q: 'Where do pro lineups come from?',
+        a: `Pro lineups are curated from professional matches and demos, enhanced with AI-assisted analysis. They are organized into team & event collections so you can study specific pro strategies.`,
+      },
+      {
+        q: 'Can I share my collections?',
+        a: <>Yes. Publish a collection to the community and other users can subscribe to it, browse your lineups, and practice them on their own server. Visit the <Link href="/dashboard/community" className="text-[#22c55e] hover:underline">Community page</Link> to explore what others have shared.</>,
       },
     ],
   },
@@ -352,6 +443,27 @@ const GUIDE_SECTIONS = [
 /* ─── component ─── */
 export default function GuidePage() {
   const [openItems, setOpenItems] = useState<Set<string>>(new Set());
+  const [exampleIdx, setExampleIdx] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const nextExample = useCallback(() => {
+    setExampleIdx((prev) => (prev + 1) % EXAMPLE_WORKFLOWS.length);
+  }, []);
+
+  // Auto-rotate examples
+  useEffect(() => {
+    if (paused) return;
+    timerRef.current = setInterval(nextExample, ROTATE_INTERVAL);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [paused, nextExample]);
+
+  const goToExample = (i: number) => {
+    setExampleIdx(i);
+    // Reset timer on manual navigation
+    if (timerRef.current) clearInterval(timerRef.current);
+    if (!paused) timerRef.current = setInterval(nextExample, ROTATE_INTERVAL);
+  };
 
   const toggleItem = (key: string) => {
     setOpenItems((prev) => {
@@ -491,65 +603,236 @@ export default function GuidePage() {
       {/* ── Right: Optimal Workflow (sticky, desktop only) ── */}
       <motion.aside
         variants={fadeUp}
-        custom={1}
-        className="hidden 2xl:block w-72 shrink-0"
+        custom={0}
+        className="hidden 2xl:block w-[340px] shrink-0"
       >
-        <div className="sticky top-6">
+        <div className="sticky top-6 space-y-5">
+          {/* ─ Workflow Timeline Card ─ */}
           <div className="rounded-2xl border border-[#2a2a3e]/50 bg-[#12121a] overflow-hidden">
             {/* Header glow line */}
             <div className="h-[2px] bg-gradient-to-r from-[#22c55e] via-[#3b82f6] via-[60%] to-[#a855f7]" />
 
-            <div className="px-5 pt-5 pb-2">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#6b6b8a]/50 mb-1">
+            {/* Header */}
+            <div className="px-6 pt-6 pb-1">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#6b6b8a]/50 mb-1.5">
                 Optimal Workflow
               </p>
-              <h3 className="text-sm font-bold text-[#e8e8e8]">
+              <h3 className="text-base font-bold text-[#e8e8e8]">
                 From zero to pro
               </h3>
+              <p className="text-[11px] text-[#6b6b8a] mt-1">
+                The recommended path to master your utility game
+              </p>
             </div>
 
             {/* Timeline */}
-            <div className="px-5 py-4">
+            <div className="px-6 py-5">
               {WORKFLOW_STEPS.map((step, i) => {
                 const StepIcon = step.icon;
                 const isLast = i === WORKFLOW_STEPS.length - 1;
                 return (
-                  <div key={step.title} className="relative flex gap-3.5">
-                    {/* Vertical line + dot */}
+                  <div key={step.title} className="relative flex gap-4">
+                    {/* Vertical line + animated icon */}
                     <div className="flex flex-col items-center">
-                      <div className={`relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${step.accent} ring-1 ${step.ring}`}>
-                        <StepIcon className={`h-4 w-4 ${step.text}`} />
-                      </div>
+                      <motion.div
+                        animate={iconFloat(i)}
+                        className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border"
+                        style={{
+                          background: `linear-gradient(135deg, ${step.color}20 0%, ${step.color}08 100%)`,
+                          borderColor: `${step.color}25`,
+                          boxShadow: `0 0 12px ${step.color}10`,
+                        }}
+                      >
+                        <StepIcon className="h-[18px] w-[18px]" style={{ color: step.color }} />
+                      </motion.div>
                       {!isLast && (
-                        <div className="relative flex flex-col items-center flex-1 min-h-[1.75rem]">
-                          {/* Connecting line */}
-                          <div className="w-px flex-1 bg-gradient-to-b from-[#2a2a3e]/60 to-[#2a2a3e]/20" />
-                          {/* Arrow */}
-                          <ArrowDown className="h-3 w-3 text-[#2a2a3e]/40 -mt-0.5 -mb-0.5 shrink-0" />
+                        <div className="relative flex flex-col items-center flex-1 min-h-[1.25rem]">
+                          <div
+                            className="w-px flex-1"
+                            style={{
+                              background: `linear-gradient(to bottom, ${step.color}30, ${WORKFLOW_STEPS[i + 1].color}15)`,
+                            }}
+                          />
+                          <ArrowDown
+                            className="h-3 w-3 -mt-0.5 -mb-0.5 shrink-0"
+                            style={{ color: `${WORKFLOW_STEPS[i + 1].color}40` }}
+                          />
                         </div>
                       )}
                     </div>
 
                     {/* Content */}
-                    <div className={`pt-1.5 ${isLast ? 'pb-0' : 'pb-5'}`}>
-                      <p className={`text-xs font-bold ${step.text}`}>
+                    <div className={`pt-1 min-w-0 flex-1 ${isLast ? 'pb-0' : 'pb-4'}`}>
+                      <p className="text-[13px] font-bold" style={{ color: step.color }}>
                         {step.title}
                       </p>
-                      <p className="text-[11px] text-[#6b6b8a] leading-snug mt-0.5">
+                      <p className="text-[11px] text-[#8b8ba0] leading-snug mt-0.5">
                         {step.desc}
                       </p>
+                      {/* Example tag */}
+                      <div className="mt-1.5 inline-flex items-center gap-1.5 rounded-md bg-[#0a0a12] border border-[#2a2a3e]/30 px-2 py-1">
+                        <div className="h-1 w-1 rounded-full shrink-0" style={{ backgroundColor: `${step.color}60` }} />
+                        <span className="text-[10px] text-[#6b6b8a] truncate">{step.example}</span>
+                      </div>
                     </div>
                   </div>
                 );
               })}
             </div>
 
-            {/* Footer accent */}
-            <div className="mx-5 mb-5 mt-1 rounded-lg bg-gradient-to-r from-[#a855f7]/5 via-[#22c55e]/5 to-[#f0a500]/5 border border-[#2a2a3e]/20 px-3 py-2.5">
-              <p className="text-[10px] text-[#6b6b8a] leading-relaxed text-center">
-                Repeat the cycle to keep improving your utility game
+            {/* Repeat hint */}
+            <div className="mx-6 mb-6 rounded-lg bg-gradient-to-r from-[#a855f7]/5 via-[#22c55e]/5 to-[#f0a500]/5 border border-[#2a2a3e]/20 px-3 py-2.5 text-center">
+              <p className="text-[10px] text-[#6b6b8a]">
+                Repeat the cycle to keep improving
               </p>
             </div>
+          </div>
+
+          {/* ─ Rotating Example Workflows ─ */}
+          <div
+            className="rounded-2xl border border-[#2a2a3e]/50 bg-[#12121a] overflow-hidden"
+            onMouseEnter={() => setPaused(true)}
+            onMouseLeave={() => setPaused(false)}
+          >
+            {/* Accent line that matches current example */}
+            <motion.div
+              className="h-[2px]"
+              animate={{
+                background: `linear-gradient(to right, ${EXAMPLE_WORKFLOWS[exampleIdx].accent}, ${EXAMPLE_WORKFLOWS[exampleIdx].accent}50, transparent)`,
+              }}
+              transition={{ duration: 0.5 }}
+            />
+
+            {/* Header with dot indicators */}
+            <div className="px-6 pt-5 pb-2">
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-2">
+                  <Flame className="h-3.5 w-3.5 text-[#f0a500]" />
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#f0a500]/60">
+                    Example Workflows
+                  </p>
+                </div>
+                {/* Dot navigation */}
+                <div className="flex items-center gap-1.5">
+                  {EXAMPLE_WORKFLOWS.map((w, i) => (
+                    <button
+                      key={i}
+                      onClick={() => goToExample(i)}
+                      className="relative p-0.5"
+                    >
+                      <div
+                        className={`h-1.5 rounded-full transition-all duration-300 ${
+                          i === exampleIdx ? 'w-4' : 'w-1.5'
+                        }`}
+                        style={{
+                          backgroundColor: i === exampleIdx ? EXAMPLE_WORKFLOWS[i].accent : '#2a2a3e',
+                        }}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Animated title */}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={exampleIdx}
+                  initial={{ opacity: 0, x: 12 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -12 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <h3 className="text-sm font-bold text-[#e8e8e8]">
+                    {EXAMPLE_WORKFLOWS[exampleIdx].title}
+                  </h3>
+                  <p className="text-[11px] text-[#6b6b8a] mt-0.5">
+                    {EXAMPLE_WORKFLOWS[exampleIdx].subtitle}
+                  </p>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            {/* Auto-rotate progress bar */}
+            <div className="mx-6 h-px bg-[#2a2a3e]/30 overflow-hidden">
+              <motion.div
+                key={`progress-${exampleIdx}-${paused}`}
+                className="h-full"
+                style={{ backgroundColor: `${EXAMPLE_WORKFLOWS[exampleIdx].accent}40` }}
+                initial={{ width: '0%' }}
+                animate={{ width: paused ? undefined : '100%' }}
+                transition={paused ? {} : { duration: ROTATE_INTERVAL / 1000, ease: 'linear' }}
+              />
+            </div>
+
+            {/* Steps */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={exampleIdx}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.35, ease: 'easeOut' }}
+                className="px-6 py-4 space-y-3"
+              >
+                {EXAMPLE_WORKFLOWS[exampleIdx].steps.map((item, i) => {
+                  const ItemIcon = item.icon;
+                  return (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, x: 10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.05, duration: 0.3 }}
+                      className="flex gap-3 items-start"
+                    >
+                      <div
+                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border mt-0.5"
+                        style={{
+                          background: `linear-gradient(135deg, ${item.color}15 0%, ${item.color}05 100%)`,
+                          borderColor: `${item.color}20`,
+                        }}
+                      >
+                        <ItemIcon className="h-3.5 w-3.5" style={{ color: item.color }} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: item.color }}>
+                          {item.label}
+                        </span>
+                        <p className="text-[11px] text-[#8b8ba0] leading-snug">
+                          {item.text}
+                        </p>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </motion.div>
+            </AnimatePresence>
+
+            {/* Result banner */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={`result-${exampleIdx}`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3, delay: 0.15 }}
+                className="mx-6 mb-6 rounded-lg border overflow-hidden"
+                style={{ borderColor: `${EXAMPLE_WORKFLOWS[exampleIdx].accent}20` }}
+              >
+                <div
+                  className="px-4 py-3"
+                  style={{
+                    background: `linear-gradient(to right, ${EXAMPLE_WORKFLOWS[exampleIdx].accent}12, ${EXAMPLE_WORKFLOWS[exampleIdx].accent}05)`,
+                  }}
+                >
+                  <p className="text-[11px] font-semibold mb-0.5" style={{ color: EXAMPLE_WORKFLOWS[exampleIdx].accent }}>
+                    Result
+                  </p>
+                  <p className="text-[11px] text-[#8b8ba0] leading-snug">
+                    {EXAMPLE_WORKFLOWS[exampleIdx].result}
+                  </p>
+                </div>
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
       </motion.aside>

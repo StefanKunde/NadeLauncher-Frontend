@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Crown, Check, ChevronDown, Sparkles, Clock, Loader2, HelpCircle, Gamepad2, Crosshair, CreditCard } from 'lucide-react';
+import { Crown, Check, ChevronDown, Sparkles, Clock, Loader2, HelpCircle } from 'lucide-react';
 import { useAuthStore } from '@/store/auth-store';
 import { authApi, stripeApi } from '@/lib/api';
 import toast from 'react-hot-toast';
@@ -22,76 +22,22 @@ const COMPARISON_ROWS = [
   { feature: 'Pro team & event collections', free: false, pro: true },
 ];
 
-const FAQ_SECTIONS = [
+const FAQ_ITEMS = [
   {
-    title: 'Getting Started',
-    icon: Gamepad2,
-    items: [
-      {
-        q: 'How does the practice server work?',
-        a: 'NadePro spins up a private CS2 server with our custom plugin. Select a collection, hit Practice, and the server loads the map with in-game markers, teleport, and ghost guidance that walks you through each throw step by step.',
-      },
-      {
-        q: 'Do I need to install anything?',
-        a: 'No. Just connect to the practice server via the CS2 console. There are no client-side mods or plugins required.',
-      },
-      {
-        q: 'What maps are supported?',
-        a: 'All current Active Duty maps are always supported. When the map pool changes, NadePro updates accordingly.',
-      },
-    ],
+    q: 'Is there a practice time limit?',
+    a: 'Free users get 30 minutes of practice time per week. Pro users get unlimited practice time.',
   },
   {
-    title: 'Practice & Lineups',
-    icon: Crosshair,
-    items: [
-      {
-        q: 'What are ghost replays?',
-        a: 'When a lineup is saved, the full player movement is recorded. During practice, a ghost model replays the exact movement like a real player — so you can see the positioning, crosshair placement, and timing to truly understand each lineup.',
-      },
-      {
-        q: 'What throw types are supported?',
-        a: 'Regular, jump throw, run throw, W-jump throw, duck throw, and all throw strength variations. The server plugin automatically detects the throw type — no manual setup needed.',
-      },
-      {
-        q: 'Can I create my own lineups?',
-        a: 'Yes! Use !save in-game to set up a new lineup from scratch, or use !savelast to save the nade you just threw. Manage your collections from the web dashboard or directly in-game.',
-      },
-      {
-        q: 'Can I add nades from pro or community collections to my own?',
-        a: 'Yes. As a Premium user you can add any lineup to your own collection — either in-game via the nade menu, or on the website from any pro or community collection page.',
-      },
-      {
-        q: 'Where do pro lineups come from?',
-        a: 'Pro lineups are curated from professional matches and demos, enhanced with AI-assisted analysis.',
-      },
-      {
-        q: 'Can I share my collections?',
-        a: 'Yes. Publish a collection to the community and other users can subscribe to it, browse your lineups, and practice them on their own server.',
-      },
-    ],
+    q: 'What payment methods do you accept?',
+    a: 'We accept all major credit and debit cards through Stripe, including Visa, Mastercard, and American Express.',
   },
   {
-    title: 'Premium & Billing',
-    icon: CreditCard,
-    items: [
-      {
-        q: 'Is there a practice time limit?',
-        a: 'Free users get 30 minutes of practice time per week. Pro users get unlimited practice time.',
-      },
-      {
-        q: 'What payment methods do you accept?',
-        a: 'We accept all major credit and debit cards through Stripe, including Visa, Mastercard, and American Express.',
-      },
-      {
-        q: 'Can I cancel anytime?',
-        a: 'Yes, cancel anytime from the subscription portal. You keep premium access until the end of your billing period.',
-      },
-      {
-        q: 'Do I keep my lineups if I downgrade?',
-        a: 'Your lineups are kept, but collections beyond the free limit are not accessible until you upgrade again.',
-      },
-    ],
+    q: 'Can I cancel anytime?',
+    a: 'Yes, cancel anytime from the subscription portal. You keep premium access until the end of your billing period.',
+  },
+  {
+    q: 'Do I keep my lineups if I downgrade?',
+    a: 'Your lineups are kept, but collections beyond the free limit are not accessible until you upgrade again.',
   },
 ];
 
@@ -369,64 +315,59 @@ function PremiumPageInner() {
             <HelpCircle className="h-4.5 w-4.5 text-[#6b6b8a]" />
           </div>
           <div>
-            <h2 className="text-xl font-semibold text-[#e8e8e8]">Frequently Asked Questions</h2>
-            <p className="text-sm text-[#6b6b8a]">Everything you need to know about NadePro</p>
+            <h2 className="text-xl font-semibold text-[#e8e8e8]">Premium & Billing</h2>
+            <p className="text-sm text-[#6b6b8a]">Questions about your subscription</p>
           </div>
         </div>
 
-        <div className="space-y-8">
-          {FAQ_SECTIONS.map((section) => (
-            <div key={section.title}>
-              <div className="flex items-center gap-2 mb-3">
-                <section.icon className="h-3.5 w-3.5 text-[#f0a500]/60" />
-                <span className="text-xs font-semibold uppercase tracking-wider text-[#f0a500]/60">{section.title}</span>
+        <div className="rounded-xl border border-[#2a2a3e]/50 bg-[#12121a] overflow-hidden divide-y divide-[#2a2a3e]/30">
+          {FAQ_ITEMS.map((item, i) => {
+            const isOpen = openFaq === `faq-${i}`;
+            return (
+              <div key={i}>
+                <button
+                  onClick={() => setOpenFaq(isOpen ? null : `faq-${i}`)}
+                  className={`flex w-full items-center gap-3 px-5 py-4 text-left transition-all duration-200 ${
+                    isOpen ? 'bg-[#1a1a2e]/60' : 'hover:bg-[#1a1a2e]/30'
+                  }`}
+                >
+                  <div
+                    className={`h-1.5 w-1.5 rounded-full shrink-0 transition-colors duration-200 ${
+                      isOpen ? 'bg-[#f0a500]' : 'bg-[#2a2a3e]'
+                    }`}
+                  />
+                  <span className={`flex-1 text-sm font-medium transition-colors duration-200 ${
+                    isOpen ? 'text-[#e8e8e8]' : 'text-[#b8b8cc]'
+                  }`}>
+                    {item.q}
+                  </span>
+                  <motion.div
+                    animate={{ rotate: isOpen ? 180 : 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <ChevronDown className={`h-4 w-4 shrink-0 transition-colors duration-200 ${
+                      isOpen ? 'text-[#f0a500]' : 'text-[#6b6b8a]/50'
+                    }`} />
+                  </motion.div>
+                </button>
+                <motion.div
+                  initial={false}
+                  animate={{ height: isOpen ? 'auto' : 0, opacity: isOpen ? 1 : 0 }}
+                  transition={{ duration: 0.25, ease: 'easeInOut' }}
+                  className="overflow-hidden"
+                >
+                  <p className="px-5 pl-[2.35rem] pt-2.5 pb-4 text-sm text-[#6b6b8a] leading-relaxed">{item.a}</p>
+                </motion.div>
               </div>
-              <div className="rounded-xl border border-[#2a2a3e]/50 bg-[#12121a] overflow-hidden divide-y divide-[#2a2a3e]/30">
-                {section.items.map((item, i) => {
-                  const globalKey = `${section.title}-${i}`;
-                  const isOpen = openFaq === globalKey;
-                  return (
-                    <div key={i}>
-                      <button
-                        onClick={() => setOpenFaq(isOpen ? null : globalKey)}
-                        className={`flex w-full items-center gap-3 px-5 py-4 text-left transition-all duration-200 ${
-                          isOpen ? 'bg-[#1a1a2e]/60' : 'hover:bg-[#1a1a2e]/30'
-                        }`}
-                      >
-                        <div
-                          className={`h-1.5 w-1.5 rounded-full shrink-0 transition-colors duration-200 ${
-                            isOpen ? 'bg-[#f0a500]' : 'bg-[#2a2a3e]'
-                          }`}
-                        />
-                        <span className={`flex-1 text-sm font-medium transition-colors duration-200 ${
-                          isOpen ? 'text-[#e8e8e8]' : 'text-[#b8b8cc]'
-                        }`}>
-                          {item.q}
-                        </span>
-                        <motion.div
-                          animate={{ rotate: isOpen ? 180 : 0 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          <ChevronDown className={`h-4 w-4 shrink-0 transition-colors duration-200 ${
-                            isOpen ? 'text-[#f0a500]' : 'text-[#6b6b8a]/50'
-                          }`} />
-                        </motion.div>
-                      </button>
-                      <motion.div
-                        initial={false}
-                        animate={{ height: isOpen ? 'auto' : 0, opacity: isOpen ? 1 : 0 }}
-                        transition={{ duration: 0.25, ease: 'easeInOut' }}
-                        className="overflow-hidden"
-                      >
-                        <p className="px-5 pl-[2.35rem] pt-2.5 pb-4 text-sm text-[#6b6b8a] leading-relaxed">{item.a}</p>
-                      </motion.div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
+
+        {/* Link to guide */}
+        <p className="mt-4 text-sm text-[#6b6b8a]">
+          Looking for help with the in-game plugin, commands, or collections?{' '}
+          <a href="/dashboard/guide" className="text-[#f0a500] hover:underline">Check the In-Game Guide</a>.
+        </p>
       </motion.div>
     </motion.div>
   );
