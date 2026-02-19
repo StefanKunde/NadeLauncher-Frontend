@@ -20,6 +20,7 @@ const COMPARISON_ROWS = [
   { feature: 'Curated pro lineups', free: false, pro: true },
   { feature: 'Build custom collections from pro lineups', free: false, pro: true },
   { feature: 'Pro team & event collections', free: false, pro: true },
+  { feature: 'Continuously updated with new events & matches', free: false, pro: true },
 ];
 
 const FAQ_ITEMS = [
@@ -57,6 +58,7 @@ const PRO_FEATURES = [
   'Unlimited practice time',
   'Curated pro lineups & collections',
   'Pro team & event collections',
+  'Always updated with the latest events',
 ];
 
 const fadeUp = {

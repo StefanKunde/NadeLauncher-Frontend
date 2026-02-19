@@ -134,6 +134,7 @@ const PRO_FEATURES = [
   'Curated pro lineups from pro matches',
   'Build custom collections from pro lineups',
   'Pro team & event collections',
+  'Always updated with the latest events',
 ];
 
 const PRO_TEAMS = [
@@ -156,12 +157,12 @@ const PRO_HIGHLIGHTS = [
   {
     icon: Users,
     title: 'Organized by Team',
-    desc: 'Browse collections by team and event — practice the exact executes your favorite team runs',
+    desc: 'Browse collections by team, event, and match — continuously updated so you always have the current meta',
   },
   {
     icon: Crosshair,
-    title: 'AI-Assisted Analysis',
-    desc: 'Lineups are enhanced with positional analysis so you understand why pros throw from each spot',
+    title: 'AI-Filtered Quality',
+    desc: 'AI helps filter out on-the-fly throws so you only get the intentional, practiced lineups worth learning',
   },
   {
     icon: Star,
@@ -171,7 +172,7 @@ const PRO_HIGHLIGHTS = [
 ];
 
 const STATS = [
-  { value: '500+', label: 'Lineups' },
+  { value: '1000+', label: 'Lineups' },
   { value: '7', label: 'Maps' },
   { value: 'Active', label: 'Community' },
   { value: 'Free', label: 'To Use' },
@@ -379,9 +380,9 @@ export default function HomePage() {
               Start Practicing &mdash; It&apos;s Free
               <ArrowRight className="w-5 h-5" />
             </a>
-            <a href="#features" className="btn-secondary text-base px-8 py-3.5 font-bold">
-              <Play className="w-5 h-5" />
-              Watch Demo
+            <a href="#pro-lineups" className="btn-secondary text-base px-8 py-3.5 font-bold">
+              <Crown className="w-5 h-5" />
+              Explore Pro Lineups
             </a>
           </motion.div>
 
@@ -609,7 +610,7 @@ export default function HomePage() {
       {/* ================================================================
           6. PRO LINEUPS SHOWCASE
           ================================================================ */}
-      <section className="relative py-28 md:py-32 bg-[#0c0c14] overflow-hidden">
+      <section id="pro-lineups" className="relative py-28 md:py-32 bg-[#0c0c14] overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-px bg-gradient-to-r from-transparent via-[#2a2a3e] to-transparent" />
 
         {/* Ambient gold glow */}
@@ -639,7 +640,7 @@ export default function HomePage() {
             </h2>
             <p className="text-[#6b6b8a] text-lg max-w-2xl mx-auto">
               Practice the exact same utility that top professional teams use on stage.
-              Curated from real Tier-1 matches and organized by team, event, and strategy.
+              Curated from real Tier-1 matches and organized by team, event, and match.
             </p>
           </motion.div>
 
