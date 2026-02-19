@@ -116,7 +116,7 @@ export default function TermsOfServicePage() {
 
           {/* 5 - Withdrawal */}
           <section>
-            <h2>5. Right of Withdrawal (Widerrufsrecht)</h2>
+            <h2>5. Right of Withdrawal</h2>
             <p>
               If you are a consumer in the European Union, you have the right to withdraw from this
               contract within 14 days without giving any reason.
@@ -243,7 +243,7 @@ export default function TermsOfServicePage() {
             <h2>11. Warranty and Digital Product Conformity</h2>
             <p>
               We provide the Service in accordance with the statutory requirements for digital products
-              under Sections 327 et seq. BGB. The Service will conform to the agreed-upon and objectively
+              under the German Civil Code. The Service will conform to the agreed-upon and objectively
               expected quality standards.
             </p>
             <p>
@@ -259,13 +259,12 @@ export default function TermsOfServicePage() {
             <ul>
               <li>
                 <strong>Unlimited liability:</strong> We are fully liable for damages caused by intent
-                (Vorsatz) or gross negligence (grobe Fahrlässigkeit), for injury to life, body, or health,
-                and for claims under mandatory statutory provisions including the German Product Liability Act
-                (Produkthaftungsgesetz).
+                or gross negligence, for injury to life, body, or health,
+                and for claims under mandatory statutory provisions including the German Product Liability Act.
               </li>
               <li>
                 <strong>Limited liability:</strong> In cases of slight negligence in the breach of material
-                contractual obligations (Kardinalpflichten), our liability is limited to the foreseeable,
+                contractual obligations, our liability is limited to the foreseeable,
                 contract-typical damages. Material contractual obligations are those whose fulfilment is
                 essential for the proper performance of the contract.
               </li>
@@ -295,8 +294,8 @@ export default function TermsOfServicePage() {
             <h2>14. Dispute Resolution</h2>
             <p>
               We are neither obligated nor willing to participate in dispute resolution proceedings
-              before a consumer arbitration body (Verbraucherschlichtungsstelle) pursuant to the
-              German Consumer Dispute Resolution Act (VSBG).
+              before a consumer arbitration body pursuant to the
+              German Consumer Dispute Resolution Act.
             </p>
           </section>
 
