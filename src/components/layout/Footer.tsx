@@ -22,9 +22,9 @@ export function Footer() {
           <div>
             <h4 className="text-sm font-semibold text-[#e8e8e8] uppercase tracking-wider mb-4">Product</h4>
             <ul className="space-y-2">
-              <li><Link href="#features" className="text-[#6b6b8a] hover:text-[#f0a500] text-sm transition-colors">Features</Link></li>
-              <li><Link href="#maps" className="text-[#6b6b8a] hover:text-[#f0a500] text-sm transition-colors">Maps</Link></li>
-              <li><Link href="#pricing" className="text-[#6b6b8a] hover:text-[#f0a500] text-sm transition-colors">Pricing</Link></li>
+              <li><Link href="/#features" className="text-[#6b6b8a] hover:text-[#f0a500] text-sm transition-colors">Features</Link></li>
+              <li><Link href="/#maps" className="text-[#6b6b8a] hover:text-[#f0a500] text-sm transition-colors">Maps</Link></li>
+              <li><Link href="/#pricing" className="text-[#6b6b8a] hover:text-[#f0a500] text-sm transition-colors">Pricing</Link></li>
             </ul>
           </div>
 
@@ -34,7 +34,7 @@ export function Footer() {
             <ul className="space-y-2">
               <li><Link href="/dashboard/guide" className="text-[#6b6b8a] hover:text-[#f0a500] text-sm transition-colors">Guide</Link></li>
               <li><Link href="/dashboard/community" className="text-[#6b6b8a] hover:text-[#f0a500] text-sm transition-colors">Community</Link></li>
-              <li><Link href="#pro-lineups" className="text-[#6b6b8a] hover:text-[#f0a500] text-sm transition-colors">Pro Lineups</Link></li>
+              <li><Link href="/#pro-lineups" className="text-[#6b6b8a] hover:text-[#f0a500] text-sm transition-colors">Pro Lineups</Link></li>
             </ul>
           </div>
 
