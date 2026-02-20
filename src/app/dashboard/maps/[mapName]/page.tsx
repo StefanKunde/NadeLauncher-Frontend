@@ -317,7 +317,7 @@ export default function MapDetailPage() {
     return result;
   }, [sourceFilter, myNades, allCollections, userCollections, lineupsByCollection]);
 
-  const PRO_THRESHOLDS: Record<number, number> = { 1: 3, 2: 6, 3: 12, 4: 20, 5: 20 };
+  const PRO_THRESHOLDS: Record<number, number> = { 1: 3, 2: 6, 3: 12, 4: 20, 5: 25 };
   const MATCH_THRESHOLDS: Record<number, number> = { 1: 1, 2: 2, 3: 3, 4: 4, 5: 5 };
 
   const filteredLineups = useMemo(() => {
@@ -833,7 +833,7 @@ export default function MapDetailPage() {
 
               const PRO_LABELS: Record<number, string> = {
                 1: 'Thrown 3+ times', 2: 'Thrown 6+ times',
-                3: 'Thrown 12+ times', 4: 'Thrown 20+ times', 5: 'Thrown 20+ times',
+                3: 'Thrown 12+ times', 4: 'Thrown 20+ times', 5: 'Thrown 25+ times',
               };
               const MATCH_LABELS: Record<number, string> = {
                 1: 'Show all nades', 2: 'Thrown 2+ times',
@@ -1416,12 +1416,41 @@ export default function MapDetailPage() {
                 </div>
                 <h3 className="text-base font-semibold text-[#e8e8e8]">Start Practice Server</h3>
               </div>
-              <p className="mb-5 text-sm text-[#6b6b8a]">
+              <p className="mb-3 text-sm text-[#6b6b8a]">
                 Start a practice server on <span className="text-[#e8e8e8] font-medium">{map?.displayName}</span>
                 {currentCollectionName && (
                   <> with collection <span className="text-[#f0a500] font-medium">"{currentCollectionName}"</span></>
                 )}?
               </p>
+              {activeProCategory && ['meta', 'meta_all', 'team', 'match', 'event'].includes(activeProCategory) && (() => {
+                const labels = isMatchOrEvent
+                  ? { 1: 'Show all nades', 2: 'Thrown 2+ times', 3: 'Thrown 3+ times', 4: 'Thrown 4+ times', 5: 'Thrown 5+ times' } as Record<number, string>
+                  : { 1: 'Thrown 3+ times', 2: 'Thrown 6+ times', 3: 'Thrown 12+ times', 4: 'Thrown 20+ times', 5: 'Thrown 20+ times' } as Record<number, string>;
+                const thresholds = isMatchOrEvent ? MATCH_THRESHOLDS : PRO_THRESHOLDS;
+                const threshold = thresholds[activeNadeDetail] ?? 1;
+                const stepColors = ['#22c55e', '#6dd44a', '#b8c436', '#d4a82a', '#f0a500'];
+                const color = stepColors[activeNadeDetail - 1] ?? '#f0a500';
+                return (
+                  <div className="mb-5 rounded-lg bg-[#0a0a12] border border-[#2a2a3e]/40 px-3 py-2.5 flex items-center gap-3">
+                    <div className="flex gap-1">
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <div
+                          key={s}
+                          className="rounded-full"
+                          style={{
+                            width: 6, height: 6,
+                            backgroundColor: s <= activeNadeDetail ? stepColors[s - 1] : '#2a2a3e',
+                          }}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-xs" style={{ color }}>{labels[activeNadeDetail]}</span>
+                    <span className="text-[10px] text-[#6b6b8a] ml-auto tabular-nums">
+                      {filteredLineups.length} nades
+                    </span>
+                  </div>
+                );
+              })()}
               <div className="flex gap-2">
                 <button
                   onClick={() => setShowPracticeConfirm(false)}

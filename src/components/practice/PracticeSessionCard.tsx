@@ -157,6 +157,40 @@ function CommandsList() {
   );
 }
 
+const PRO_DETAIL_LABELS: Record<number, string> = {
+  1: 'Thrown 3+ times', 2: 'Thrown 6+ times',
+  3: 'Thrown 12+ times', 4: 'Thrown 20+ times', 5: 'Thrown 25+ times',
+};
+const MATCH_DETAIL_LABELS: Record<number, string> = {
+  1: 'Show all nades', 2: 'Thrown 2+ times',
+  3: 'Thrown 3+ times', 4: 'Thrown 4+ times', 5: 'Thrown 5+ times',
+};
+const DETAIL_STEP_COLORS = ['#22c55e', '#6dd44a', '#b8c436', '#d4a82a', '#f0a500'];
+
+function DetailIndicator({ collection, proNadeDetail }: { collection?: LineupCollection | null; proNadeDetail: number }) {
+  if (!collection || !collection.autoManaged || collection.ownerId) return null;
+  const cat = collection.proCategory ?? '';
+  if (!['meta', 'meta_all', 'team', 'match', 'event'].includes(cat)) return null;
+  const isMatch = cat === 'match' || cat === 'event';
+  const labels = isMatch ? MATCH_DETAIL_LABELS : PRO_DETAIL_LABELS;
+  const step = Math.max(1, Math.min(5, proNadeDetail));
+  const color = DETAIL_STEP_COLORS[step - 1];
+  return (
+    <div className="flex items-center gap-2 mt-1">
+      <div className="flex gap-0.5">
+        {[1, 2, 3, 4, 5].map((s) => (
+          <div
+            key={s}
+            className="rounded-full"
+            style={{ width: 5, height: 5, backgroundColor: s <= step ? DETAIL_STEP_COLORS[s - 1] : '#2a2a3e' }}
+          />
+        ))}
+      </div>
+      <span className="text-[10px]" style={{ color }}>{labels[step]}</span>
+    </div>
+  );
+}
+
 export default function PracticeSessionCard() {
   const user = useAuthStore((s) => s.user);
   const [session, setSession] = useState<Session | null>(null);
@@ -720,6 +754,10 @@ export default function PracticeSessionCard() {
                 <><br />Collection: <span className="text-[#f0a500]">{session.practiceCollectionName}</span></>
               )}
             </p>
+            <DetailIndicator
+              collection={activeCollections.find((c) => c.id === session.practiceCollectionId)}
+              proNadeDetail={user?.proNadeDetail ?? 3}
+            />
           </div>
 
           <button
@@ -767,6 +805,10 @@ export default function PracticeSessionCard() {
                   <><br />Collection: <span className="text-[#f0a500]">{session.practiceCollectionName}</span></>
                 )}
               </p>
+              <DetailIndicator
+                collection={activeCollections.find((c) => c.id === session.practiceCollectionId)}
+                proNadeDetail={user?.proNadeDetail ?? 3}
+              />
             </div>
 
             <button
@@ -1251,6 +1293,10 @@ export default function PracticeSessionCard() {
                     </select>
                     <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6b6b8a] pointer-events-none" />
                   </div>
+                  <DetailIndicator
+                    collection={collections.find((c) => c.id === selectedCollection)}
+                    proNadeDetail={user?.proNadeDetail ?? 3}
+                  />
                 </div>
               )}
 
