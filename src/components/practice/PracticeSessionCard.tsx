@@ -40,8 +40,19 @@ function groupCollections(collections: LineupCollection[], userId?: string) {
   return { pro, own, community };
 }
 
+function getProDisplayName(c: LineupCollection): string {
+  if (c.proCategory === 'meta_all') return 'Pro Nades (all)';
+  // Strip "Pro " prefix and map suffix for cleaner names
+  const base = c.name.replace(/\s+—\s+.*$/, '');
+  return base;
+}
+
 function CollectionOptgroups({ collections, userId }: { collections: LineupCollection[]; userId?: string }) {
   const { pro, own, community } = groupCollections(collections, userId);
+  // Sort pro: meta_all first, then alphabetical
+  const sortedPro = [...pro].sort((a, b) =>
+    a.proCategory === 'meta_all' ? -1 : b.proCategory === 'meta_all' ? 1 : a.name.localeCompare(b.name),
+  );
   return (
     <>
       {own.length > 0 && (
@@ -51,10 +62,10 @@ function CollectionOptgroups({ collections, userId }: { collections: LineupColle
           ))}
         </optgroup>
       )}
-      {pro.length > 0 && (
+      {sortedPro.length > 0 && (
         <optgroup label="Pro Collections">
-          {pro.map((c) => (
-            <option key={c.id} value={c.id}>{c.name} ({c.lineupCount})</option>
+          {sortedPro.map((c) => (
+            <option key={c.id} value={c.id}>{getProDisplayName(c)} ({c.lineupCount})</option>
           ))}
         </optgroup>
       )}
