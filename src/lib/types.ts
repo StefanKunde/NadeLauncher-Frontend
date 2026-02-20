@@ -6,6 +6,7 @@ export interface User {
   profileUrl?: string;
   isPremium: boolean;
   premiumExpiresAt?: string | null;
+  proNadeDetail?: number;
   createdAt: string;
 }
 
@@ -68,6 +69,7 @@ export interface Lineup {
   roundNumber?: number;
   isPistolRound?: boolean;
   proMatchId?: string;
+  occurrenceCount?: number;
   createdAt: string;
   updatedAt: string;
 }

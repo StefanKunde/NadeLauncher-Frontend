@@ -8,7 +8,7 @@ import { ArrowLeft, Play, ChevronDown, Loader2, Monitor, X, Trash2, Users, Share
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { MAPS, MAP_COLORS } from '@/lib/constants';
-import { collectionsApi, userCollectionsApi, sessionsApi, lineupsApi, communityApi } from '@/lib/api';
+import { collectionsApi, userCollectionsApi, sessionsApi, lineupsApi, communityApi, usersApi } from '@/lib/api';
 import { useAuthStore } from '@/store/auth-store';
 import type { Lineup, LineupCollection, Session } from '@/lib/types';
 import MapRadar from '@/components/ui/MapRadar';
@@ -79,6 +79,15 @@ export default function MapDetailPage() {
   // Publish state tracked inside edit modal (saved on "Save")
   const [editPublishState, setEditPublishState] = useState(false);
 
+  // Pro nade detail slider (occurrence filtering)
+  const [proNadeDetail, setProNadeDetail] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('proNadeDetail');
+      if (saved) return Number(saved);
+    }
+    return user?.proNadeDetail ?? 3;
+  });
+
   // Inline publish / unpublish
   const [publishing, setPublishing] = useState(false);
   const [publishingCollection, setPublishingCollection] = useState<LineupCollection | null>(null);
@@ -98,6 +107,12 @@ export default function MapDetailPage() {
       router.replace(`/dashboard/maps/${mapName}`, { scroll: false });
     }
   }, [allCollections, userCollections, mapName, router]);
+
+  const handleProNadeDetailChange = useCallback((level: number) => {
+    setProNadeDetail(level);
+    localStorage.setItem('proNadeDetail', String(level));
+    usersApi.updatePreferences({ proNadeDetail: level }).catch(() => {});
+  }, []);
 
   // ── Data Loading ───────────────────────────────────────────────
   const loadData = useCallback(async () => {
@@ -286,10 +301,24 @@ export default function MapDetailPage() {
     return result;
   }, [sourceFilter, myNades, allCollections, userCollections, lineupsByCollection]);
 
+  const STEP_THRESHOLDS: Record<number, number> = { 1: 1, 2: 3, 3: 6, 4: 12, 5: 20 };
+
   const filteredLineups = useMemo(() => {
-    if (grenadeFilter === 'all') return allLineups;
-    return allLineups.filter((l) => l.grenadeType === grenadeFilter);
-  }, [allLineups, grenadeFilter]);
+    let lineups = grenadeFilter === 'all' ? allLineups : allLineups.filter((l) => l.grenadeType === grenadeFilter);
+
+    // Apply occurrence filtering for pro collections (meta/meta_all/team)
+    if (sourceFilter.type === 'collection') {
+      const col = proCollections.find((c) => c.id === sourceFilter.collectionId);
+      if (col && ['meta', 'meta_all', 'team'].includes(col.proCategory ?? '')) {
+        const threshold = STEP_THRESHOLDS[proNadeDetail] ?? 6;
+        if (threshold > 1) {
+          lineups = lineups.filter((l) => (l.occurrenceCount ?? 1) >= threshold);
+        }
+      }
+    }
+
+    return lineups;
+  }, [allLineups, grenadeFilter, sourceFilter, proCollections, proNadeDetail]);
 
   const searchFilteredLineups = useMemo(() => {
     if (!nadeSearch.trim()) return filteredLineups;
@@ -678,6 +707,8 @@ export default function MapDetailPage() {
               onEditCollection={handleEditCollection}
               onDeleteCollection={handleDeleteCollection}
               creatingCollection={creatingCollection}
+              proNadeDetail={proNadeDetail}
+              onProNadeDetailChange={handleProNadeDetailChange}
             />
           </div>
 

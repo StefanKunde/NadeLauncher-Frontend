@@ -183,6 +183,8 @@ export const referralsApi = {
 // Account
 export const usersApi = {
   deleteAccount: () => api.delete('/api/users/me'),
+  updatePreferences: (prefs: { proNadeDetail?: number }) =>
+    api.patch('/api/users/me/preferences', prefs),
 };
 
 // Stripe

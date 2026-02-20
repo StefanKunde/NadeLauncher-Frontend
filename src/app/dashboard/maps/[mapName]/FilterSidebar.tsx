@@ -29,6 +29,8 @@ interface FilterSidebarProps {
   onEditCollection: (c: LineupCollection) => void;
   onDeleteCollection: (c: LineupCollection) => void;
   creatingCollection: boolean;
+  proNadeDetail: number;
+  onProNadeDetailChange: (level: number) => void;
 }
 
 const MAP_SHORT: Record<string, string> = {
@@ -64,6 +66,8 @@ export default function FilterSidebar({
   onEditCollection,
   onDeleteCollection,
   creatingCollection,
+  proNadeDetail,
+  onProNadeDetailChange,
 }: FilterSidebarProps) {
   const user = useAuthStore((s) => s.user);
   const isPremium = user?.isPremium ?? false;
@@ -115,6 +119,11 @@ export default function FilterSidebar({
   const matchCollections = proCollections
     .filter((c) => c.proCategory === 'match')
     .sort((a, b) => (b.timeWindow ?? '').localeCompare(a.timeWindow ?? ''));
+
+  // Show occurrence slider for meta/meta_all/team pro collections
+  const showOccurrenceSlider = sourceFilter.type === 'collection' && proCollections.some(
+    (c) => c.id === sourceFilter.collectionId && ['meta', 'meta_all', 'team'].includes(c.proCategory ?? ''),
+  );
 
   const q = search.toLowerCase().trim();
   const filteredMeta = q ? metaCollections.filter((c) => getProLabel(c).toLowerCase().includes(q)) : metaCollections;
@@ -428,6 +437,24 @@ export default function FilterSidebar({
               {proExpanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
               Pro Collections
             </button>
+            {showOccurrenceSlider && proExpanded && (
+              <div className="mb-2 px-1">
+                <div className="flex items-center justify-between text-[10px] text-[#6b6b8a] mb-1">
+                  <span>All</span>
+                  <span className="text-[#8b8ba0]">Detail Level</span>
+                  <span>Popular</span>
+                </div>
+                <input
+                  type="range"
+                  min={1}
+                  max={5}
+                  step={1}
+                  value={proNadeDetail}
+                  onChange={(e) => onProNadeDetailChange(Number(e.target.value))}
+                  className="w-full h-1 rounded-full appearance-none cursor-pointer bg-[#2a2a3e] accent-[#f0a500] [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#f0a500] [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-[#f0a500] [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:cursor-pointer"
+                />
+              </div>
+            )}
             <AnimatePresence>
               {proExpanded && (
                 <motion.div
