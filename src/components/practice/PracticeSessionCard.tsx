@@ -176,7 +176,8 @@ function DetailIndicator({ collection, proNadeDetail }: { collection?: LineupCol
   const step = Math.max(1, Math.min(5, proNadeDetail));
   const color = DETAIL_STEP_COLORS[step - 1];
   return (
-    <div className="flex items-center gap-2 mt-1">
+    <div className="flex items-center gap-2 mt-1.5">
+      <span className="text-[10px] text-[#6b6b8a]">Detail:</span>
       <div className="flex gap-0.5">
         {[1, 2, 3, 4, 5].map((s) => (
           <div
@@ -755,7 +756,7 @@ export default function PracticeSessionCard() {
               )}
             </p>
             <DetailIndicator
-              collection={activeCollections.find((c) => c.id === session.practiceCollectionId)}
+              collection={activeCollections.find((c) => c.id === session.practiceCollectionId) ?? collections.find((c) => c.id === session.practiceCollectionId)}
               proNadeDetail={user?.proNadeDetail ?? 3}
             />
           </div>
@@ -806,7 +807,7 @@ export default function PracticeSessionCard() {
                 )}
               </p>
               <DetailIndicator
-                collection={activeCollections.find((c) => c.id === session.practiceCollectionId)}
+                collection={activeCollections.find((c) => c.id === session.practiceCollectionId) ?? collections.find((c) => c.id === session.practiceCollectionId)}
                 proNadeDetail={user?.proNadeDetail ?? 3}
               />
             </div>
