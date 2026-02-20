@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Crown, Check, ChevronDown, Sparkles, Clock, Loader2, HelpCircle, X } from 'lucide-react';
+import { Crown, Check, ChevronDown, Sparkles, Clock, Loader2, HelpCircle, X, Gift, Users } from 'lucide-react';
 import { useAuthStore } from '@/store/auth-store';
 import { authApi, stripeApi } from '@/lib/api';
 import toast from 'react-hot-toast';
@@ -39,6 +39,10 @@ const FAQ_ITEMS = [
   {
     q: 'Do I keep my lineups if I downgrade?',
     a: 'Your lineups are kept, but collections beyond the free limit are not accessible until you upgrade again.',
+  },
+  {
+    q: 'What happens to my referral bonus if I subscribe?',
+    a: 'Your referral bonus days are banked. If you cancel your subscription, the banked days are applied automatically so you keep premium access longer.',
   },
 ];
 
@@ -94,10 +98,12 @@ function PremiumPageInner() {
   const [withdrawalConsent, setWithdrawalConsent] = useState(false);
 
   const isPremium = user?.isPremium ?? false;
+  const hasStripeSubscription = user?.hasStripeSubscription ?? false;
   const premiumExpiresAt = user?.premiumExpiresAt ? new Date(user.premiumExpiresAt) : null;
   const daysRemaining = premiumExpiresAt
     ? Math.max(0, Math.ceil((premiumExpiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
     : null;
+  const isReferralOnly = isPremium && !!premiumExpiresAt && !hasStripeSubscription;
 
   // Handle return from Stripe Checkout
   useEffect(() => {
@@ -173,9 +179,19 @@ function PremiumPageInner() {
           {/* Status bar */}
           {isPremium && daysRemaining !== null && (
             <div className="relative border-t border-[#2a2a3e]/50 px-6 sm:px-8 py-3 flex items-center gap-2 text-sm text-[#6b6b8a]">
-              <Clock className="h-3.5 w-3.5 text-[#6b6b8a]" />
-              <span className="text-[#00c850] font-medium">{daysRemaining} day{daysRemaining !== 1 ? 's' : ''}</span>
-              <span>remaining &middot; expires {premiumExpiresAt!.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+              {isReferralOnly ? (
+                <>
+                  <Gift className="h-3.5 w-3.5 text-[#a78bfa]" />
+                  <span className="text-[#a78bfa] font-medium">Referral bonus</span>
+                  <span>&middot; {daysRemaining} day{daysRemaining !== 1 ? 's' : ''} remaining &middot; expires {premiumExpiresAt!.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                </>
+              ) : (
+                <>
+                  <Clock className="h-3.5 w-3.5 text-[#6b6b8a]" />
+                  <span className="text-[#00c850] font-medium">{daysRemaining} day{daysRemaining !== 1 ? 's' : ''}</span>
+                  <span>remaining &middot; expires {premiumExpiresAt!.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                </>
+              )}
             </div>
           )}
         </div>
@@ -276,6 +292,7 @@ function PremiumPageInner() {
               ))}
             </ul>
             {isPremium && !premiumExpiresAt ? (
+              /* Active Stripe subscription */
               <>
                 <button
                   onClick={handleManageSubscription}
@@ -287,7 +304,44 @@ function PremiumPageInner() {
                   Update payment method or cancel
                 </p>
               </>
+            ) : isPremium && premiumExpiresAt && hasStripeSubscription ? (
+              /* Cancelled Stripe, winding down */
+              <>
+                <button
+                  onClick={handleManageSubscription}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg border border-[#2a2a3e] bg-[#1a1a2e]/50 py-2.5 text-sm font-semibold text-[#e8e8e8] hover:bg-[#2a2a3e] transition-colors"
+                >
+                  Manage Subscription
+                </button>
+                <p className="mt-3 text-center text-xs text-[#6b6b8a]">
+                  Resubscribe or update payment method
+                </p>
+              </>
+            ) : isReferralOnly ? (
+              /* Referral-only premium */
+              <>
+                <div className="rounded-lg bg-[#a78bfa]/[0.08] border border-[#a78bfa]/20 px-4 py-3 mb-3 flex items-start gap-2.5">
+                  <Users className="h-4 w-4 text-[#a78bfa] shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-medium text-[#a78bfa]">Premium via referral bonus</p>
+                    <p className="text-[11px] text-[#6b6b8a] mt-0.5">
+                      {daysRemaining} day{daysRemaining !== 1 ? 's' : ''} remaining. Subscribe to keep your premium benefits.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => { setWithdrawalConsent(false); setShowUpgradeModal(true); }}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#f0a500] to-[#d4920a] py-3 text-sm font-bold text-[#0a0a0f] hover:brightness-110 transition-all shadow-lg shadow-[#f0a500]/15"
+                >
+                  <Crown className="h-4 w-4" />
+                  Subscribe to Keep Premium
+                </button>
+                <p className="mt-3 text-center text-xs text-[#6b6b8a]">
+                  Cancel anytime &bull; Billed monthly
+                </p>
+              </>
             ) : (
+              /* Not premium */
               <>
                 <button
                   onClick={() => { setWithdrawalConsent(false); setShowUpgradeModal(true); }}

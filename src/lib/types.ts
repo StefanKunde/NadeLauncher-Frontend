@@ -7,6 +7,7 @@ export interface User {
   isPremium: boolean;
   premiumExpiresAt?: string | null;
   proNadeDetail?: number;
+  hasStripeSubscription?: boolean;
   createdAt: string;
 }
 
