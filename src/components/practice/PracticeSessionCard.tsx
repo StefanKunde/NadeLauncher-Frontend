@@ -366,8 +366,10 @@ export default function PracticeSessionCard() {
             all.push(c);
           }
         }
-        // Filter out pro collections for free users (they may be auto-subscribed via isDefault)
-        const filtered = isPremium ? all : all.filter((c) => !(c.autoManaged && !c.ownerId));
+        // Filter out pro collections for free users and locked user collections
+        const filtered = isPremium
+          ? all
+          : all.filter((c) => !(c.autoManaged && !c.ownerId) && !c.locked);
         setActiveCollections(filtered);
       } catch {
         if (!cancelled) setActiveCollections([]);
@@ -413,8 +415,10 @@ export default function PracticeSessionCard() {
             all.push(c);
           }
         }
-        // Filter out pro collections for free users (they may be auto-subscribed via isDefault)
-        const filtered = isPremium ? all : all.filter((c) => !(c.autoManaged && !c.ownerId));
+        // Filter out pro collections for free users and locked user collections
+        const filtered = isPremium
+          ? all
+          : all.filter((c) => !(c.autoManaged && !c.ownerId) && !c.locked);
         setCollections(filtered);
         // Pre-select the first collection (users must always have one)
         setSelectedCollection(filtered.length > 0 ? filtered[0].id : '');

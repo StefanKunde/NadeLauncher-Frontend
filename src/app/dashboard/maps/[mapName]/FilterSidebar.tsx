@@ -314,39 +314,55 @@ export default function FilterSidebar({
               >
                 {filteredUser.map((c) => (
                   <div key={c.id} className="group/item relative">
-                    <SourceButton
-                      active={isSourceActive(c.id)}
-                      onClick={() => onSourceFilterChange({ type: 'collection', collectionId: c.id, collectionName: c.name })}
-                      label={c.name}
-                    />
-                    {/* Count — hidden on hover, replaced by action buttons */}
-                    <span className={`absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5 group-hover/item:hidden`}>
-                      {c.isPublished && (
-                        <Users className="h-3 w-3 shrink-0 text-[#6c5ce7]" />
-                      )}
-                      <span className={`text-[10px] ${isSourceActive(c.id) ? 'text-[#f0a500]/70' : 'text-[#6b6b8a]'}`}>
-                        {c.lineupCount}
-                      </span>
-                    </span>
-                    <div className="absolute right-1 top-1/2 -translate-y-1/2 hidden group-hover/item:flex items-center gap-0.5">
-                      {c.isPublished && (
-                        <span title="Published to Community" className="p-1">
-                          <Users className="h-3 w-3 shrink-0 text-[#6c5ce7]" />
+                    {c.locked ? (
+                      <>
+                        <SourceButton
+                          active={false}
+                          onClick={() => setShowPremiumModal(true)}
+                          label={c.name}
+                          locked
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+                          <span className="text-[10px] text-[#6b6b8a]/40">{c.lineupCount}</span>
                         </span>
-                      )}
-                      <button
-                        onClick={(e) => { e.stopPropagation(); onEditCollection(c); }}
-                        className="p-1 rounded text-[#6b6b8a] hover:text-[#e8e8e8] hover:bg-[#1a1a2e]"
-                      >
-                        <Pencil className="h-3 w-3" />
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); onDeleteCollection(c); }}
-                        className="p-1 rounded text-[#6b6b8a] hover:text-[#ff4444] hover:bg-[#ff4444]/10"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </button>
-                    </div>
+                      </>
+                    ) : (
+                      <>
+                        <SourceButton
+                          active={isSourceActive(c.id)}
+                          onClick={() => onSourceFilterChange({ type: 'collection', collectionId: c.id, collectionName: c.name })}
+                          label={c.name}
+                        />
+                        {/* Count — hidden on hover, replaced by action buttons */}
+                        <span className={`absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5 group-hover/item:hidden`}>
+                          {c.isPublished && (
+                            <Users className="h-3 w-3 shrink-0 text-[#6c5ce7]" />
+                          )}
+                          <span className={`text-[10px] ${isSourceActive(c.id) ? 'text-[#f0a500]/70' : 'text-[#6b6b8a]'}`}>
+                            {c.lineupCount}
+                          </span>
+                        </span>
+                        <div className="absolute right-1 top-1/2 -translate-y-1/2 hidden group-hover/item:flex items-center gap-0.5">
+                          {c.isPublished && (
+                            <span title="Published to Community" className="p-1">
+                              <Users className="h-3 w-3 shrink-0 text-[#6c5ce7]" />
+                            </span>
+                          )}
+                          <button
+                            onClick={(e) => { e.stopPropagation(); onEditCollection(c); }}
+                            className="p-1 rounded text-[#6b6b8a] hover:text-[#e8e8e8] hover:bg-[#1a1a2e]"
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); onDeleteCollection(c); }}
+                            className="p-1 rounded text-[#6b6b8a] hover:text-[#ff4444] hover:bg-[#ff4444]/10"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        </div>
+                      </>
+                    )}
                   </div>
                 ))}
                 <button
@@ -715,7 +731,7 @@ export default function FilterSidebar({
                 <h3 className="text-base font-semibold text-[#e8e8e8]">Premium Feature</h3>
               </div>
               <p className="mb-5 text-sm text-[#6b6b8a]">
-                Pro collections are curated from professional CS2 matches and require a premium subscription to access.
+                Upgrade to Premium to access pro collections and use multiple collections per map with unlimited lineups.
               </p>
               <div className="flex gap-2">
                 <button

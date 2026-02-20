@@ -153,6 +153,7 @@ export interface LineupCollection {
   averageRating?: number;
   ratingCount?: number;
   subscriberCount?: number;
+  locked?: boolean;
   createdAt: string;
   updatedAt: string;
 }

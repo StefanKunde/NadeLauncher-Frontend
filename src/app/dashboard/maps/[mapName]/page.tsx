@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, Play, ChevronDown, Loader2, Monitor, X, Trash2, Users, Share2, Star, Eye, EyeOff, Search, Crosshair } from 'lucide-react';
+import { ArrowLeft, Play, ChevronDown, Loader2, Monitor, X, Trash2, Users, Share2, Star, Eye, EyeOff, Search, Crosshair, Crown, Lock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { MAPS, MAP_COLORS } from '@/lib/constants';
@@ -326,6 +326,7 @@ export default function MapDetailPage() {
   };
 
   const handleEditCollection = (c: LineupCollection) => {
+    if (c.locked) return; // Locked collections cannot be edited
     setEditingCollection(c);
     setEditCollectionName(c.name);
     setEditPublishState(c.isPublished ?? false);
@@ -505,6 +506,8 @@ export default function MapDetailPage() {
   // Current collection for practice server
   const currentCollectionId = sourceFilter.type === 'collection' ? sourceFilter.collectionId : undefined;
   const currentCollectionName = sourceFilter.type === 'collection' ? sourceFilter.collectionName : undefined;
+  const isCurrentCollectionLocked = sourceFilter.type === 'collection'
+    && userCollections.some((c) => c.id === sourceFilter.collectionId && c.locked);
 
   // Collections for the practice picker — non-premium only sees user collections
   const isPremium = user?.isPremium ?? false;
@@ -516,6 +519,7 @@ export default function MapDetailPage() {
     const community: PracticeCollection[] = [];
     for (const c of userCollections) {
       if (seen.has(c.id)) continue;
+      if (c.locked) continue; // Skip locked collections
       seen.add(c.id);
       own.push({ id: c.id, name: c.name, type: 'own' });
     }
@@ -626,7 +630,8 @@ export default function MapDetailPage() {
               )}
               <button
                 onClick={() => setShowPracticeConfirm(true)}
-                disabled={startingServer}
+                disabled={startingServer || isCurrentCollectionLocked}
+                title={isCurrentCollectionLocked ? 'This collection is locked — upgrade to Premium' : undefined}
                 className="flex items-center gap-1.5 rounded-lg bg-[#f0a500] px-2 py-1.5 text-[10px] sm:text-xs sm:px-3 sm:gap-2 font-semibold text-[#0a0a0f] hover:bg-[#ffd700] transition-colors disabled:opacity-50"
               >
                 {startingServer ? <Loader2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 animate-spin" /> : <Play className="h-3 w-3 sm:h-3.5 sm:w-3.5" />}
@@ -738,6 +743,32 @@ export default function MapDetailPage() {
                   >
                     Publish
                   </button>
+                </div>
+              );
+            })()}
+
+            {/* Free user lineup cap banner */}
+            {(() => {
+              if (isPremium) return null;
+              if (sourceFilter.type !== 'collection') return null;
+              const coll = userCollections.find((c) => c.id === sourceFilter.collectionId);
+              if (!coll || coll.locked) return null;
+              if (coll.lineupCount <= 20) return null;
+              return (
+                <div className="rounded-lg border border-[#f0a500]/20 bg-[#f0a500]/5 px-4 py-3">
+                  <div className="flex items-center gap-3">
+                    <Lock className="h-4 w-4 shrink-0 text-[#f0a500]" />
+                    <p className="flex-1 text-xs text-[#b8b8cc]">
+                      Only <span className="text-[#f0a500] font-semibold">20</span> of {coll.lineupCount} lineups will load on the practice server (free limit).
+                    </p>
+                    <Link
+                      href="/dashboard/premium"
+                      className="shrink-0 flex items-center gap-1.5 rounded-lg bg-[#f0a500] px-3 py-1.5 text-xs font-semibold text-[#0a0a0f] hover:bg-[#ffd700] transition-colors"
+                    >
+                      <Crown className="h-3 w-3" />
+                      Upgrade
+                    </Link>
+                  </div>
                 </div>
               );
             })()}
