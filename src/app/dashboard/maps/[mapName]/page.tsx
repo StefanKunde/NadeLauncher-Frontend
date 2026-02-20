@@ -709,6 +709,7 @@ export default function MapDetailPage() {
               creatingCollection={creatingCollection}
               proNadeDetail={proNadeDetail}
               onProNadeDetailChange={handleProNadeDetailChange}
+              filteredLineupCount={filteredLineups.length}
             />
           </div>
 

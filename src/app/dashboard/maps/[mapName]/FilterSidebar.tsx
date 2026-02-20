@@ -31,6 +31,7 @@ interface FilterSidebarProps {
   creatingCollection: boolean;
   proNadeDetail: number;
   onProNadeDetailChange: (level: number) => void;
+  filteredLineupCount?: number;
 }
 
 const MAP_SHORT: Record<string, string> = {
@@ -68,6 +69,7 @@ export default function FilterSidebar({
   creatingCollection,
   proNadeDetail,
   onProNadeDetailChange,
+  filteredLineupCount,
 }: FilterSidebarProps) {
   const user = useAuthStore((s) => s.user);
   const isPremium = user?.isPremium ?? false;
@@ -124,6 +126,19 @@ export default function FilterSidebar({
   const showOccurrenceSlider = sourceFilter.type === 'collection' && proCollections.some(
     (c) => c.id === sourceFilter.collectionId && ['meta', 'meta_all', 'team'].includes(c.proCategory ?? ''),
   );
+
+  // Get display count for a collection — use filtered count when occurrence filtering is active
+  const getDisplayCount = (c: LineupCollection) => {
+    if (
+      filteredLineupCount !== undefined &&
+      sourceFilter.type === 'collection' &&
+      sourceFilter.collectionId === c.id &&
+      showOccurrenceSlider
+    ) {
+      return filteredLineupCount;
+    }
+    return c.lineupCount;
+  };
 
   const q = search.toLowerCase().trim();
   const filteredMeta = q ? metaCollections.filter((c) => getProLabel(c).toLowerCase().includes(q)) : metaCollections;
@@ -479,7 +494,7 @@ export default function FilterSidebar({
                         active={isSourceActive(c.id)}
                         onClick={() => handleProClick(c, label)}
                         label={label}
-                        count={c.lineupCount}
+                        count={getDisplayCount(c)}
                         grenadeType={grenadeType}
                         locked={!isPremium}
                         badge={c.timeWindow === 'current' || c.timeWindow === 'all' ? 'Current' : undefined}
@@ -514,7 +529,7 @@ export default function FilterSidebar({
                                   active={isSourceActive(c.id)}
                                   onClick={() => handleProClick(c, label)}
                                   label={label}
-                                  count={c.lineupCount}
+                                  count={getDisplayCount(c)}
                                   locked={!isPremium}
                                   logoUrl={c.coverImage}
                                 />
