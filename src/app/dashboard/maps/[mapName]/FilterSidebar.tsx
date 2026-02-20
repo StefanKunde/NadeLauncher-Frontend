@@ -29,8 +29,6 @@ interface FilterSidebarProps {
   onEditCollection: (c: LineupCollection) => void;
   onDeleteCollection: (c: LineupCollection) => void;
   creatingCollection: boolean;
-  proNadeDetail: number;
-  onProNadeDetailChange: (level: number) => void;
   filteredLineupCount?: number;
 }
 
@@ -67,8 +65,6 @@ export default function FilterSidebar({
   onEditCollection,
   onDeleteCollection,
   creatingCollection,
-  proNadeDetail,
-  onProNadeDetailChange,
   filteredLineupCount,
 }: FilterSidebarProps) {
   const user = useAuthStore((s) => s.user);
@@ -123,14 +119,9 @@ export default function FilterSidebar({
     .sort((a, b) => (b.timeWindow ?? '').localeCompare(a.timeWindow ?? ''));
 
   // Show occurrence slider for pro collections with occurrence data
-  const showOccurrenceSlider = sourceFilter.type === 'collection' && proCollections.some(
+  const isOccurrenceFiltered = sourceFilter.type === 'collection' && proCollections.some(
     (c) => c.id === sourceFilter.collectionId && ['meta', 'meta_all', 'team', 'match', 'event'].includes(c.proCategory ?? ''),
   );
-
-  // Total lineup count of the active collection (before filtering)
-  const activeCollectionTotal = sourceFilter.type === 'collection'
-    ? proCollections.find((c) => c.id === sourceFilter.collectionId)?.lineupCount
-    : undefined;
 
   // Get display count for a collection — use filtered count when occurrence filtering is active
   const getDisplayCount = (c: LineupCollection) => {
@@ -138,7 +129,7 @@ export default function FilterSidebar({
       filteredLineupCount !== undefined &&
       sourceFilter.type === 'collection' &&
       sourceFilter.collectionId === c.id &&
-      showOccurrenceSlider
+      isOccurrenceFiltered
     ) {
       return filteredLineupCount;
     }
@@ -457,16 +448,6 @@ export default function FilterSidebar({
               {proExpanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
               Pro Collections
             </button>
-            {showOccurrenceSlider && proExpanded && proCollections.some(
-              (c) => sourceFilter.type === 'collection' && c.id === sourceFilter.collectionId && ['meta', 'meta_all', 'team'].includes(c.proCategory ?? ''),
-            ) && (
-              <OccurrenceSlider
-                value={proNadeDetail}
-                onChange={onProNadeDetailChange}
-                filteredCount={filteredLineupCount}
-                totalCount={activeCollectionTotal}
-              />
-            )}
             <AnimatePresence>
               {proExpanded && (
                 <motion.div
@@ -554,17 +535,6 @@ export default function FilterSidebar({
               <Calendar className="h-3 w-3" />
               Events
             </button>
-            {showOccurrenceSlider && eventsExpanded && proCollections.some(
-              (c) => sourceFilter.type === 'collection' && c.id === sourceFilter.collectionId && ['match', 'event'].includes(c.proCategory ?? ''),
-            ) && (
-              <OccurrenceSlider
-                value={proNadeDetail}
-                onChange={onProNadeDetailChange}
-                filteredCount={filteredLineupCount}
-                totalCount={activeCollectionTotal}
-                isMatch
-              />
-            )}
             <AnimatePresence>
               {eventsExpanded && (
                 <motion.div
@@ -911,62 +881,3 @@ function MatchButton({
   );
 }
 
-const PRO_STEP_LABELS: Record<number, string> = {
-  1: 'Thrown 3+ times',
-  2: 'Thrown 6+ times',
-  3: 'Thrown 12+ times',
-  4: 'Thrown 20+ times',
-  5: 'Thrown 20+ times',
-};
-
-const MATCH_STEP_LABELS: Record<number, string> = {
-  1: 'Show all nades',
-  2: 'Thrown 2+ times',
-  3: 'Thrown 3+ times',
-  4: 'Thrown 4+ times',
-  5: 'Thrown 5+ times',
-};
-
-function OccurrenceSlider({
-  value,
-  onChange,
-  filteredCount,
-  totalCount,
-  isMatch,
-}: {
-  value: number;
-  onChange: (level: number) => void;
-  filteredCount?: number;
-  totalCount?: number;
-  isMatch?: boolean;
-}) {
-  const labels = isMatch ? MATCH_STEP_LABELS : PRO_STEP_LABELS;
-  const label = labels[value] ?? '';
-  const showCounts = filteredCount !== undefined && totalCount !== undefined && value > 1;
-
-  return (
-    <div className="mb-2 px-1">
-      <div className="flex items-center justify-between mb-1">
-        <span className="text-[10px] text-[#8b8ba0]">{label}</span>
-        {showCounts && (
-          <span className="text-[10px] text-[#6b6b8a] tabular-nums">
-            {filteredCount} / {totalCount}
-          </span>
-        )}
-      </div>
-      <input
-        type="range"
-        min={1}
-        max={5}
-        step={1}
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="w-full h-1 rounded-full appearance-none cursor-pointer bg-[#2a2a3e] accent-[#f0a500] [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#f0a500] [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-[#f0a500] [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:cursor-pointer"
-      />
-      <div className="flex items-center justify-between text-[9px] text-[#6b6b8a]/50 mt-0.5">
-        <span>All</span>
-        <span>Popular</span>
-      </div>
-    </div>
-  );
-}

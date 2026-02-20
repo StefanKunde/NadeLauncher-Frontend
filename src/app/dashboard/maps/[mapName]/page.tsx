@@ -725,8 +725,6 @@ export default function MapDetailPage() {
               onEditCollection={handleEditCollection}
               onDeleteCollection={handleDeleteCollection}
               creatingCollection={creatingCollection}
-              proNadeDetail={activeNadeDetail}
-              onProNadeDetailChange={handleNadeDetailChange}
               filteredLineupCount={filteredLineups.length}
             />
           </div>
@@ -819,6 +817,101 @@ export default function MapDetailPage() {
                       Upgrade
                     </Link>
                   </div>
+                </div>
+              );
+            })()}
+
+            {/* Detail slider — above radar for pro/match collections */}
+            {(() => {
+              if (!activeProCategory || !['meta', 'meta_all', 'team', 'match', 'event'].includes(activeProCategory)) return null;
+              const isMatch = isMatchOrEvent;
+              const value = activeNadeDetail;
+              const totalCount = sourceFilter.type === 'collection'
+                ? proCollections.find((c) => c.id === sourceFilter.collectionId)?.lineupCount ?? 0
+                : 0;
+              const filtered = filteredLineups.length;
+
+              const PRO_LABELS: Record<number, string> = {
+                1: 'Thrown 3+ times', 2: 'Thrown 6+ times',
+                3: 'Thrown 12+ times', 4: 'Thrown 20+ times', 5: 'Thrown 20+ times',
+              };
+              const MATCH_LABELS: Record<number, string> = {
+                1: 'Show all nades', 2: 'Thrown 2+ times',
+                3: 'Thrown 3+ times', 4: 'Thrown 4+ times', 5: 'Thrown 5+ times',
+              };
+              const labels = isMatch ? MATCH_LABELS : PRO_LABELS;
+
+              // Color interpolation: step 1 = green (#22c55e), step 5 = amber (#f0a500)
+              const stepColors = ['#22c55e', '#6dd44a', '#b8c436', '#d4a82a', '#f0a500'];
+              const activeColor = stepColors[value - 1];
+
+              return (
+                <div className="flex gap-2 items-start justify-center px-4">
+                  <div className="w-full max-w-[700px]">
+                    <div className="rounded-xl border border-[#2a2a3e]/50 bg-[#12121a] px-4 py-3">
+                      <div className="flex items-center gap-4">
+                        {/* Label */}
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-[#6b6b8a] shrink-0">
+                          {isMatch ? 'Match Detail' : 'Detail'}
+                        </span>
+
+                        {/* Step track */}
+                        <div className="flex-1 relative">
+                          {/* Background track */}
+                          <div className="absolute top-1/2 -translate-y-1/2 left-[6px] right-[6px] h-[3px] rounded-full bg-[#2a2a3e]/60" />
+                          {/* Filled track */}
+                          <div
+                            className="absolute top-1/2 -translate-y-1/2 left-[6px] h-[3px] rounded-full transition-all duration-200"
+                            style={{
+                              width: `calc(${(value - 1) / 4} * (100% - 12px))`,
+                              background: `linear-gradient(to right, #22c55e, ${activeColor})`,
+                            }}
+                          />
+                          {/* Step dots */}
+                          <div className="relative flex items-center justify-between">
+                            {[1, 2, 3, 4, 5].map((step) => {
+                              const isActive = step === value;
+                              const isPast = step <= value;
+                              const dotColor = isPast ? stepColors[step - 1] : '#2a2a3e';
+                              return (
+                                <button
+                                  key={step}
+                                  onClick={() => handleNadeDetailChange(step)}
+                                  className="relative z-10 group flex flex-col items-center"
+                                  title={labels[step]}
+                                >
+                                  <div
+                                    className="rounded-full transition-all duration-200"
+                                    style={{
+                                      width: isActive ? 14 : 10,
+                                      height: isActive ? 14 : 10,
+                                      backgroundColor: dotColor,
+                                      boxShadow: isActive ? `0 0 8px ${activeColor}60` : 'none',
+                                      border: isActive ? `2px solid ${activeColor}` : isPast ? 'none' : '2px solid #3a3a4e',
+                                    }}
+                                  />
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Description + count */}
+                        <div className="shrink-0 text-right min-w-[100px]">
+                          <p className="text-[11px] font-medium transition-colors duration-200" style={{ color: activeColor }}>
+                            {labels[value]}
+                          </p>
+                          {totalCount > 0 && (
+                            <p className="text-[10px] text-[#6b6b8a] tabular-nums">
+                              {filtered} / {totalCount} nades
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Spacer for map nav strip alignment */}
+                  <div className="hidden md:block w-28 shrink-0" />
                 </div>
               );
             })()}

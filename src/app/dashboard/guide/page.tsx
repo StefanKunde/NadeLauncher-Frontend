@@ -213,6 +213,10 @@ const GUIDE_SECTIONS = [
         a: <>Pro collections contain lineups extracted from actual professional matches and enhanced with AI-assisted analysis. Browse them on the <Link href="/dashboard/maps" className="text-[#22c55e] hover:underline">Nades page</Link>:{'\n\n'}• Learn the default smoke setups that pros rely on{'\n'}• Discover off-angle flashes you wouldn&#39;t think of{'\n'}• Understand how teams coordinate utility with team &amp; event collections{'\n'}• Copy the best ones into your own collection and adapt them to your playstyle</>,
       },
       {
+        q: 'Control nade density with the detail slider',
+        a: <>Pro and match collections include a detail slider that lets you control how many nades are shown. The slider filters lineups based on how frequently pros throw them:{'\n\n'}• <strong className="text-[#e8e8e8]">Pro collections</strong> — defaults to showing nades thrown 12+ times across analyzed demos. Slide left to see more nades (minimum 3+ throws), or right to only see the most popular ones (20+ throws).{'\n'}• <strong className="text-[#e8e8e8]">Match collections</strong> — defaults to showing all nades from that match. Slide right to filter down to only nades that were thrown multiple times.{'\n\n'}Your pro collection preference is saved to your account and applies both on the website and in-game. Match slider resets each session since you typically want to see everything from a specific match.{'\n\n'}On-the-fly nades and random one-off throws are automatically filtered out by AI analysis, so even on the lowest setting you only see intentional, distinct lineups.</>,
+      },
+      {
         q: 'Share your knowledge',
         a: <>Found a great set of lineups? Publish your collection to the <Link href="/dashboard/community" className="text-[#22c55e] hover:underline">community</Link> so other players can subscribe and practice them. Building a reputation with quality lineups helps the entire NadePro community improve.</>,
       },
@@ -370,7 +374,7 @@ const GUIDE_SECTIONS = [
       },
       {
         q: 'Where do pro lineups come from?',
-        a: `Pro lineups are curated from professional matches and demos, enhanced with AI-assisted analysis. They are organized into team & event collections so you can study specific pro strategies.`,
+        a: `Pro lineups are extracted from professional match demos and processed by AI-assisted analysis. The AI groups similar throws into clusters, removes duplicates, and selects the best representative for each unique lineup. On-the-fly nades and random one-off throws are automatically filtered out — only intentional, repeatable lineups make it into collections.\n\nCollections are organized by team, event, and meta (across all teams) so you can study specific strategies or see what the entire pro scene is using. Use the detail slider to control how many nades are shown based on how frequently they appear in pro play.`,
       },
       {
         q: 'Can I share my collections?',
