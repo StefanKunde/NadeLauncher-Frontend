@@ -366,7 +366,9 @@ export default function PracticeSessionCard() {
             all.push(c);
           }
         }
-        setActiveCollections(all);
+        // Filter out pro collections for free users (they may be auto-subscribed via isDefault)
+        const filtered = isPremium ? all : all.filter((c) => !(c.autoManaged && !c.ownerId));
+        setActiveCollections(filtered);
       } catch {
         if (!cancelled) setActiveCollections([]);
       }
@@ -411,9 +413,11 @@ export default function PracticeSessionCard() {
             all.push(c);
           }
         }
-        setCollections(all);
+        // Filter out pro collections for free users (they may be auto-subscribed via isDefault)
+        const filtered = isPremium ? all : all.filter((c) => !(c.autoManaged && !c.ownerId));
+        setCollections(filtered);
         // Pre-select the first collection (users must always have one)
-        setSelectedCollection(all.length > 0 ? all[0].id : '');
+        setSelectedCollection(filtered.length > 0 ? filtered[0].id : '');
       } catch {
         if (!cancelled) setCollections([]);
       }
