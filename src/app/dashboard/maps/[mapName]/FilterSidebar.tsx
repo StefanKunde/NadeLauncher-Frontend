@@ -562,6 +562,7 @@ export default function FilterSidebar({
                 onChange={onProNadeDetailChange}
                 filteredCount={filteredLineupCount}
                 totalCount={activeCollectionTotal}
+                isMatch
               />
             )}
             <AnimatePresence>
@@ -910,12 +911,20 @@ function MatchButton({
   );
 }
 
-const STEP_LABELS: Record<number, string> = {
-  1: 'Show all nades',
-  2: 'Thrown 3+ times',
-  3: 'Thrown 6+ times',
-  4: 'Thrown 12+ times',
+const PRO_STEP_LABELS: Record<number, string> = {
+  1: 'Thrown 3+ times',
+  2: 'Thrown 6+ times',
+  3: 'Thrown 12+ times',
+  4: 'Thrown 20+ times',
   5: 'Thrown 20+ times',
+};
+
+const MATCH_STEP_LABELS: Record<number, string> = {
+  1: 'Show all nades',
+  2: 'Thrown 2+ times',
+  3: 'Thrown 3+ times',
+  4: 'Thrown 4+ times',
+  5: 'Thrown 5+ times',
 };
 
 function OccurrenceSlider({
@@ -923,13 +932,16 @@ function OccurrenceSlider({
   onChange,
   filteredCount,
   totalCount,
+  isMatch,
 }: {
   value: number;
   onChange: (level: number) => void;
   filteredCount?: number;
   totalCount?: number;
+  isMatch?: boolean;
 }) {
-  const label = STEP_LABELS[value] ?? '';
+  const labels = isMatch ? MATCH_STEP_LABELS : PRO_STEP_LABELS;
+  const label = labels[value] ?? '';
   const showCounts = filteredCount !== undefined && totalCount !== undefined && value > 1;
 
   return (

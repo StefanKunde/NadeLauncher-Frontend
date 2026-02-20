@@ -80,6 +80,7 @@ export default function MapDetailPage() {
   const [editPublishState, setEditPublishState] = useState(false);
 
   // Pro nade detail slider (occurrence filtering)
+  // Meta/team collections: persisted preference (default step 4 = threshold 12)
   const [proNadeDetail, setProNadeDetail] = useState<number>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('proNadeDetail');
@@ -87,6 +88,8 @@ export default function MapDetailPage() {
     }
     return user?.proNadeDetail ?? 3;
   });
+  // Match/event collections: always start at step 1 ("Show all"), not persisted
+  const [matchNadeDetail, setMatchNadeDetail] = useState(1);
 
   // Inline publish / unpublish
   const [publishing, setPublishing] = useState(false);
@@ -107,12 +110,6 @@ export default function MapDetailPage() {
       router.replace(`/dashboard/maps/${mapName}`, { scroll: false });
     }
   }, [allCollections, userCollections, mapName, router]);
-
-  const handleProNadeDetailChange = useCallback((level: number) => {
-    setProNadeDetail(level);
-    localStorage.setItem('proNadeDetail', String(level));
-    usersApi.updatePreferences({ proNadeDetail: level }).catch(() => {});
-  }, []);
 
   // ── Data Loading ───────────────────────────────────────────────
   const loadData = useCallback(async () => {
@@ -268,6 +265,25 @@ export default function MapDetailPage() {
     [allCollections],
   );
 
+  // Determine active collection type for slider context
+  const activeProCategory = useMemo(() => {
+    if (sourceFilter.type !== 'collection') return null;
+    return proCollections.find((c) => c.id === sourceFilter.collectionId)?.proCategory ?? null;
+  }, [sourceFilter, proCollections]);
+
+  const isMatchOrEvent = activeProCategory === 'match' || activeProCategory === 'event';
+  const activeNadeDetail = isMatchOrEvent ? matchNadeDetail : proNadeDetail;
+
+  const handleNadeDetailChange = useCallback((level: number) => {
+    if (isMatchOrEvent) {
+      setMatchNadeDetail(level);
+    } else {
+      setProNadeDetail(level);
+      localStorage.setItem('proNadeDetail', String(level));
+      usersApi.updatePreferences({ proNadeDetail: level }).catch(() => {});
+    }
+  }, [isMatchOrEvent]);
+
   const communityCollections = useMemo(
     () => allCollections.filter((c) => c.isPublished && c.isSubscribed && c.ownerId && c.ownerId !== user?.id),
     [allCollections, user],
@@ -301,7 +317,8 @@ export default function MapDetailPage() {
     return result;
   }, [sourceFilter, myNades, allCollections, userCollections, lineupsByCollection]);
 
-  const STEP_THRESHOLDS: Record<number, number> = { 1: 1, 2: 3, 3: 6, 4: 12, 5: 20 };
+  const PRO_THRESHOLDS: Record<number, number> = { 1: 3, 2: 6, 3: 12, 4: 20, 5: 20 };
+  const MATCH_THRESHOLDS: Record<number, number> = { 1: 1, 2: 2, 3: 3, 4: 4, 5: 5 };
 
   const filteredLineups = useMemo(() => {
     let lineups = grenadeFilter === 'all' ? allLineups : allLineups.filter((l) => l.grenadeType === grenadeFilter);
@@ -310,7 +327,8 @@ export default function MapDetailPage() {
     if (sourceFilter.type === 'collection') {
       const col = proCollections.find((c) => c.id === sourceFilter.collectionId);
       if (col && ['meta', 'meta_all', 'team', 'match', 'event'].includes(col.proCategory ?? '')) {
-        const threshold = STEP_THRESHOLDS[proNadeDetail] ?? 6;
+        const thresholds = isMatchOrEvent ? MATCH_THRESHOLDS : PRO_THRESHOLDS;
+        const threshold = thresholds[activeNadeDetail] ?? 1;
         if (threshold > 1) {
           lineups = lineups.filter((l) => (l.occurrenceCount ?? 1) >= threshold);
         }
@@ -318,7 +336,7 @@ export default function MapDetailPage() {
     }
 
     return lineups;
-  }, [allLineups, grenadeFilter, sourceFilter, proCollections, proNadeDetail]);
+  }, [allLineups, grenadeFilter, sourceFilter, proCollections, activeNadeDetail, isMatchOrEvent]);
 
   const searchFilteredLineups = useMemo(() => {
     if (!nadeSearch.trim()) return filteredLineups;
@@ -707,8 +725,8 @@ export default function MapDetailPage() {
               onEditCollection={handleEditCollection}
               onDeleteCollection={handleDeleteCollection}
               creatingCollection={creatingCollection}
-              proNadeDetail={proNadeDetail}
-              onProNadeDetailChange={handleProNadeDetailChange}
+              proNadeDetail={activeNadeDetail}
+              onProNadeDetailChange={handleNadeDetailChange}
               filteredLineupCount={filteredLineups.length}
             />
           </div>
