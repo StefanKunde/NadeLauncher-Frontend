@@ -763,6 +763,9 @@ export default function PracticeSessionCard() {
             <div className="rounded-lg bg-[#0a0a12] p-3">
               <p className="text-xs text-[#6b6b8a]">
                 Map: {MAPS.find((m) => m.name === session.mapName)?.displayName ?? session.mapName}
+                {session.practiceCollectionName && (
+                  <><br />Collection: <span className="text-[#f0a500]">{session.practiceCollectionName}</span></>
+                )}
               </p>
             </div>
 
