@@ -306,10 +306,10 @@ export default function MapDetailPage() {
   const filteredLineups = useMemo(() => {
     let lineups = grenadeFilter === 'all' ? allLineups : allLineups.filter((l) => l.grenadeType === grenadeFilter);
 
-    // Apply occurrence filtering for pro collections (meta/meta_all/team)
+    // Apply occurrence filtering for pro collections
     if (sourceFilter.type === 'collection') {
       const col = proCollections.find((c) => c.id === sourceFilter.collectionId);
-      if (col && ['meta', 'meta_all', 'team'].includes(col.proCategory ?? '')) {
+      if (col && ['meta', 'meta_all', 'team', 'match', 'event'].includes(col.proCategory ?? '')) {
         const threshold = STEP_THRESHOLDS[proNadeDetail] ?? 6;
         if (threshold > 1) {
           lineups = lineups.filter((l) => (l.occurrenceCount ?? 1) >= threshold);
