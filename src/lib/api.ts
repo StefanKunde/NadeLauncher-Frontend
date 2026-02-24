@@ -140,6 +140,8 @@ export const userCollectionsApi = {
     api.post(`/api/collections/my/${collectionId}/lineups/${lineupId}`),
   removeLineup: (collectionId: string, lineupId: string) =>
     api.delete(`/api/collections/my/${collectionId}/lineups/${lineupId}`),
+  toggleTraining: (id: string, isTraining: boolean) =>
+    api.put<{ data: LineupCollection }>(`/api/collections/my/${id}/training`, { isTraining }).then((r) => r.data.data),
 };
 
 // Pro Nades
@@ -182,6 +184,8 @@ export const referralsApi = {
 
 // Training
 export const trainingApi = {
+  ensureDefault: (mapName: string) =>
+    api.post<{ data: { id: string; name: string; mapName: string } }>('/api/training/collections/ensure-default', { mapName }).then((r) => r.data.data),
   getCollections: (map?: string) =>
     api.get<{ data: TrainingCollection[] }>('/api/training/collections', { params: { map } }).then((r) => r.data.data),
   getStats: (collectionId: string) =>

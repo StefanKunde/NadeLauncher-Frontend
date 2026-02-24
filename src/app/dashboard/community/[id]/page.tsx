@@ -7,7 +7,7 @@ import { ArrowLeft, Users, Loader2, Play, Monitor, X, Eye, Search, Crosshair, Ch
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { MAPS, MAP_COLORS, GRENADE_TYPES } from '@/lib/constants';
-import { collectionsApi, userCollectionsApi, communityApi, sessionsApi } from '@/lib/api';
+import { collectionsApi, userCollectionsApi, communityApi, sessionsApi, trainingApi } from '@/lib/api';
 import { useAuthStore } from '@/store/auth-store';
 import type { Lineup, LineupCollection, Session } from '@/lib/types';
 import MapRadar from '@/components/ui/MapRadar';
@@ -44,6 +44,7 @@ export default function CommunityDetailPage() {
 
   // User collections for "Add to my collection" feature
   const [userCollections, setUserCollections] = useState<LineupCollection[]>([]);
+  const [trainingCollections, setTrainingCollections] = useState<LineupCollection[]>([]);
   const [addingToCollection, setAddingToCollection] = useState<string | null>(null);
   const [userCollectionLineupIds, setUserCollectionLineupIds] = useState<Map<string, Set<string>>>(new Map());
 
@@ -63,11 +64,12 @@ export default function CommunityDetailPage() {
     const load = async () => {
       try {
         setLoading(true);
-        const [data, myCols] = await Promise.all([
+        const [data, myCols, trainCols] = await Promise.all([
           user
             ? collectionsApi.getByIdWithUserState(collectionId)
             : collectionsApi.getById(collectionId),
           user ? userCollectionsApi.getMy() : Promise.resolve([]),
+          user ? trainingApi.getCollections() : Promise.resolve([]),
         ]);
         setCollection(data.collection);
         setLineups(data.lineups);
@@ -76,6 +78,19 @@ export default function CommunityDetailPage() {
         setAverageRating(data.collection.averageRating ?? 0);
         setRatingCount(data.collection.ratingCount ?? 0);
         setUserCollections(myCols);
+        setTrainingCollections(
+          trainCols.map((tc) => ({
+            id: tc.id,
+            name: tc.name,
+            mapName: tc.mapName,
+            lineupCount: tc.lineupCount ?? 0,
+            isDefault: false,
+            sortOrder: 0,
+            isTraining: true,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          })),
+        );
 
         // Build lineup ID map for user collections
         const idMap = new Map<string, Set<string>>();
@@ -201,6 +216,30 @@ export default function CommunityDetailPage() {
   const handleRemoveFromCollection = async () => {
     // No-op for community detail — users can't remove from community collections
   };
+
+  const handleEnsureTrainingCollection = useCallback(async (mapName: string) => {
+    try {
+      const result = await trainingApi.ensureDefault(mapName);
+      setTrainingCollections((prev) => {
+        if (prev.some((c) => c.id === result.id)) return prev;
+        return [...prev, {
+          id: result.id,
+          name: result.name,
+          mapName: result.mapName,
+          lineupCount: 0,
+          isDefault: false,
+          sortOrder: 0,
+          isTraining: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        }];
+      });
+      return { id: result.id, name: result.name };
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Failed to create training collection');
+      return null;
+    }
+  }, []);
 
   const handleStartServer = async () => {
     if (!collection) return;
@@ -459,9 +498,11 @@ export default function CommunityDetailPage() {
                 selectedLineupId={selectedLineup?.id ?? null}
                 onSelectLineup={setSelectedLineup}
                 userCollections={userCollections}
+                trainingCollections={trainingCollections}
                 addingToCollection={addingToCollection}
                 onAddToCollection={handleAddToCollection}
                 onRemoveFromCollection={handleRemoveFromCollection}
+                onEnsureTrainingCollection={handleEnsureTrainingCollection}
                 userCollectionLineupIds={userCollectionLineupIds}
                 isCurrentCollectionOwned={false}
               />

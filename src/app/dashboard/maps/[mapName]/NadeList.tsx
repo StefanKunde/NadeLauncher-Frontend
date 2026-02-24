@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Plus, Check, Loader2, Minus, ChevronRight, Eye, X } from 'lucide-react';
+import { Plus, Check, Loader2, Minus, ChevronRight, Eye, X, Target } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Lineup, LineupCollection } from '@/lib/types';
 import GrenadeIcon from '@/components/ui/GrenadeIcon';
@@ -13,9 +13,11 @@ interface NadeListProps {
   selectedLineupId: string | null;
   onSelectLineup: (lineup: Lineup) => void;
   userCollections: LineupCollection[];
+  trainingCollections: LineupCollection[];
   addingToCollection: string | null;
   onAddToCollection: (lineupId: string, collectionId: string) => void;
   onRemoveFromCollection: (lineupId: string, collectionId: string) => void;
+  onEnsureTrainingCollection: (mapName: string) => Promise<{ id: string; name: string } | null>;
   userCollectionLineupIds: Map<string, Set<string>>;
   currentCollectionId?: string;
   isCurrentCollectionOwned: boolean;
@@ -26,9 +28,11 @@ export default function NadeList({
   selectedLineupId,
   onSelectLineup,
   userCollections,
+  trainingCollections,
   addingToCollection,
   onAddToCollection,
   onRemoveFromCollection,
+  onEnsureTrainingCollection,
   userCollectionLineupIds,
   currentCollectionId,
   isCurrentCollectionOwned,
@@ -63,9 +67,11 @@ export default function NadeList({
             isActive={selectedLineupId === lineup.id}
             onSelect={() => onSelectLineup(lineup)}
             userCollections={userCollections}
+            trainingCollections={trainingCollections}
             addingToCollection={addingToCollection}
             onAddToCollection={onAddToCollection}
             onRemoveFromCollection={onRemoveFromCollection}
+            onEnsureTrainingCollection={onEnsureTrainingCollection}
             userCollectionLineupIds={userCollectionLineupIds}
             currentCollectionId={currentCollectionId}
             isCurrentCollectionOwned={isCurrentCollectionOwned}
@@ -81,9 +87,11 @@ function NadeListItem({
   isActive,
   onSelect,
   userCollections,
+  trainingCollections,
   addingToCollection,
   onAddToCollection,
   onRemoveFromCollection,
+  onEnsureTrainingCollection,
   userCollectionLineupIds,
   currentCollectionId,
   isCurrentCollectionOwned,
@@ -92,9 +100,11 @@ function NadeListItem({
   isActive: boolean;
   onSelect: () => void;
   userCollections: LineupCollection[];
+  trainingCollections: LineupCollection[];
   addingToCollection: string | null;
   onAddToCollection: (lineupId: string, collectionId: string) => void;
   onRemoveFromCollection: (lineupId: string, collectionId: string) => void;
+  onEnsureTrainingCollection: (mapName: string) => Promise<{ id: string; name: string } | null>;
   userCollectionLineupIds: Map<string, Set<string>>;
   currentCollectionId?: string;
   isCurrentCollectionOwned: boolean;
@@ -102,6 +112,7 @@ function NadeListItem({
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
   const [confirmRemove, setConfirmRemove] = useState(false);
+  const [creatingTraining, setCreatingTraining] = useState(false);
   const addBtnRef = useRef<HTMLButtonElement>(null);
   const itemRef = useRef<HTMLDivElement>(null);
   const grenadeColor = GRENADE_TYPES[lineup.grenadeType as keyof typeof GRENADE_TYPES]?.color ?? '#f0a500';
@@ -115,12 +126,17 @@ function NadeListItem({
   const proLine = [lineup.playerName, lineup.teamName].filter(Boolean).join(' \u00b7 ');
   const hasGhostReplay = (lineup.movementPath?.length ?? 0) > 0;
 
+  const mapTrainingCols = trainingCollections.filter((c) => c.mapName === lineup.mapName);
+  const mapUserCols = userCollections.filter((c) => c.mapName === lineup.mapName && !c.locked);
+  const hasAnyDropdownItems = mapUserCols.length > 0 || mapTrainingCols.length > 0 || true; // always show (can create training)
+
   const toggleMenu = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     if (!menuOpen && addBtnRef.current) {
       const rect = addBtnRef.current.getBoundingClientRect();
+      const totalItems = mapUserCols.length + mapTrainingCols.length + 3; // headers + create btn
+      const dropdownHeight = totalItems * 36 + 40;
       const spaceBelow = window.innerHeight - rect.bottom;
-      const dropdownHeight = userCollections.length * 36 + 40; // estimate
       const openAbove = spaceBelow < dropdownHeight && rect.top > dropdownHeight;
       setMenuPos({
         top: openAbove ? rect.top - dropdownHeight - 4 : rect.bottom + 4,
@@ -128,7 +144,21 @@ function NadeListItem({
       });
     }
     setMenuOpen(!menuOpen);
-  }, [menuOpen, userCollections.length]);
+  }, [menuOpen, mapUserCols.length, mapTrainingCols.length]);
+
+  const handleCreateAndAdd = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCreatingTraining(true);
+    try {
+      const result = await onEnsureTrainingCollection(lineup.mapName);
+      if (result) {
+        onAddToCollection(lineup.id, result.id);
+        setMenuOpen(false);
+      }
+    } finally {
+      setCreatingTraining(false);
+    }
+  };
 
   return (
     <motion.div
@@ -229,8 +259,8 @@ function NadeListItem({
           )
         )}
 
-        {/* Add to collection button */}
-        {userCollections.some((c) => c.mapName === lineup.mapName && !c.locked) && (
+        {/* Add to collection / training button */}
+        {hasAnyDropdownItems && (
           <div className="shrink-0">
             <button
               ref={addBtnRef}
@@ -243,11 +273,15 @@ function NadeListItem({
               <>
                 <div className="fixed inset-0 z-[80]" onClick={(e) => { e.stopPropagation(); setMenuOpen(false); }} />
                 <div
-                  className="fixed z-[90] w-52 rounded-xl border border-[#2a2a3e] bg-[#12121a] py-1.5 shadow-xl shadow-black/50"
+                  className="fixed z-[90] w-56 rounded-xl border border-[#2a2a3e] bg-[#12121a] py-1.5 shadow-xl shadow-black/50 max-h-72 overflow-y-auto scrollbar-thin"
                   style={{ top: menuPos.top, right: menuPos.right }}
                 >
-                  <p className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#6b6b8a]/60">Add to collection</p>
-                  {userCollections.filter((c) => c.mapName === lineup.mapName && !c.locked).map((c) => {
+                  {/* Training section */}
+                  <p className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#f0a500]/60 flex items-center gap-1">
+                    <Target className="h-3 w-3" />
+                    Training
+                  </p>
+                  {mapTrainingCols.map((c) => {
                     const alreadyIn = userCollectionLineupIds.get(c.id)?.has(lineup.id) ?? false;
                     const isAdding = addingToCollection === lineup.id;
                     return (
@@ -261,19 +295,72 @@ function NadeListItem({
                           }
                         }}
                         disabled={alreadyIn || isAdding}
-                        className="flex w-full items-center gap-2 px-3 py-2 text-xs text-[#b8b8cc] hover:bg-[#1a1a2e] hover:text-[#e8e8e8] disabled:opacity-50 disabled:cursor-default transition-colors rounded-lg mx-0"
+                        className="flex w-full items-center gap-2 px-3 py-2 text-xs text-[#b8b8cc] hover:bg-[#1a1a2e] hover:text-[#e8e8e8] disabled:opacity-50 disabled:cursor-default transition-colors rounded-lg"
                       >
                         {alreadyIn ? (
                           <Check className="h-3 w-3 text-[#22c55e]" />
                         ) : isAdding ? (
                           <Loader2 className="h-3 w-3 animate-spin" />
                         ) : (
-                          <Plus className="h-3 w-3 text-[#6b6b8a]" />
+                          <Target className="h-3 w-3 text-[#f0a500]" />
                         )}
                         <span className="truncate">{c.name}</span>
                       </button>
                     );
                   })}
+                  {mapTrainingCols.length === 0 && (
+                    <button
+                      onClick={handleCreateAndAdd}
+                      disabled={creatingTraining}
+                      className="flex w-full items-center gap-2 px-3 py-2 text-xs text-[#f0a500] hover:bg-[#f0a500]/10 transition-colors rounded-lg"
+                    >
+                      {creatingTraining ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <Plus className="h-3 w-3" />
+                      )}
+                      <span>Create & add to Training</span>
+                    </button>
+                  )}
+
+                  {/* Divider */}
+                  {mapUserCols.length > 0 && (
+                    <div className="mx-2 my-1.5 h-px bg-[#2a2a3e]/50" />
+                  )}
+
+                  {/* User collections section */}
+                  {mapUserCols.length > 0 && (
+                    <>
+                      <p className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#6b6b8a]/60">Collections</p>
+                      {mapUserCols.map((c) => {
+                        const alreadyIn = userCollectionLineupIds.get(c.id)?.has(lineup.id) ?? false;
+                        const isAdding = addingToCollection === lineup.id;
+                        return (
+                          <button
+                            key={c.id}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (!alreadyIn && !isAdding) {
+                                onAddToCollection(lineup.id, c.id);
+                                setMenuOpen(false);
+                              }
+                            }}
+                            disabled={alreadyIn || isAdding}
+                            className="flex w-full items-center gap-2 px-3 py-2 text-xs text-[#b8b8cc] hover:bg-[#1a1a2e] hover:text-[#e8e8e8] disabled:opacity-50 disabled:cursor-default transition-colors rounded-lg"
+                          >
+                            {alreadyIn ? (
+                              <Check className="h-3 w-3 text-[#22c55e]" />
+                            ) : isAdding ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <Plus className="h-3 w-3 text-[#6b6b8a]" />
+                            )}
+                            <span className="truncate">{c.name}</span>
+                          </button>
+                        );
+                      })}
+                    </>
+                  )}
                 </div>
               </>
             )}

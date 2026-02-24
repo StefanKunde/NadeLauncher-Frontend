@@ -4,11 +4,11 @@ import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, Play, ChevronDown, Loader2, Monitor, X, Trash2, Users, Share2, Star, Eye, EyeOff, Search, Crosshair, Crown, Lock } from 'lucide-react';
+import { ArrowLeft, Play, ChevronDown, Loader2, Monitor, X, Trash2, Users, Share2, Star, Eye, EyeOff, Search, Crosshair, Crown, Lock, Target } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { MAPS, MAP_COLORS } from '@/lib/constants';
-import { collectionsApi, userCollectionsApi, sessionsApi, lineupsApi, communityApi, usersApi } from '@/lib/api';
+import { collectionsApi, userCollectionsApi, sessionsApi, lineupsApi, communityApi, usersApi, trainingApi } from '@/lib/api';
 import { useAuthStore } from '@/store/auth-store';
 import type { Lineup, LineupCollection, Session } from '@/lib/types';
 import MapRadar from '@/components/ui/MapRadar';
@@ -36,6 +36,7 @@ export default function MapDetailPage() {
   const [lineupsByCollection, setLineupsByCollection] = useState<Map<string, Lineup[]>>(new Map());
   const [myNades, setMyNades] = useState<Lineup[]>([]);
   const [crossMapMatches, setCrossMapMatches] = useState<LineupCollection[]>([]);
+  const [trainingCollections, setTrainingCollections] = useState<LineupCollection[]>([]);
 
   // Filters
   const [grenadeFilter, setGrenadeFilter] = useState<GrenadeFilter>('all');
@@ -76,8 +77,9 @@ export default function MapDetailPage() {
   const [deletingCollection, setDeletingCollection] = useState<LineupCollection | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Publish state tracked inside edit modal (saved on "Save")
+  // Publish + training state tracked inside edit modal (saved on "Save")
   const [editPublishState, setEditPublishState] = useState(false);
+  const [editTrainingState, setEditTrainingState] = useState(false);
 
   // Pro nade detail slider (occurrence filtering)
   // Meta/team collections: persisted preference (default step 4 = threshold 12)
@@ -116,11 +118,12 @@ export default function MapDetailPage() {
     try {
       setLoading(true);
 
-      const [collections, myColls, myLineups, allProColls] = await Promise.all([
+      const [collections, myColls, myLineups, allProColls, trainCols] = await Promise.all([
         collectionsApi.getAllWithStatus(mapName),
         userCollectionsApi.getMy(mapName),
         lineupsApi.getMy(mapName),
         collectionsApi.getAll(undefined, 'match'),
+        trainingApi.getCollections(mapName).catch(() => []),
       ]);
 
       setAllCollections(collections);
@@ -129,6 +132,18 @@ export default function MapDetailPage() {
       setCrossMapMatches(
         allProColls.filter((c) => c.mapName !== mapName),
       );
+      // Convert training collections to LineupCollection shape for the dropdown
+      setTrainingCollections(trainCols.map((tc) => ({
+        id: tc.id,
+        name: tc.name,
+        mapName: tc.mapName,
+        isDefault: tc.isDefault,
+        lineupCount: tc.lineupCount,
+        isTraining: true,
+        sortOrder: 0,
+        createdAt: tc.createdAt,
+        updatedAt: tc.createdAt,
+      })));
 
       // Load lineups for subscribed collections and user collections
       const collectionsToLoad = [
@@ -377,6 +392,7 @@ export default function MapDetailPage() {
     setEditingCollection(c);
     setEditCollectionName(c.name);
     setEditPublishState(c.isPublished ?? false);
+    setEditTrainingState(c.isTraining ?? false);
   };
 
   const handleEditCollectionSubmit = async () => {
@@ -387,8 +403,9 @@ export default function MapDetailPage() {
 
     const nameChanged = editCollectionName.trim() && editCollectionName.trim() !== editingCollection.name;
     const publishChanged = editPublishState !== editingCollection.isPublished;
+    const trainingChanged = editTrainingState !== (editingCollection.isTraining ?? false);
 
-    if (!nameChanged && !publishChanged) {
+    if (!nameChanged && !publishChanged && !trainingChanged) {
       setEditingCollection(null);
       return;
     }
@@ -405,8 +422,28 @@ export default function MapDetailPage() {
         updated = { ...updated, isPublished: editPublishState };
       }
 
+      if (trainingChanged) {
+        const toggled = await userCollectionsApi.toggleTraining(editingCollection.id, editTrainingState);
+        updated = { ...updated, isTraining: toggled.isTraining };
+        if (editTrainingState) {
+          // Add to training collections list
+          setTrainingCollections((prev) => {
+            if (prev.some((c) => c.id === editingCollection.id)) return prev;
+            return [...prev, updated];
+          });
+        } else {
+          // Remove from training collections list
+          setTrainingCollections((prev) => prev.filter((c) => c.id !== editingCollection.id));
+        }
+      }
+
       setUserCollections((prev) => prev.map((x) => (x.id === editingCollection.id ? updated : x)));
-      toast.success(publishChanged ? (editPublishState ? 'Published to Community!' : 'Unpublished') : 'Collection updated');
+      const msg = trainingChanged
+        ? (editTrainingState ? 'Enabled as Training collection!' : 'Training mode disabled')
+        : publishChanged
+          ? (editPublishState ? 'Published to Community!' : 'Unpublished')
+          : 'Collection updated';
+      toast.success(msg);
       setEditingCollection(null);
     } catch (err: any) {
       toast.error(err?.response?.data?.message || 'Failed to save');
@@ -468,12 +505,42 @@ export default function MapDetailPage() {
         });
       }
 
+      // Also update training collections count if applicable
+      setTrainingCollections((prev) =>
+        prev.map((c) => (c.id === collectionId ? { ...c, lineupCount: c.lineupCount + 1 } : c)),
+      );
+
       toast.success('Added to collection');
     } catch (err: any) {
       const msg = err?.response?.data?.message || 'Failed to add';
       toast.error(msg);
     } finally {
       setAddingToCollection(null);
+    }
+  };
+
+  const handleEnsureTrainingCollection = async (targetMapName: string): Promise<{ id: string; name: string } | null> => {
+    try {
+      const result = await trainingApi.ensureDefault(targetMapName);
+      // Add to training collections state if new
+      setTrainingCollections((prev) => {
+        if (prev.some((c) => c.id === result.id)) return prev;
+        return [...prev, {
+          id: result.id,
+          name: result.name,
+          mapName: result.mapName,
+          isDefault: true,
+          lineupCount: 0,
+          isTraining: true,
+          sortOrder: 0,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        }];
+      });
+      return result;
+    } catch {
+      toast.error('Failed to create training collection');
+      return null;
     }
   };
 
@@ -1050,9 +1117,11 @@ export default function MapDetailPage() {
                   selectedLineupId={selectedLineup?.id ?? null}
                   onSelectLineup={setSelectedLineup}
                   userCollections={userCollections}
+                  trainingCollections={trainingCollections}
                   addingToCollection={addingToCollection}
                   onAddToCollection={handleAddToCollection}
                   onRemoveFromCollection={handleRemoveFromCollection}
+                  onEnsureTrainingCollection={handleEnsureTrainingCollection}
                   userCollectionLineupIds={userCollectionLineupIds}
                   currentCollectionId={sourceFilter.type === 'collection' ? sourceFilter.collectionId : undefined}
                   isCurrentCollectionOwned={
@@ -1342,6 +1411,34 @@ export default function MapDetailPage() {
                   {editCollectionName.length}/50
                 </p>
               </div>
+              {/* Training toggle */}
+              {editingCollection && (
+                <div className="mb-4 flex items-center justify-between rounded-lg border border-[#2a2a3e] bg-[#0a0a0f] px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <Target className="h-4 w-4 text-[#f0a500] shrink-0" />
+                    <div>
+                      <p className="text-sm text-[#e8e8e8]">Training Collection</p>
+                      <p className="text-xs text-[#6b6b8a]">
+                        {editTrainingState
+                          ? 'Track scores, accuracy & leaderboards'
+                          : 'Enable in-game training mode'}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setEditTrainingState(!editTrainingState)}
+                    className={`relative h-6 w-11 rounded-full transition-colors ${
+                      editTrainingState ? 'bg-[#f0a500]' : 'bg-[#2a2a3e]'
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
+                        editTrainingState ? 'translate-x-5' : ''
+                      }`}
+                    />
+                  </button>
+                </div>
+              )}
               {/* Publish to Community toggle */}
               {user?.isPremium && editingCollection && (
                 <div className="mb-4 flex items-center justify-between rounded-lg border border-[#2a2a3e] bg-[#0a0a0f] px-4 py-3">
@@ -1382,7 +1479,7 @@ export default function MapDetailPage() {
                 </button>
                 <button
                   onClick={handleEditCollectionSubmit}
-                  disabled={!editCollectionName.trim() || (editCollectionName.trim() === editingCollection.name && editPublishState === editingCollection.isPublished)}
+                  disabled={!editCollectionName.trim() || (editCollectionName.trim() === editingCollection.name && editPublishState === editingCollection.isPublished && editTrainingState === (editingCollection.isTraining ?? false))}
                   className="flex-1 rounded-lg bg-[#f0a500] px-3 py-2 text-sm font-semibold text-[#0a0a0f] hover:bg-[#ffd700] transition-colors disabled:opacity-50"
                 >
                   Save

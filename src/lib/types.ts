@@ -157,6 +157,7 @@ export interface LineupCollection {
   ratingCount?: number;
   subscriberCount?: number;
   locked?: boolean;
+  isTraining?: boolean;
   createdAt: string;
   updatedAt: string;
 }

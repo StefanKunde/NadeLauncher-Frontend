@@ -4,10 +4,10 @@ import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { Target, Trophy, ChevronRight, Loader2, Crosshair } from 'lucide-react';
-import { trainingApi } from '@/lib/api';
+import { Target, Trophy, ChevronRight, Loader2, Crosshair, Users } from 'lucide-react';
+import { trainingApi, collectionsApi } from '@/lib/api';
 import { MAPS, MAP_COLORS } from '@/lib/constants';
-import type { TrainingCollection } from '@/lib/types';
+import type { TrainingCollection, UserSubscription } from '@/lib/types';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -40,11 +40,17 @@ function ScoreBadge({ score }: { score: number | null }) {
 export default function TrainingPage() {
   const [loading, setLoading] = useState(true);
   const [collections, setCollections] = useState<TrainingCollection[]>([]);
+  const [subscriptions, setSubscriptions] = useState<UserSubscription[]>([]);
 
   useEffect(() => {
-    trainingApi
-      .getCollections()
-      .then(setCollections)
+    Promise.all([
+      trainingApi.getCollections(),
+      collectionsApi.getSubscriptions().catch(() => [] as UserSubscription[]),
+    ])
+      .then(([cols, subs]) => {
+        setCollections(cols);
+        setSubscriptions(subs);
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
@@ -224,8 +230,59 @@ export default function TrainingPage() {
             <Target className="h-10 w-10 text-[#2a2a3e] mx-auto mb-3" />
             <p className="text-sm text-[#6b6b8a] mb-1">No training collections yet</p>
             <p className="text-xs text-[#6b6b8a]/60">
-              Start a practice server and add lineups to training using the in-game menu
+              Add lineups to training from any map page, or toggle training on a collection
             </p>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Subscribed Community Collections */}
+      {subscriptions.length > 0 && (
+        <motion.div variants={fadeUp} custom={byMap.size + 2} className="mb-8">
+          <div className="flex items-center gap-2 mb-4">
+            <Users className="h-4 w-4 text-[#6c5ce7]" />
+            <h2 className="text-lg font-semibold text-[#e8e8e8]">Subscribed Collections</h2>
+            <span className="text-[11px] text-[#6b6b8a]">Train with collections you've subscribed to</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {subscriptions.map((sub) => {
+              const col = sub.collection;
+              const mapInfo = MAPS.find((m) => m.name === col.mapName);
+              const mapColor = MAP_COLORS[col.mapName] || '#6c5ce7';
+              return (
+                <Link
+                  key={sub.id}
+                  href={`/dashboard/community/${col.id}`}
+                  className="group block rounded-xl border border-[#2a2a3e]/50 bg-[#12121a] p-4 transition-all duration-200 hover:border-[#2a2a3e] hover:-translate-y-0.5"
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+                        style={{ backgroundColor: `${mapColor}15` }}
+                      >
+                        <Users className="h-4 w-4" style={{ color: mapColor }} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-[#e8e8e8] truncate group-hover:text-[#6c5ce7] transition-colors">
+                          {col.name}
+                        </p>
+                        <p className="text-[10px] text-[#6b6b8a]">
+                          {mapInfo?.displayName || col.mapName} &middot; {col.lineupCount} lineup{col.lineupCount !== 1 ? 's' : ''}
+                        </p>
+                      </div>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-[#2a2a3e] group-hover:text-[#6b6b8a] transition-colors shrink-0 mt-1" />
+                  </div>
+                  {col.subscriberCount !== undefined && col.subscriberCount > 0 && (
+                    <div className="flex items-center gap-1 text-[10px] text-[#6b6b8a]">
+                      <Users className="h-3 w-3" />
+                      {col.subscriberCount} subscriber{col.subscriberCount !== 1 ? 's' : ''}
+                    </div>
+                  )}
+                </Link>
+              );
+            })}
           </div>
         </motion.div>
       )}
