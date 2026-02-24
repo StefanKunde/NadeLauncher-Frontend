@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft,
   Target,
@@ -16,9 +16,11 @@ import {
   Crosshair,
   TrendingUp,
   Hash,
+  Play,
+  Monitor,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { trainingApi, collectionsApi } from '@/lib/api';
+import { trainingApi, collectionsApi, sessionsApi } from '@/lib/api';
 import { MAPS, MAP_COLORS, GRENADE_TYPES } from '@/lib/constants';
 import { useAuthStore } from '@/store/auth-store';
 import type {
@@ -26,6 +28,7 @@ import type {
   LeaderboardEntry,
   Lineup,
   LineupCollection,
+  Session,
 } from '@/lib/types';
 import GrenadeIcon from '@/components/ui/GrenadeIcon';
 
@@ -102,6 +105,11 @@ export default function TrainingDetailPage() {
   const [myRank, setMyRank] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<'stats' | 'leaderboard'>('stats');
 
+  // Practice server
+  const [startingServer, setStartingServer] = useState(false);
+  const [showPracticeConfirm, setShowPracticeConfirm] = useState(false);
+  const [activeSession, setActiveSession] = useState<Session | null>(null);
+
   const map = collection ? MAPS.find((m) => m.name === collection.mapName) : null;
   const color = collection ? MAP_COLORS[collection.mapName] || '#f0a500' : '#f0a500';
 
@@ -143,6 +151,38 @@ export default function TrainingDetailPage() {
       setLeaderboardPage(page);
     } catch {
       toast.error('Failed to load leaderboard');
+    }
+  };
+
+  // Check for active session
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    const check = async () => {
+      try {
+        const s = await sessionsApi.getActive();
+        if (!cancelled) setActiveSession(s ?? null);
+      } catch {
+        if (!cancelled) setActiveSession(null);
+      }
+    };
+    check();
+    const interval = setInterval(check, 3000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, [user]);
+
+  const handleStartServer = async () => {
+    if (!collection) return;
+    setStartingServer(true);
+    try {
+      const created = await sessionsApi.create(collection.mapName, collectionId);
+      setActiveSession(created);
+      toast.success('Server starting...');
+      router.push('/dashboard');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Failed to start server');
+    } finally {
+      setStartingServer(false);
     }
   };
 
@@ -195,14 +235,43 @@ export default function TrainingDetailPage() {
             )}
           </div>
         </div>
-        {/* Rank badge */}
-        {myRank !== null && (
-          <div className="ml-auto flex items-center gap-2 rounded-lg border border-[#2a2a3e]/50 bg-[#12121a] px-3 py-2">
-            <Medal className="h-4 w-4 text-[#f0a500]" />
-            <span className="text-sm font-semibold text-[#e8e8e8]">#{myRank}</span>
-            <span className="text-[10px] text-[#6b6b8a]">Your Rank</span>
-          </div>
-        )}
+        {/* Rank badge + Practice button */}
+        <div className="ml-auto flex items-center gap-2">
+          {myRank !== null && (
+            <div className="flex items-center gap-2 rounded-lg border border-[#2a2a3e]/50 bg-[#12121a] px-3 py-2">
+              <Medal className="h-4 w-4 text-[#f0a500]" />
+              <span className="text-sm font-semibold text-[#e8e8e8]">#{myRank}</span>
+              <span className="text-[10px] text-[#6b6b8a]">Your Rank</span>
+            </div>
+          )}
+          {activeSession?.isActive ? (
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-2 rounded-lg border border-[#4a9fd4]/30 bg-[#4a9fd4]/10 px-4 py-2 text-xs font-semibold text-[#4a9fd4] hover:bg-[#4a9fd4]/20 transition-colors"
+            >
+              {activeSession.status === 'pending' || activeSession.status === 'provisioning' || activeSession.status === 'queued' ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  {activeSession.status === 'queued' ? 'Queued...' : 'Starting...'}
+                </>
+              ) : (
+                <>
+                  <Monitor className="h-3.5 w-3.5" />
+                  Server Active
+                </>
+              )}
+            </Link>
+          ) : user ? (
+            <button
+              onClick={() => setShowPracticeConfirm(true)}
+              disabled={startingServer}
+              className="flex items-center gap-2 rounded-lg bg-[#f0a500] px-4 py-2 text-xs font-semibold text-[#0a0a0f] hover:bg-[#ffd700] transition-colors disabled:opacity-50"
+            >
+              {startingServer ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
+              Practice
+            </button>
+          ) : null}
+        </div>
       </div>
 
       {/* Stats Overview Cards */}
@@ -500,6 +569,56 @@ export default function TrainingDetailPage() {
           })}
         </div>
       </div>
+
+      {/* Practice Confirmation Modal */}
+      <AnimatePresence>
+        {showPracticeConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+            onClick={() => setShowPracticeConfirm(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-96 rounded-xl border border-[#2a2a3e] bg-[#12121a] p-6 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-4 flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#f0a500]/10">
+                  <Play className="h-5 w-5 text-[#f0a500]" />
+                </div>
+                <h3 className="text-base font-semibold text-[#e8e8e8]">Start Practice Server</h3>
+              </div>
+              <p className="mb-5 text-sm text-[#6b6b8a]">
+                Start a practice server on <span className="text-[#e8e8e8] font-medium">{map?.displayName}</span> with training collection <span className="text-[#f0a500] font-medium">"{collection?.name}"</span>?
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowPracticeConfirm(false)}
+                  className="flex-1 rounded-lg border border-[#2a2a3e] px-3 py-2 text-sm text-[#b8b8cc] hover:bg-[#1a1a2e] transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={async () => {
+                    setShowPracticeConfirm(false);
+                    await handleStartServer();
+                  }}
+                  disabled={startingServer}
+                  className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-[#f0a500] px-3 py-2 text-sm font-semibold text-[#0a0a0f] hover:bg-[#ffd700] transition-colors disabled:opacity-50"
+                >
+                  {startingServer ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+                  Start Server
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
