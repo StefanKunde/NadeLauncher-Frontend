@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { useAuthStore } from '@/store/auth-store';
-import type { AuthResponse, Lineup, MapInfo, Session, UsageStats, PracticeStats, LineupCollection, UserSubscription, CollectionWithLineups, ProCollection, ProTeam, ProPlayer, ProMatch, Notification, ReferralStats, ReferralEntry, CommunityCollection } from './types';
+import type { AuthResponse, Lineup, MapInfo, Session, UsageStats, PracticeStats, LineupCollection, UserSubscription, CollectionWithLineups, ProCollection, ProTeam, ProPlayer, ProMatch, Notification, ReferralStats, ReferralEntry, CommunityCollection, TrainingCollection, TrainingStats, LeaderboardResponse } from './types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://nadelauncher-backend-a99d397c.apps.deploypilot.stefankunde.dev';
 
@@ -178,6 +178,18 @@ export const referralsApi = {
     api.get<{ data: ReferralStats }>('/api/referrals/stats').then((r) => r.data.data),
   getReferrals: () =>
     api.get<{ data: ReferralEntry[] }>('/api/referrals').then((r) => r.data.data),
+};
+
+// Training
+export const trainingApi = {
+  getCollections: (map?: string) =>
+    api.get<{ data: TrainingCollection[] }>('/api/training/collections', { params: { map } }).then((r) => r.data.data),
+  getStats: (collectionId: string) =>
+    api.get<{ data: TrainingStats }>(`/api/training/stats/${collectionId}`).then((r) => r.data.data),
+  getLeaderboard: (collectionId: string, page = 1, limit = 10) =>
+    api.get<{ data: LeaderboardResponse }>(`/api/training/leaderboard/${collectionId}`, { params: { page, limit } }).then((r) => r.data.data),
+  getRank: (collectionId: string) =>
+    api.get<{ data: { rank: number | null } }>(`/api/training/rank/${collectionId}`).then((r) => r.data.data),
 };
 
 // Account

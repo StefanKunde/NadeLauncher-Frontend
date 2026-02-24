@@ -263,3 +263,52 @@ export interface Notification {
 
 export type ProCategory = 'meta' | 'meta_all' | 'meta_archive' | 'team' | 'team_archive' | 'event' | 'match';
 export type TimeWindow = 'last_30d' | 'last_90d' | 'all_time';
+
+// Training types
+export interface TrainingCollection {
+  id: string;
+  name: string;
+  mapName: string;
+  isDefault: boolean;
+  lineupCount: number;
+  bestScore: number | null;
+  bestAccuracy: number | null;
+  totalSessions: number;
+  createdAt: string;
+}
+
+export interface TrainingStats {
+  bestScore: number | null;
+  bestAccuracy: number | null;
+  totalSessions: number;
+  totalAttempts: number;
+  perLineup: TrainingLineupStats[];
+}
+
+export interface TrainingLineupStats {
+  lineupId: string;
+  lineupName: string;
+  grenadeType: string | null;
+  throwType: string | null;
+  attempts: number;
+  successRate: number;
+  avgDistance: number | null;
+  bestDistance: number | null;
+}
+
+export interface LeaderboardEntry {
+  rank: number;
+  userId: string;
+  username: string;
+  avatar: string | null;
+  bestScore: number;
+  accuracyPercent: number;
+  completedAt: string;
+}
+
+export interface LeaderboardResponse {
+  entries: LeaderboardEntry[];
+  total: number;
+  page: number;
+  limit: number;
+}
