@@ -18,6 +18,7 @@ import {
   Hash,
   Play,
   Monitor,
+  Clock,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { trainingApi, collectionsApi, sessionsApi } from '@/lib/api';
@@ -29,6 +30,7 @@ import type {
   Lineup,
   LineupCollection,
   Session,
+  MyRankEntry,
 } from '@/lib/types';
 import GrenadeIcon from '@/components/ui/GrenadeIcon';
 
@@ -89,6 +91,15 @@ function RankBadge({ rank }: { rank: number }) {
   );
 }
 
+function formatDuration(ms: number | null): string {
+  if (ms == null) return '—';
+  const totalSeconds = ms / 1000;
+  if (totalSeconds < 60) return `${totalSeconds.toFixed(1)}s`;
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}m ${seconds.toFixed(0)}s`;
+}
+
 export default function TrainingDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -102,7 +113,7 @@ export default function TrainingDetailPage() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [leaderboardTotal, setLeaderboardTotal] = useState(0);
   const [leaderboardPage, setLeaderboardPage] = useState(1);
-  const [myRank, setMyRank] = useState<number | null>(null);
+  const [myRankEntry, setMyRankEntry] = useState<MyRankEntry | null>(null);
   const [activeTab, setActiveTab] = useState<'stats' | 'leaderboard'>('stats');
 
   // Practice server
@@ -113,8 +124,18 @@ export default function TrainingDetailPage() {
   const map = collection ? MAPS.find((m) => m.name === collection.mapName) : null;
   const color = collection ? MAP_COLORS[collection.mapName] || '#f0a500' : '#f0a500';
 
+  const isPremium = user?.isPremium ?? false;
+
+  // Redirect non-premium users
+  useEffect(() => {
+    if (user && !isPremium) {
+      router.push('/dashboard/training');
+    }
+  }, [user, isPremium, router]);
+
   // Load collection + stats + leaderboard
   useEffect(() => {
+    if (!isPremium) return;
     const load = async () => {
       try {
         setLoading(true);
@@ -131,9 +152,9 @@ export default function TrainingDetailPage() {
           setLeaderboard(lbData.entries);
           setLeaderboardTotal(lbData.total);
         }
-        setMyRank(rankData.rank);
+        setMyRankEntry(rankData);
       } catch {
-        toast.error('Failed to load training collection');
+        toast.error('Failed to load training set');
         router.push('/dashboard/training');
       } finally {
         setLoading(false);
@@ -237,10 +258,10 @@ export default function TrainingDetailPage() {
         </div>
         {/* Rank badge + Practice button */}
         <div className="ml-auto flex items-center gap-2">
-          {myRank !== null && (
+          {myRankEntry?.rank != null && (
             <div className="flex items-center gap-2 rounded-lg border border-[#2a2a3e]/50 bg-[#12121a] px-3 py-2">
               <Medal className="h-4 w-4 text-[#f0a500]" />
-              <span className="text-sm font-semibold text-[#e8e8e8]">#{myRank}</span>
+              <span className="text-sm font-semibold text-[#e8e8e8]">#{myRankEntry.rank}</span>
               <span className="text-[10px] text-[#6b6b8a]">Your Rank</span>
             </div>
           )}
@@ -275,7 +296,7 @@ export default function TrainingDetailPage() {
       </div>
 
       {/* Stats Overview Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
         <StatCard
           label="Best Score"
           value={stats?.bestScore !== null ? `${stats?.bestScore}%` : '—'}
@@ -288,6 +309,12 @@ export default function TrainingDetailPage() {
           color="#22c55e"
         />
         <StatCard
+          label="Best Time"
+          value={formatDuration(stats?.bestTotalDurationMs ?? null)}
+          sub="Fastest at best score"
+          color="#3b82f6"
+        />
+        <StatCard
           label="Sessions"
           value={String(stats?.totalSessions ?? 0)}
           sub="Training runs completed"
@@ -295,7 +322,7 @@ export default function TrainingDetailPage() {
         <StatCard
           label="Total Attempts"
           value={String(stats?.totalAttempts ?? 0)}
-          sub={`${lineups.length} lineup${lineups.length !== 1 ? 's' : ''} in collection`}
+          sub={`${lineups.length} lineup${lineups.length !== 1 ? 's' : ''} in training set`}
         />
       </div>
 
@@ -451,6 +478,7 @@ export default function TrainingDetailPage() {
                 <div className="flex-1">Player</div>
                 <div className="w-20 text-right">Score</div>
                 <div className="w-20 text-right">Accuracy</div>
+                <div className="w-20 text-right">Time</div>
               </div>
 
               {/* Entries */}
@@ -497,9 +525,59 @@ export default function TrainingDetailPage() {
                         {entry.accuracyPercent}%
                       </span>
                     </div>
+                    <div className="w-20 text-right">
+                      <span className="text-xs text-[#6b6b8a] tabular-nums flex items-center justify-end gap-1">
+                        {entry.totalDurationMs != null && <Clock className="h-3 w-3 text-[#3b82f6]/50" />}
+                        {formatDuration(entry.totalDurationMs)}
+                      </span>
+                    </div>
                   </div>
                 );
               })}
+
+              {/* Pinned "You" row when not visible on current page */}
+              {myRankEntry?.rank != null &&
+                !leaderboard.some((e) => e.userId === user?.id) && (
+                  <>
+                    <div className="border-t border-dashed border-[#2a2a3e]/40" />
+                    <div className="flex items-center gap-3 px-4 py-3 bg-[#f0a500]/[0.04]">
+                      <div className="w-8 flex justify-center shrink-0">
+                        <RankBadge rank={myRankEntry.rank} />
+                      </div>
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        {user?.avatar ? (
+                          <img
+                            src={user.avatar}
+                            alt=""
+                            className="h-7 w-7 rounded-full shrink-0"
+                          />
+                        ) : (
+                          <div className="h-7 w-7 rounded-full bg-[#2a2a3e] shrink-0" />
+                        )}
+                        <span className="text-sm font-medium truncate text-[#f0a500]">
+                          {user?.username ?? 'You'}
+                          <span className="ml-1.5 text-[10px] text-[#f0a500]/60">(you)</span>
+                        </span>
+                      </div>
+                      <div className="w-20 text-right">
+                        <span className="text-sm font-bold text-[#e8e8e8] tabular-nums">
+                          {myRankEntry.bestScore}%
+                        </span>
+                      </div>
+                      <div className="w-20 text-right">
+                        <span className="text-xs text-[#6b6b8a] tabular-nums">
+                          {myRankEntry.accuracyPercent}%
+                        </span>
+                      </div>
+                      <div className="w-20 text-right">
+                        <span className="text-xs text-[#6b6b8a] tabular-nums flex items-center justify-end gap-1">
+                          {myRankEntry.totalDurationMs != null && <Clock className="h-3 w-3 text-[#3b82f6]/50" />}
+                          {formatDuration(myRankEntry.totalDurationMs ?? null)}
+                        </span>
+                      </div>
+                    </div>
+                  </>
+                )}
 
               {/* Pagination */}
               {totalPages > 1 && (
@@ -541,7 +619,7 @@ export default function TrainingDetailPage() {
       {/* Lineup list (below tabs) */}
       <div className="mt-8">
         <h3 className="text-sm font-semibold text-[#e8e8e8] mb-3">
-          Lineups in this Collection ({lineups.length})
+          Lineups in this Training Set ({lineups.length})
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {lineups.map((lineup) => {
@@ -594,7 +672,7 @@ export default function TrainingDetailPage() {
                 <h3 className="text-base font-semibold text-[#e8e8e8]">Start Practice Server</h3>
               </div>
               <p className="mb-5 text-sm text-[#6b6b8a]">
-                Start a practice server on <span className="text-[#e8e8e8] font-medium">{map?.displayName}</span> with training collection <span className="text-[#f0a500] font-medium">"{collection?.name}"</span>?
+                Start a practice server on <span className="text-[#e8e8e8] font-medium">{map?.displayName}</span> with training set <span className="text-[#f0a500] font-medium">"{collection?.name}"</span>?
               </p>
               <div className="flex gap-2">
                 <button

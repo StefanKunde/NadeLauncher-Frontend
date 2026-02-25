@@ -25,7 +25,7 @@ import SidebarServerStatus from './SidebarServerStatus';
 const NAV_MAIN = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', desc: 'Overview & practice' },
   { href: '/dashboard/maps', icon: Map, label: 'Nades', desc: 'Browse lineups' },
-  { href: '/dashboard/community', icon: Users, label: 'Community', desc: 'Shared collections' },
+  { href: '/dashboard/community', icon: Users, label: 'Community', desc: 'Discover & subscribe' },
   { href: '/dashboard/training', icon: Target, label: 'Training', desc: 'Practice & compete' },
   { href: '/dashboard/guide', icon: BookOpen, label: 'Guide', desc: 'In-game instructions' },
 ];

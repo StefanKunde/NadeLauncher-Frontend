@@ -51,7 +51,7 @@ export default function CommunityPage() {
       setCollections(result.items);
       setTotal(result.total);
     } catch {
-      toast.error('Failed to load community collections');
+      toast.error('Failed to load community nades');
     } finally {
       setLoading(false);
     }
@@ -123,10 +123,10 @@ export default function CommunityPage() {
       <div>
         <h1 className="text-2xl font-bold text-white flex items-center gap-2">
           <Users className="h-6 w-6 text-[#6c5ce7]" />
-          Community Collections
+          Community Nades
         </h1>
         <p className="text-sm text-[#8888aa] mt-1">
-          Browse and subscribe to collections shared by other players
+          Browse and subscribe to nades shared by other players
         </p>
       </div>
 
@@ -191,7 +191,7 @@ export default function CommunityPage() {
         <Search className="h-4 w-4 shrink-0 text-[#555577]" />
         <input
           type="text"
-          placeholder="Search collections..."
+          placeholder="Search nades..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full bg-transparent py-2 text-white text-sm placeholder-[#555577] focus:outline-none border-none"
@@ -206,8 +206,8 @@ export default function CommunityPage() {
       ) : collections.length === 0 ? (
         <div className="text-center py-20 text-[#8888aa]">
           <Users className="h-12 w-12 mx-auto mb-3 opacity-30" />
-          <p className="text-lg font-medium text-white/60">No community collections found</p>
-          <p className="text-sm mt-1">Be the first to publish a collection!</p>
+          <p className="text-lg font-medium text-white/60">No community nades found</p>
+          <p className="text-sm mt-1">Be the first to publish your nades!</p>
         </div>
       ) : (
         <>
@@ -218,7 +218,7 @@ export default function CommunityPage() {
               onClick={() => handleSort('newest')}
               className="group/sort flex-1 flex items-center gap-1 text-left hover:text-[#e8e8e8] transition-colors"
             >
-              Collection <SortIcon column="newest" />
+              Name <SortIcon column="newest" />
             </button>
             <button
               onClick={() => handleSort('most_lineups')}
@@ -364,7 +364,7 @@ export default function CommunityPage() {
           {/* Pagination */}
           <div className="flex items-center justify-between pt-4">
             <span className="text-xs text-[#6b6b8a]">
-              {total} collection{total !== 1 ? 's' : ''}
+              {total} result{total !== 1 ? 's' : ''}
             </span>
             {totalPages > 1 && (
               <div className="flex items-center gap-1">

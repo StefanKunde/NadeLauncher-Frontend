@@ -4,8 +4,9 @@ import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { Target, Trophy, ChevronRight, Loader2, Crosshair, Users } from 'lucide-react';
+import { Target, Trophy, ChevronRight, Loader2, Crosshair, Users, Clock, Crown } from 'lucide-react';
 import { trainingApi, collectionsApi } from '@/lib/api';
+import { useAuthStore } from '@/store/auth-store';
 import { MAPS, MAP_COLORS } from '@/lib/constants';
 import type { TrainingCollection, UserSubscription } from '@/lib/types';
 
@@ -37,12 +38,27 @@ function ScoreBadge({ score }: { score: number | null }) {
   );
 }
 
+function formatDuration(ms: number | null): string {
+  if (ms == null) return '—';
+  const totalSeconds = ms / 1000;
+  if (totalSeconds < 60) return `${totalSeconds.toFixed(1)}s`;
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}m ${seconds.toFixed(0)}s`;
+}
+
 export default function TrainingPage() {
+  const user = useAuthStore((s) => s.user);
+  const isPremium = user?.isPremium ?? false;
   const [loading, setLoading] = useState(true);
   const [collections, setCollections] = useState<TrainingCollection[]>([]);
   const [subscriptions, setSubscriptions] = useState<UserSubscription[]>([]);
 
   useEffect(() => {
+    if (!isPremium) {
+      setLoading(false);
+      return;
+    }
     Promise.all([
       trainingApi.getCollections(),
       collectionsApi.getSubscriptions().catch(() => [] as UserSubscription[]),
@@ -53,7 +69,7 @@ export default function TrainingPage() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  }, [isPremium]);
 
   // Group collections by map
   const byMap = useMemo(() => {
@@ -91,8 +107,33 @@ export default function TrainingPage() {
         </div>
       </motion.div>
 
+      {/* Premium gate */}
+      {!isPremium && (
+        <motion.div variants={fadeUp} custom={1} className="mb-10">
+          <div className="rounded-xl border border-[#f0a500]/20 bg-[#12121a] overflow-hidden">
+            <div className="h-[3px] bg-gradient-to-r from-[#f0a500] via-[#f0a500]/40 to-transparent" />
+            <div className="px-6 py-8 text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f0a500]/10 border border-[#f0a500]/15 mx-auto mb-4">
+                <Crown className="h-6 w-6 text-[#f0a500]" />
+              </div>
+              <h3 className="text-lg font-semibold text-[#e8e8e8] mb-2">Training Mode is a Premium Feature</h3>
+              <p className="text-sm text-[#6b6b8a] mb-5 max-w-md mx-auto">
+                Create training sets from your lineups, practice with scored rounds, and compete on global leaderboards.
+              </p>
+              <Link
+                href="/dashboard/premium"
+                className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#f0a500] to-[#d4920a] px-5 py-2.5 text-sm font-bold text-[#0a0a0f] hover:brightness-110 transition-all"
+              >
+                <Crown className="h-4 w-4" />
+                Upgrade to Premium
+              </Link>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       {/* How it works — show when no collections */}
-      {collections.length === 0 && (
+      {isPremium && collections.length === 0 && (
         <motion.div variants={fadeUp} custom={1} className="mb-10">
           <div className="rounded-xl border border-[#2a2a3e]/50 bg-[#12121a] overflow-hidden">
             <div className="h-[3px] bg-gradient-to-r from-[#f0a500] via-[#f0a500]/40 to-transparent" />
@@ -103,7 +144,7 @@ export default function TrainingPage() {
               </div>
               <div className="flex flex-col sm:flex-row gap-4">
                 {[
-                  { step: '1', text: 'Add lineups to a Training collection', desc: 'Use "Add to Training" on any lineup in your Nades tab' },
+                  { step: '1', text: 'Add lineups to a training set', desc: 'Use "Add to Training" on any lineup in your Nades tab' },
                   { step: '2', text: 'Start a Practice Server and use !training', desc: 'The plugin teleports you through each lineup for practice' },
                   { step: '3', text: 'Review your scores and climb the leaderboard', desc: 'Track accuracy per lineup and compare with other players' },
                 ].map((item) => (
@@ -124,7 +165,7 @@ export default function TrainingPage() {
       )}
 
       {/* Collections grouped by map */}
-      {collections.length > 0 ? (
+      {!isPremium ? null : collections.length > 0 ? (
         Array.from(byMap.entries()).map(([mapName, cols], mapIdx) => {
           const mapInfo = MAPS.find((m) => m.name === mapName);
           const color = MAP_COLORS[mapName] || '#f0a500';
@@ -150,7 +191,7 @@ export default function TrainingPage() {
                     {mapInfo?.displayName || mapName}
                   </h2>
                   <p className="text-[11px] text-[#6b6b8a]">
-                    {cols.length} training collection{cols.length !== 1 ? 's' : ''}
+                    {cols.length} training set{cols.length !== 1 ? 's' : ''}
                   </p>
                 </div>
               </div>
@@ -191,6 +232,12 @@ export default function TrainingPage() {
                           {col.bestAccuracy}% accuracy
                         </span>
                       )}
+                      {col.bestTotalDurationMs != null && (
+                        <span className="inline-flex items-center gap-1 text-[10px] text-[#3b82f6]">
+                          <Clock className="h-3 w-3" />
+                          {formatDuration(col.bestTotalDurationMs)}
+                        </span>
+                      )}
                       {col.totalSessions > 0 && (
                         <span className="text-[10px] text-[#6b6b8a] ml-auto">
                           {col.totalSessions} session{col.totalSessions !== 1 ? 's' : ''}
@@ -228,21 +275,21 @@ export default function TrainingPage() {
         <motion.div variants={fadeUp} custom={2}>
           <div className="text-center py-16 rounded-xl border border-[#2a2a3e]/30 bg-[#12121a]">
             <Target className="h-10 w-10 text-[#2a2a3e] mx-auto mb-3" />
-            <p className="text-sm text-[#6b6b8a] mb-1">No training collections yet</p>
+            <p className="text-sm text-[#6b6b8a] mb-1">No training sets yet</p>
             <p className="text-xs text-[#6b6b8a]/60">
-              Add lineups to training from any map page, or toggle training on a collection
+              Add lineups from any map page, or toggle training on any nade set
             </p>
           </div>
         </motion.div>
       )}
 
       {/* Subscribed Community Collections */}
-      {subscriptions.length > 0 && (
+      {isPremium && subscriptions.length > 0 && (
         <motion.div variants={fadeUp} custom={byMap.size + 2} className="mb-8">
           <div className="flex items-center gap-2 mb-4">
             <Users className="h-4 w-4 text-[#6c5ce7]" />
-            <h2 className="text-lg font-semibold text-[#e8e8e8]">Subscribed Collections</h2>
-            <span className="text-[11px] text-[#6b6b8a]">Train with collections you've subscribed to</span>
+            <h2 className="text-lg font-semibold text-[#e8e8e8]">Subscribed Nades</h2>
+            <span className="text-[11px] text-[#6b6b8a]">Train with nades you've subscribed to</span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {subscriptions.map((sub) => {

@@ -274,6 +274,7 @@ export interface TrainingCollection {
   lineupCount: number;
   bestScore: number | null;
   bestAccuracy: number | null;
+  bestTotalDurationMs: number | null;
   totalSessions: number;
   createdAt: string;
 }
@@ -281,6 +282,7 @@ export interface TrainingCollection {
 export interface TrainingStats {
   bestScore: number | null;
   bestAccuracy: number | null;
+  bestTotalDurationMs: number | null;
   totalSessions: number;
   totalAttempts: number;
   perLineup: TrainingLineupStats[];
@@ -304,6 +306,7 @@ export interface LeaderboardEntry {
   avatar: string | null;
   bestScore: number;
   accuracyPercent: number;
+  totalDurationMs: number | null;
   completedAt: string;
 }
 
@@ -312,4 +315,12 @@ export interface LeaderboardResponse {
   total: number;
   page: number;
   limit: number;
+}
+
+export interface MyRankEntry {
+  rank: number | null;
+  bestScore?: number;
+  accuracyPercent?: number;
+  totalDurationMs?: number | null;
+  completedAt?: string;
 }

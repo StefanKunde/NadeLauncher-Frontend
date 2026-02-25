@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { useAuthStore } from '@/store/auth-store';
-import type { AuthResponse, Lineup, MapInfo, Session, UsageStats, PracticeStats, LineupCollection, UserSubscription, CollectionWithLineups, ProCollection, ProTeam, ProPlayer, ProMatch, Notification, ReferralStats, ReferralEntry, CommunityCollection, TrainingCollection, TrainingStats, LeaderboardResponse } from './types';
+import type { AuthResponse, Lineup, MapInfo, Session, UsageStats, PracticeStats, LineupCollection, UserSubscription, CollectionWithLineups, ProCollection, ProTeam, ProPlayer, ProMatch, Notification, ReferralStats, ReferralEntry, CommunityCollection, TrainingCollection, TrainingStats, LeaderboardResponse, MyRankEntry } from './types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://nadelauncher-backend-a99d397c.apps.deploypilot.stefankunde.dev';
 
@@ -193,7 +193,7 @@ export const trainingApi = {
   getLeaderboard: (collectionId: string, page = 1, limit = 10) =>
     api.get<{ data: LeaderboardResponse }>(`/api/training/leaderboard/${collectionId}`, { params: { page, limit } }).then((r) => r.data.data),
   getRank: (collectionId: string) =>
-    api.get<{ data: { rank: number | null } }>(`/api/training/rank/${collectionId}`).then((r) => r.data.data),
+    api.get<{ data: MyRankEntry }>(`/api/training/rank/${collectionId}`).then((r) => r.data.data),
 };
 
 // Account

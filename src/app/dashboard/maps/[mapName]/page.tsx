@@ -439,10 +439,10 @@ export default function MapDetailPage() {
 
       setUserCollections((prev) => prev.map((x) => (x.id === editingCollection.id ? updated : x)));
       const msg = trainingChanged
-        ? (editTrainingState ? 'Enabled as Training collection!' : 'Training mode disabled')
+        ? (editTrainingState ? 'Enabled as training set!' : 'Training mode disabled')
         : publishChanged
           ? (editPublishState ? 'Published to Community!' : 'Unpublished')
-          : 'Collection updated';
+          : 'Updated';
       toast.success(msg);
       setEditingCollection(null);
     } catch (err: any) {
@@ -1411,13 +1411,13 @@ export default function MapDetailPage() {
                   {editCollectionName.length}/50
                 </p>
               </div>
-              {/* Training toggle */}
-              {editingCollection && (
+              {/* Training toggle (Premium only) */}
+              {user?.isPremium && editingCollection && (
                 <div className="mb-4 flex items-center justify-between rounded-lg border border-[#2a2a3e] bg-[#0a0a0f] px-4 py-3">
                   <div className="flex items-center gap-2">
                     <Target className="h-4 w-4 text-[#f0a500] shrink-0" />
                     <div>
-                      <p className="text-sm text-[#e8e8e8]">Training Collection</p>
+                      <p className="text-sm text-[#e8e8e8]">Training Set</p>
                       <p className="text-xs text-[#6b6b8a]">
                         {editTrainingState
                           ? 'Track scores, accuracy & leaderboards'

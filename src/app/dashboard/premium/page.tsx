@@ -21,6 +21,7 @@ const COMPARISON_ROWS = [
   { feature: 'Build custom collections from pro lineups', free: false, pro: true },
   { feature: 'Pro team & event collections', free: false, pro: true },
   { feature: 'Continuously updated with new events & matches', free: false, pro: true },
+  { feature: 'Training mode with leaderboards', free: false, pro: true },
 ];
 
 const FAQ_ITEMS = [
@@ -63,6 +64,7 @@ const PRO_FEATURES = [
   'Curated pro lineups & collections',
   'Pro team & event collections',
   'Always updated with the latest events',
+  'Training mode with global leaderboards',
 ];
 
 const fadeUp = {
@@ -454,6 +456,10 @@ function PremiumPageInner() {
               <div className="flex items-center gap-2">
                 <Check className="h-4 w-4 text-[#f0a500] shrink-0" />
                 <span>Pro team & event collections</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Check className="h-4 w-4 text-[#f0a500] shrink-0" />
+                <span>Training mode with global leaderboards</span>
               </div>
             </div>
 

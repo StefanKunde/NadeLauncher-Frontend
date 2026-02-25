@@ -321,7 +321,7 @@ export default function FilterSidebar({
             className="mb-2 flex w-full items-center gap-1 text-xs font-semibold uppercase tracking-wider text-[#6b6b8a] hover:text-[#e8e8e8] transition-colors"
           >
             {myExpanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-            My Collections
+            My Nades
           </button>
           <AnimatePresence>
             {myExpanded && (
@@ -391,7 +391,7 @@ export default function FilterSidebar({
                   className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-[#6b6b8a] hover:text-[#f0a500] hover:bg-[#f0a500]/5 transition-colors disabled:opacity-50"
                 >
                   {creatingCollection ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
-                  Create Collection
+                  New Nade Set
                 </button>
               </motion.div>
             )}

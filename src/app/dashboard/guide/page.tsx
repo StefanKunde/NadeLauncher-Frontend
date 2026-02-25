@@ -28,6 +28,7 @@ import {
   Flame,
   Users,
   Swords,
+  Trophy,
 } from 'lucide-react';
 
 /* ─── animation helpers ─── */
@@ -383,6 +384,38 @@ const GUIDE_SECTIONS = [
     ],
   },
   {
+    id: 'training',
+    icon: Trophy,
+    title: 'Training Mode',
+    subtitle: 'Test yourself with scored practice runs',
+    items: [
+      {
+        q: 'What is Training Mode?',
+        a: <>Training mode is a <Link href="/dashboard/premium" className="text-[#f0a500] hover:underline">Premium</Link> feature that turns your lineup sets into scored practice runs. You get teleported to each lineup in random order and scored on accuracy — perfect, good, or miss — based on how close your throw lands to the target. Your score and time are tracked on a global leaderboard so you can compete with other players.</>,
+      },
+      {
+        q: 'How do I start training?',
+        a: `Type !training (or !train) in chat. A menu appears with your available training sets. Select one and the session starts immediately — you'll be teleported to the first lineup.\n\nTraining sets need at least 5 lineups. You can mark any of your nade sets as a training set from the website.`,
+      },
+      {
+        q: 'How does scoring work?',
+        a: `Each throw is scored based on distance from the target landing position:\n\n• Perfect (green) — within 64 units\n• Good (yellow) — within 150 units\n• Miss (red) — beyond 150 units or air burst\n\nYour final score is calculated as: (Perfect × 3 + Good × 1) / (Total lineups × 3) × 100%. Time is also tracked — faster completions rank higher on the leaderboard when scores are tied.`,
+      },
+      {
+        q: 'What are demo throws?',
+        a: `Press R during a training round to see a demo throw. A grenade is spawned along the correct trajectory and you follow it in a spectator camera to see exactly where it lands. After the demo you're returned to the throw position to try it yourself.\n\nYou can use demos as many times as you want, but it won't help your score — it's purely for learning.`,
+      },
+      {
+        q: 'Training commands',
+        a: `• !training / !train — Start training mode (pick a training set)\n• !stoptraining — End the current training session early\n• !skip — Skip the current lineup (counts as a miss)\n• !retry — Retry the current lineup from scratch\n• !helpmode — Toggle the landing position marker on/off\n• Press R — Demo throw (spectator follow camera)`,
+      },
+      {
+        q: 'How do leaderboards work?',
+        a: <>Each training set has its own global leaderboard. Your best score is displayed with accuracy and completion time. When scores are tied, faster times rank higher. View leaderboards on the <Link href="/dashboard/training" className="text-[#22c55e] hover:underline">Training page</Link>.</>,
+      },
+    ],
+  },
+  {
     id: 'commands',
     icon: Terminal,
     title: 'All Chat Commands',
@@ -403,6 +436,10 @@ const GUIDE_SECTIONS = [
       {
         q: 'Practice utility commands',
         a: `• !noflash — Toggle flashbang immunity on/off\n• !clear / !c — Remove all active smoke, molotov, and decoy effects\n• !ff [seconds] — Fast-forward time (default 6 sec, max 120 sec)`,
+      },
+      {
+        q: 'Training commands (Premium)',
+        a: `• !training / !train — Start training mode (pick a training set)\n• !stoptraining — End current training session\n• !skip — Skip the current lineup\n• !retry — Retry the current lineup\n• !helpmode — Toggle landing position marker\n• Press R — Demo throw with follow camera`,
       },
     ],
   },
