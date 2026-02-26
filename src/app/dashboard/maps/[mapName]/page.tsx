@@ -427,8 +427,8 @@ export default function MapDetailPage() {
       });
       setEditingCollection((prev) => prev ? { ...prev, lineupCount: Math.max(0, prev.lineupCount - 1) } : prev);
       toast.success('Lineup removed');
-    } catch {
-      toast.error('Failed to remove lineup');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Failed to remove lineup');
     } finally {
       setConfirmRemoveLineup(null);
     }
