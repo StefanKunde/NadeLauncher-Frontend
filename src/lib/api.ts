@@ -142,6 +142,8 @@ export const userCollectionsApi = {
     api.delete(`/api/collections/my/${collectionId}/lineups/${lineupId}`),
   toggleTraining: (id: string, isTraining: boolean) =>
     api.put<{ data: LineupCollection }>(`/api/collections/my/${id}/training`, { isTraining }).then((r) => r.data.data),
+  fixIncompatibleAndEnableTraining: (id: string) =>
+    api.post<{ data: LineupCollection }>(`/api/collections/my/${id}/training/fix-incompatible`).then((r) => r.data.data),
 };
 
 // Pro Nades

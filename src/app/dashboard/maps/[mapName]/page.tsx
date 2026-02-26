@@ -81,6 +81,10 @@ export default function MapDetailPage() {
   const [editPublishState, setEditPublishState] = useState(false);
   const [editTrainingState, setEditTrainingState] = useState(false);
 
+  // Incompatible lineups dialog
+  const [incompatibleLineups, setIncompatibleLineups] = useState<{ id: string; name: string; throwType: string }[]>([]);
+  const [fixingIncompatible, setFixingIncompatible] = useState(false);
+
   // Pro nade detail slider (occurrence filtering)
   // Meta/team collections: persisted preference (default step 4 = threshold 12)
   const [proNadeDetail, setProNadeDetail] = useState<number>(() => {
@@ -446,7 +450,52 @@ export default function MapDetailPage() {
       toast.success(msg);
       setEditingCollection(null);
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Failed to save');
+      const data = err?.response?.data;
+      if (data?.error === 'INCOMPATIBLE_LINEUPS' && data?.incompatibleLineups?.length > 0) {
+        setIncompatibleLineups(data.incompatibleLineups);
+      } else {
+        toast.error(data?.message || 'Failed to save');
+      }
+    }
+  };
+
+  const handleFixIncompatible = async () => {
+    if (!editingCollection) return;
+    setFixingIncompatible(true);
+    try {
+      const toggled = await userCollectionsApi.fixIncompatibleAndEnableTraining(editingCollection.id);
+      const updated = { ...editingCollection, isTraining: true };
+      setUserCollections((prev) => prev.map((x) => (x.id === editingCollection.id ? updated : x)));
+      setTrainingCollections((prev) => {
+        if (prev.some((c) => c.id === editingCollection.id)) return prev;
+        return [...prev, updated];
+      });
+
+      // Remove the incompatible lineups from local state
+      const removedIds = new Set(incompatibleLineups.map((l) => l.id));
+      setLineupsByCollection((prev) => {
+        const next = new Map(prev);
+        const existing = next.get(editingCollection.id);
+        if (existing) {
+          next.set(editingCollection.id, existing.filter((l) => !removedIds.has(l.id)));
+        }
+        return next;
+      });
+      setUserCollectionLineupIds((prev) => {
+        const next = new Map(prev);
+        const ids = new Set(next.get(editingCollection.id) ?? []);
+        for (const id of removedIds) ids.delete(id);
+        next.set(editingCollection.id, ids);
+        return next;
+      });
+
+      toast.success(`Removed ${incompatibleLineups.length} incompatible lineup(s) and enabled training!`);
+      setIncompatibleLineups([]);
+      setEditingCollection(null);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Failed to fix incompatible lineups');
+    } finally {
+      setFixingIncompatible(false);
     }
   };
 
@@ -1220,6 +1269,70 @@ export default function MapDetailPage() {
                 >
                   {creatingCollection ? <Loader2 className="mx-auto h-4 w-4 animate-spin" /> : 'Create'}
                 </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Incompatible Lineups Dialog */}
+      <AnimatePresence>
+        {incompatibleLineups.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
+            onClick={() => setIncompatibleLineups([])}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md rounded-xl border border-[#f0a500]/20 bg-[#12121a] shadow-2xl overflow-hidden"
+            >
+              <div className="h-[3px] bg-gradient-to-r from-[#f0a500] via-[#f0a500]/40 to-transparent" />
+              <div className="p-5 space-y-4">
+                <div className="flex items-center gap-2">
+                  <Target className="h-5 w-5 text-[#f0a500]" />
+                  <h3 className="text-base font-semibold text-[#e8e8e8]">Can&apos;t Enable Training</h3>
+                </div>
+
+                <p className="text-sm text-[#8888aa]">
+                  {incompatibleLineups.length} pro lineup{incompatibleLineups.length !== 1 ? 's use' : ' uses'} movement throws (walkthrow, runthrow, etc.) that can&apos;t be scored automatically in training mode.
+                </p>
+
+                <div className="rounded-lg border border-[#2a2a3e]/50 bg-[#0a0a12] max-h-48 overflow-y-auto">
+                  {incompatibleLineups.map((l) => (
+                    <div key={l.id} className="flex items-center justify-between px-3 py-2 border-b border-[#2a2a3e]/30 last:border-b-0">
+                      <span className="text-sm text-[#e8e8e8] truncate">{l.name}</span>
+                      <span className="shrink-0 text-[10px] font-medium text-[#f97316] bg-[#f97316]/10 rounded px-1.5 py-0.5">{l.throwType}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="rounded-lg border border-[#2a2a3e]/30 bg-[#1a1a2e]/50 p-3">
+                  <p className="text-xs text-[#6b6b8a]">
+                    <span className="text-[#f0a500] font-medium">Tip:</span> You can also start a practice server, delete these lineups, and re-throw them with a supported throw type (standing throw, jump throw, etc.) to keep them in the collection.
+                  </p>
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setIncompatibleLineups([])}
+                    className="flex-1 rounded-lg border border-[#2a2a3e] px-3 py-2 text-sm text-[#b8b8cc] hover:bg-[#1a1a2e] transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleFixIncompatible}
+                    disabled={fixingIncompatible}
+                    className="flex-1 rounded-lg bg-[#f0a500] px-3 py-2 text-sm font-semibold text-[#0a0a0f] hover:bg-[#ffd700] transition-colors disabled:opacity-50"
+                  >
+                    {fixingIncompatible ? 'Removing...' : `Remove ${incompatibleLineups.length} & Enable`}
+                  </button>
+                </div>
               </div>
             </motion.div>
           </motion.div>

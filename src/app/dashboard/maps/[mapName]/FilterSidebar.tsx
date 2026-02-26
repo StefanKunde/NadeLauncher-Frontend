@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { Search, Plus, Lock, ChevronDown, ChevronRight, Pencil, Trash2, Loader2, X, Calendar, Crown, Users } from 'lucide-react';
+import { Search, Plus, Lock, ChevronDown, ChevronRight, Pencil, Trash2, Loader2, X, Calendar, Crown, Users, Target } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -355,6 +355,9 @@ export default function FilterSidebar({
                         />
                         {/* Count — hidden on hover, replaced by action buttons */}
                         <span className={`absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5 group-hover/item:hidden`}>
+                          {c.isTraining && (
+                            <Target className="h-3 w-3 shrink-0 text-[#f0a500]" />
+                          )}
                           {c.isPublished && (
                             <Users className="h-3 w-3 shrink-0 text-[#6c5ce7]" />
                           )}
@@ -363,6 +366,11 @@ export default function FilterSidebar({
                           </span>
                         </span>
                         <div className="absolute right-1 top-1/2 -translate-y-1/2 hidden group-hover/item:flex items-center gap-0.5">
+                          {c.isTraining && (
+                            <span title="Training Set" className="p-1">
+                              <Target className="h-3 w-3 shrink-0 text-[#f0a500]" />
+                            </span>
+                          )}
                           {c.isPublished && (
                             <span title="Published to Community" className="p-1">
                               <Users className="h-3 w-3 shrink-0 text-[#6c5ce7]" />
