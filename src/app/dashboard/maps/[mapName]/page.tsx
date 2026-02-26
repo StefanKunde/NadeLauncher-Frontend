@@ -1505,10 +1505,10 @@ export default function MapDetailPage() {
                     <div className="mt-3 space-y-2">
                       <div className="rounded-md border border-[#f97316]/15 bg-[#f97316]/5 px-3 py-2">
                         <p className="text-[11px] text-[#f97316]/90 leading-relaxed">
-                          {editIncompatibleLineups.length} <span className="font-medium">pro</span> lineup{editIncompatibleLineups.length !== 1 ? 's' : ''} can&apos;t be used in training because {editIncompatibleLineups.length !== 1 ? 'they involve' : 'it involves'} movement before throwing (walking, running). Only your own nades and standing/jump throws can be scored.
+                          {editIncompatibleLineups.length} <span className="font-medium">pro</span> lineup{editIncompatibleLineups.length !== 1 ? 's involve' : ' involves'} movement before throwing (walking, running). Pro nades with movement can&apos;t be scored automatically &mdash; your own nades with any throw type work fine.
                         </p>
                         <p className="mt-1 text-[11px] text-[#6b6b8a] leading-relaxed">
-                          Remove them below, or re-throw them on a practice server with a standing or jump throw. Saving will remove any remaining ones.
+                          Remove them below, or re-throw them on a practice server so they become your own. Saving will remove any remaining ones.
                         </p>
                       </div>
                       <div className="rounded-lg border border-[#2a2a3e]/50 bg-[#0a0a12] max-h-36 overflow-y-auto">
