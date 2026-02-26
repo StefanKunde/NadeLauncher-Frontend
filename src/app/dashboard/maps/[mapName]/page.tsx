@@ -80,6 +80,7 @@ export default function MapDetailPage() {
   // Publish + training state tracked inside edit modal (saved on "Save")
   const [editPublishState, setEditPublishState] = useState(false);
   const [editTrainingState, setEditTrainingState] = useState(false);
+  const [confirmRemoveLineup, setConfirmRemoveLineup] = useState<{ id: string; name: string } | null>(null);
 
 
   // Pro nade detail slider (occurrence filtering)
@@ -406,8 +407,9 @@ export default function MapDetailPage() {
     setEditTrainingState(c.isTraining ?? false);
   };
 
-  const handleRemoveIncompatibleLineup = async (lineupId: string) => {
-    if (!editingCollection) return;
+  const handleConfirmRemoveLineup = async () => {
+    if (!editingCollection || !confirmRemoveLineup) return;
+    const lineupId = confirmRemoveLineup.id;
     try {
       await userCollectionsApi.removeLineup(editingCollection.id, lineupId);
       setLineupsByCollection((prev) => {
@@ -427,6 +429,8 @@ export default function MapDetailPage() {
       toast.success('Lineup removed');
     } catch {
       toast.error('Failed to remove lineup');
+    } finally {
+      setConfirmRemoveLineup(null);
     }
   };
 
@@ -1501,21 +1505,18 @@ export default function MapDetailPage() {
                     <div className="mt-3 space-y-2">
                       <div className="rounded-md border border-[#f97316]/15 bg-[#f97316]/5 px-3 py-2">
                         <p className="text-[11px] text-[#f97316]/90 leading-relaxed">
-                          {editIncompatibleLineups.length} pro lineup{editIncompatibleLineups.length !== 1 ? 's require' : ' requires'} movement before throwing (walking, running) which can&apos;t be scored automatically.
+                          {editIncompatibleLineups.length} <span className="font-medium">pro</span> lineup{editIncompatibleLineups.length !== 1 ? 's' : ''} can&apos;t be used in training because {editIncompatibleLineups.length !== 1 ? 'they involve' : 'it involves'} movement before throwing (walking, running). Only your own nades and standing/jump throws can be scored.
                         </p>
                         <p className="mt-1 text-[11px] text-[#6b6b8a] leading-relaxed">
-                          Remove them below, or re-throw them on a practice server using a standing or jump throw. Saving will remove any remaining ones.
+                          Remove them below, or re-throw them on a practice server with a standing or jump throw. Saving will remove any remaining ones.
                         </p>
                       </div>
                       <div className="rounded-lg border border-[#2a2a3e]/50 bg-[#0a0a12] max-h-36 overflow-y-auto">
                         {editIncompatibleLineups.map((l) => (
                           <div key={l.id} className="flex items-center gap-2 px-3 py-1.5 border-b border-[#2a2a3e]/30 last:border-b-0">
                             <span className="text-xs text-[#e8e8e8] truncate flex-1">{l.name}</span>
-                            <span className="shrink-0 text-[9px] text-[#6b6b8a]">
-                              {l.throwType.replace('throw', '').replace('jump', ' jump')}
-                            </span>
                             <button
-                              onClick={() => handleRemoveIncompatibleLineup(l.id)}
+                              onClick={() => setConfirmRemoveLineup({ id: l.id, name: l.name })}
                               className="shrink-0 p-1 rounded text-[#6b6b8a] hover:text-[#ff4444] hover:bg-[#ff4444]/10 transition-colors"
                               title="Remove from collection"
                             >
@@ -1574,6 +1575,49 @@ export default function MapDetailPage() {
                   {editTrainingState && !(editingCollection.isTraining ?? false) && editIncompatibleLineups.length > 0
                     ? `Remove ${editIncompatibleLineups.length} & Save`
                     : 'Save'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Remove Lineup Confirmation Modal */}
+      <AnimatePresence>
+        {confirmRemoveLineup && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60"
+            onClick={() => setConfirmRemoveLineup(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-80 rounded-xl border border-[#2a2a3e] bg-[#12121a] p-5 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <Trash2 className="h-4 w-4 text-[#ff4444]" />
+                <h3 className="text-sm font-semibold text-[#e8e8e8]">Remove Lineup</h3>
+              </div>
+              <p className="text-sm text-[#6b6b8a] mb-4">
+                Remove <span className="text-[#e8e8e8] font-medium">&quot;{confirmRemoveLineup.name}&quot;</span> from this collection?
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setConfirmRemoveLineup(null)}
+                  className="flex-1 rounded-lg border border-[#2a2a3e] px-3 py-2 text-sm text-[#b8b8cc] hover:bg-[#1a1a2e] transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmRemoveLineup}
+                  className="flex-1 rounded-lg bg-[#ff4444] px-3 py-2 text-sm font-semibold text-white hover:bg-[#ff5555] transition-colors"
+                >
+                  Remove
                 </button>
               </div>
             </motion.div>
