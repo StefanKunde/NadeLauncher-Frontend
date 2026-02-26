@@ -284,7 +284,7 @@ export default function TrainingPage() {
       )}
 
       {/* Subscribed Community Collections */}
-      {isPremium && subscriptions.length > 0 && (
+      {isPremium && subscriptions.filter((s) => s.collection.isTraining).length > 0 && (
         <motion.div variants={fadeUp} custom={byMap.size + 2} className="mb-8">
           <div className="flex items-center gap-2 mb-4">
             <Users className="h-4 w-4 text-[#6c5ce7]" />
@@ -292,7 +292,7 @@ export default function TrainingPage() {
             <span className="text-[11px] text-[#6b6b8a]">Train with nades you've subscribed to</span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {subscriptions.map((sub) => {
+            {subscriptions.filter((s) => s.collection.isTraining).map((sub) => {
               const col = sub.collection;
               const mapInfo = MAPS.find((m) => m.name === col.mapName);
               const mapColor = MAP_COLORS[col.mapName] || '#6c5ce7';
