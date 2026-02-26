@@ -20,6 +20,7 @@ import {
   RefreshCw,
   ChevronDown,
   Map,
+  Target,
 } from 'lucide-react';
 import Link from 'next/link';
 import { sessionsApi, collectionsApi, userCollectionsApi } from '@/lib/api';
@@ -153,6 +154,32 @@ function CommandsList() {
         <div className="flex items-start gap-2">
           <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!pos</code>
           <span className="text-[#6b6b8a]">Show current position and angles</span>
+        </div>
+
+        <div className="border-t border-[#2a2a3e]/50 my-3" />
+        <div className="flex items-center gap-2 mb-2">
+          <Target className="h-3.5 w-3.5 text-[#f0a500]" />
+          <span className="text-[10px] font-semibold text-[#e8e8e8]/60 uppercase tracking-wider">Training</span>
+        </div>
+        <div className="flex items-start gap-2">
+          <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!training</code>
+          <span className="text-[#6b6b8a]">Start training mode <span className="text-[#88bbee]">(!train)</span></span>
+        </div>
+        <div className="flex items-start gap-2">
+          <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!stoptraining</code>
+          <span className="text-[#6b6b8a]">Stop training & submit results</span>
+        </div>
+        <div className="flex items-start gap-2">
+          <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!skip</code>
+          <span className="text-[#6b6b8a]">Skip current lineup</span>
+        </div>
+        <div className="flex items-start gap-2">
+          <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!retry</code>
+          <span className="text-[#6b6b8a]">Retry current lineup</span>
+        </div>
+        <div className="flex items-start gap-2">
+          <code className="text-[#f0a500] bg-[#12121a] px-1.5 py-0.5 rounded shrink-0">!helpmode</code>
+          <span className="text-[#6b6b8a]">Toggle landing position marker</span>
         </div>
       </div>
       <p className="mt-3 text-xs text-[#6b6b8a] italic">
