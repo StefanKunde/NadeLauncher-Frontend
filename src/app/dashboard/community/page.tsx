@@ -11,7 +11,7 @@ import StarRating from '@/components/ui/StarRating';
 import type { CommunityCollection } from '@/lib/types';
 import toast from 'react-hot-toast';
 
-type SortOption = 'popular' | 'top_rated' | 'newest' | 'most_lineups';
+type SortOption = 'popular' | 'top_rated' | 'newest' | 'most_lineups' | 'last_updated';
 type SortDirection = 'asc' | 'desc';
 
 const LIMIT = 25;
@@ -257,7 +257,13 @@ export default function CommunityPage() {
               <Target className="h-3 w-3" />
               {trainableFirst ? <ChevronUp className="h-3 w-3" /> : <ArrowUpDown className="h-3 w-3 opacity-0 group-hover/sort:opacity-50 transition-opacity" />}
             </button>
-            <span className="w-24 text-center" title="Last updated date">Updated</span>
+            <button
+              onClick={() => handleSort('last_updated')}
+              className="group/sort w-24 flex items-center justify-center gap-1 hover:text-[#e8e8e8] transition-colors"
+              title="Sort by last updated date"
+            >
+              Updated <SortIcon column="last_updated" />
+            </button>
             <span className="w-32" title="Collection owner">By</span>
             <span className="w-24" />
           </div>
