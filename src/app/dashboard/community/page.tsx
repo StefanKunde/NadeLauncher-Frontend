@@ -220,40 +220,45 @@ export default function CommunityPage() {
         <>
           {/* Table header — desktop only, sortable */}
           <div className="hidden md:flex items-center gap-3 px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-[#6b6b8a] select-none">
-            <span className="w-16">Map</span>
+            <span className="w-16" title="Map name">Map</span>
             <button
               onClick={() => handleSort('newest')}
               className="group/sort flex-1 flex items-center gap-1 text-left hover:text-[#e8e8e8] transition-colors"
+              title="Sort by name / date added"
             >
               Name <SortIcon column="newest" />
             </button>
             <button
               onClick={() => handleSort('most_lineups')}
               className="group/sort w-20 flex items-center justify-center gap-1 hover:text-[#e8e8e8] transition-colors"
+              title="Sort by number of lineups"
             >
               Nades <SortIcon column="most_lineups" />
             </button>
             <button
               onClick={() => handleSort('popular')}
               className="group/sort w-20 flex items-center justify-center gap-1 hover:text-[#e8e8e8] transition-colors"
+              title="Sort by subscriber count"
             >
               Subs <SortIcon column="popular" />
             </button>
             <button
               onClick={() => handleSort('top_rated')}
               className="group/sort w-24 flex items-center justify-center gap-1 hover:text-[#e8e8e8] transition-colors"
+              title="Sort by average rating"
             >
               Rating <SortIcon column="top_rated" />
             </button>
             <button
               onClick={() => setTrainableFirst((v) => !v)}
               className={`group/sort w-16 flex items-center justify-center gap-1 transition-colors ${trainableFirst ? 'text-[#f0a500]' : 'hover:text-[#e8e8e8]'}`}
+              title="Show trainable collections first"
             >
               <Target className="h-3 w-3" />
               {trainableFirst ? <ChevronUp className="h-3 w-3" /> : <ArrowUpDown className="h-3 w-3 opacity-0 group-hover/sort:opacity-50 transition-opacity" />}
             </button>
-            <span className="w-24 text-center">Updated</span>
-            <span className="w-32">By</span>
+            <span className="w-24 text-center" title="Last updated date">Updated</span>
+            <span className="w-32" title="Collection owner">By</span>
             <span className="w-24" />
           </div>
 
