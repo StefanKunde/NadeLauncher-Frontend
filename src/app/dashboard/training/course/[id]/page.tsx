@@ -8,7 +8,7 @@ import { BookOpen, ChevronRight, Loader2, Trophy, Clock, CheckCircle2, Circle, A
 import { coursesApi } from '@/lib/api';
 import { useAuthStore } from '@/store/auth-store';
 import { MAPS, MAP_COLORS } from '@/lib/constants';
-import type { CourseWithProgress, CourseDifficulty } from '@/lib/types';
+import type { CourseWithProgress, CourseDifficulty, CollectionDifficulty } from '@/lib/types';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -28,6 +28,12 @@ const DIFFICULTY_COLORS: Record<CourseDifficulty, string> = {
   intermediate: '#06b6d4',
   advanced: '#f59e0b',
   expert: '#ef4444',
+};
+
+const COLL_DIFF_COLORS: Record<CollectionDifficulty, string> = {
+  easy: '#22c55e',
+  medium: '#f59e0b',
+  hard: '#ef4444',
 };
 
 function formatDuration(ms: number | null): string {
@@ -215,17 +221,30 @@ export default function CourseDetailPage() {
 
                 {/* Collection info */}
                 <div className="flex-1 min-w-0">
-                  <p
-                    className={`text-sm font-medium truncate transition-colors ${
-                      isCompleted
-                        ? 'text-[#e8e8e8]'
-                        : isRecommended
-                          ? 'text-[#f0a500] group-hover:text-[#ffd700]'
-                          : 'text-[#6b6b8a] group-hover:text-[#e8e8e8]'
-                    }`}
-                  >
-                    {col.collectionName}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p
+                      className={`text-sm font-medium truncate transition-colors ${
+                        isCompleted
+                          ? 'text-[#e8e8e8]'
+                          : isRecommended
+                            ? 'text-[#f0a500] group-hover:text-[#ffd700]'
+                            : 'text-[#6b6b8a] group-hover:text-[#e8e8e8]'
+                      }`}
+                    >
+                      {col.collectionName}
+                    </p>
+                    {col.difficulty && (
+                      <span
+                        className="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase"
+                        style={{
+                          backgroundColor: `${COLL_DIFF_COLORS[col.difficulty]}15`,
+                          color: COLL_DIFF_COLORS[col.difficulty],
+                        }}
+                      >
+                        {col.difficulty}
+                      </span>
+                    )}
+                  </div>
                   <p className="text-[10px] text-[#6b6b8a] mt-0.5">
                     {col.lineupCount} lineup{col.lineupCount !== 1 ? 's' : ''}
                     {isRecommended && !isCompleted && (

@@ -328,10 +328,12 @@ export interface MyRankEntry {
 
 // Course types
 export type CourseDifficulty = 'beginner' | 'intermediate' | 'advanced' | 'expert';
+export type CollectionDifficulty = 'easy' | 'medium' | 'hard';
 
 export interface CourseCollectionProgress {
   collectionId: string;
   collectionName: string;
+  difficulty?: CollectionDifficulty | null;
   lineupCount: number;
   sortOrder: number;
   bestScore: number | null;
