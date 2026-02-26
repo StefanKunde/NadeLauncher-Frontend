@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Search, Users, Loader2, Star, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Globe, ArrowUpDown } from 'lucide-react';
+import { Search, Users, Loader2, Star, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Globe, ArrowUpDown, Target } from 'lucide-react';
 import { communityApi, collectionsApi } from '@/lib/api';
 import { useAuthStore } from '@/store/auth-store';
 import { MAPS, MAP_COLORS } from '@/lib/constants';
@@ -27,6 +27,7 @@ export default function CommunityPage() {
   const [sortDir, setSortDir] = useState<SortDirection>('desc');
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [trainableFirst, setTrainableFirst] = useState(false);
 
   // Debounce search input
   useEffect(() => {
@@ -81,6 +82,12 @@ export default function CommunityPage() {
       ? <ChevronDown className="h-3 w-3 text-[#6c5ce7]" />
       : <ChevronUp className="h-3 w-3 text-[#6c5ce7]" />;
   };
+
+  // Client-side re-order: trainable collections first
+  const displayCollections = useMemo(() => {
+    if (!trainableFirst) return collections;
+    return [...collections].sort((a, b) => (b.isTraining ? 1 : 0) - (a.isTraining ? 1 : 0));
+  }, [collections, trainableFirst]);
 
   const handleSubscribe = async (e: React.MouseEvent, collectionId: string) => {
     e.preventDefault();
@@ -238,6 +245,13 @@ export default function CommunityPage() {
             >
               Rating <SortIcon column="top_rated" />
             </button>
+            <button
+              onClick={() => setTrainableFirst((v) => !v)}
+              className={`group/sort w-16 flex items-center justify-center gap-1 transition-colors ${trainableFirst ? 'text-[#f0a500]' : 'hover:text-[#e8e8e8]'}`}
+            >
+              <Target className="h-3 w-3" />
+              {trainableFirst ? <ChevronUp className="h-3 w-3" /> : <ArrowUpDown className="h-3 w-3 opacity-0 group-hover/sort:opacity-50 transition-opacity" />}
+            </button>
             <span className="w-24 text-center">Updated</span>
             <span className="w-32">By</span>
             <span className="w-24" />
@@ -245,7 +259,7 @@ export default function CommunityPage() {
 
           {/* List */}
           <div className="flex flex-col gap-3">
-            {collections.map((col) => (
+            {displayCollections.map((col) => (
               <Link key={col.id} href={`/dashboard/community/${col.slug || col.id}`} className="block">
                 {/* Desktop row */}
                 <div className="hidden md:flex items-center gap-3 px-4 py-2.5 rounded-lg bg-[#12121a] border border-transparent hover:border-[#6c5ce7]/40 hover:bg-[#1a1a2e] transition-all cursor-pointer group">
@@ -285,6 +299,15 @@ export default function CommunityPage() {
                   {/* Rating */}
                   <div className="w-24 flex justify-center">
                     <StarRating value={Math.round(col.averageRating)} count={col.ratingCount} />
+                  </div>
+
+                  {/* Trainable badge */}
+                  <div className="w-16 flex justify-center">
+                    {col.isTraining && (
+                      <span className="inline-flex items-center gap-1 rounded-md bg-[#f0a500]/10 px-1.5 py-0.5 text-[10px] font-bold text-[#f0a500]">
+                        <Target className="h-3 w-3" />
+                      </span>
+                    )}
                   </div>
 
                   {/* Updated */}
@@ -333,6 +356,9 @@ export default function CommunityPage() {
                         {getMapDisplayName(col.mapName)}
                       </span>
                       <span className="text-sm font-medium text-[#e8e8e8] truncate">{col.name}</span>
+                      {col.isTraining && (
+                        <Target className="h-3.5 w-3.5 shrink-0 text-[#f0a500]" />
+                      )}
                     </div>
                     {user && col.ownerId !== user.id && (
                       <button

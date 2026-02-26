@@ -180,6 +180,7 @@ export interface CommunityCollection {
   updatedAt: string;
   isSubscribed?: boolean;
   userRating?: number;
+  isTraining?: boolean;
 }
 
 export interface UserSubscription {
