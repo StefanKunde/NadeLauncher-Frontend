@@ -341,6 +341,7 @@ export default function FilterSidebar({
                           onClick={() => setShowPremiumModal(true)}
                           label={c.name}
                           locked
+                          className="pr-10"
                         />
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
                           <span className="text-[10px] text-[#6b6b8a]/40">{c.lineupCount}</span>
@@ -352,6 +353,7 @@ export default function FilterSidebar({
                           active={isSourceActive(c.id)}
                           onClick={() => onSourceFilterChange({ type: 'collection', collectionId: c.id, collectionName: c.name })}
                           label={c.name}
+                          className="pr-[4.5rem]"
                         />
                         {/* Count — hidden on hover, replaced by action buttons */}
                         <span className={`absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5 group-hover/item:hidden`}>
@@ -792,6 +794,7 @@ function SourceButton({
   grenadeType,
   logoUrl,
   badge,
+  className,
 }: {
   active: boolean;
   onClick: () => void;
@@ -801,6 +804,7 @@ function SourceButton({
   grenadeType?: 'smoke' | 'flash' | 'molotov' | 'he';
   logoUrl?: string;
   badge?: string;
+  className?: string;
 }) {
   return (
     <button
@@ -811,7 +815,7 @@ function SourceButton({
           : locked
             ? 'text-[#6b6b8a]/50 border border-transparent cursor-not-allowed hover:bg-[#1a1a2e]/50'
             : 'text-[#b8b8cc] border border-transparent hover:bg-[#1a1a2e] hover:text-[#e8e8e8]'
-      }`}
+      } ${className ?? ''}`}
     >
       {logoUrl ? (
         <img
