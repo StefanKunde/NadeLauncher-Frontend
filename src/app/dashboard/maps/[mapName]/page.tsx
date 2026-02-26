@@ -81,10 +81,6 @@ export default function MapDetailPage() {
   const [editPublishState, setEditPublishState] = useState(false);
   const [editTrainingState, setEditTrainingState] = useState(false);
 
-  // Incompatible lineups dialog
-  const [incompatibleLineups, setIncompatibleLineups] = useState<{ id: string; name: string; throwType: string }[]>([]);
-  const [incompatibleCollection, setIncompatibleCollection] = useState<LineupCollection | null>(null);
-  const [fixingIncompatible, setFixingIncompatible] = useState(false);
 
   // Pro nade detail slider (occurrence filtering)
   // Meta/team collections: persisted preference (default step 4 = threshold 12)
@@ -279,6 +275,17 @@ export default function MapDetailPage() {
     if (editingCollection) setTimeout(() => editInputRef.current?.focus(), 100);
   }, [editingCollection]);
 
+  // Compute incompatible lineups for the currently editing collection
+  const BLOCKED_THROW_TYPES = ['walkthrow', 'runthrow', 'walkjumpthrow', 'runjumpthrow'];
+  const editIncompatibleLineups = useMemo(() => {
+    if (!editingCollection) return [];
+    const lineups = lineupsByCollection.get(editingCollection.id) ?? [];
+    return lineups.filter(
+      (l) => (l.isPreset || l.isPublic) && BLOCKED_THROW_TYPES.includes(l.throwType),
+    );
+  }, [editingCollection, lineupsByCollection]);
+  const canEnableTraining = editIncompatibleLineups.length === 0;
+
   // ── Filtered Lineups ──────────────────────────────────────────
   const proCollections = useMemo(
     () => allCollections.filter((c) => c.autoManaged && !c.ownerId),
@@ -452,53 +459,7 @@ export default function MapDetailPage() {
       setEditingCollection(null);
     } catch (err: any) {
       const data = err?.response?.data;
-      if (data?.error === 'INCOMPATIBLE_LINEUPS' && data?.incompatibleLineups?.length > 0) {
-        setIncompatibleCollection(editingCollection);
-        setIncompatibleLineups(data.incompatibleLineups);
-        setEditingCollection(null);
-      } else {
-        toast.error(data?.message || 'Failed to save');
-      }
-    }
-  };
-
-  const handleFixIncompatible = async () => {
-    if (!incompatibleCollection) return;
-    setFixingIncompatible(true);
-    try {
-      const toggled = await userCollectionsApi.fixIncompatibleAndEnableTraining(incompatibleCollection.id);
-      const updated = { ...incompatibleCollection, isTraining: true };
-      setUserCollections((prev) => prev.map((x) => (x.id === incompatibleCollection.id ? updated : x)));
-      setTrainingCollections((prev) => {
-        if (prev.some((c) => c.id === incompatibleCollection.id)) return prev;
-        return [...prev, updated];
-      });
-
-      // Remove the incompatible lineups from local state
-      const removedIds = new Set(incompatibleLineups.map((l) => l.id));
-      setLineupsByCollection((prev) => {
-        const next = new Map(prev);
-        const existing = next.get(incompatibleCollection.id);
-        if (existing) {
-          next.set(incompatibleCollection.id, existing.filter((l) => !removedIds.has(l.id)));
-        }
-        return next;
-      });
-      setUserCollectionLineupIds((prev) => {
-        const next = new Map(prev);
-        const ids = new Set(next.get(incompatibleCollection.id) ?? []);
-        for (const id of removedIds) ids.delete(id);
-        next.set(incompatibleCollection.id, ids);
-        return next;
-      });
-
-      toast.success(`Removed ${incompatibleLineups.length} incompatible lineup(s) and enabled training!`);
-      setIncompatibleLineups([]);
-      setIncompatibleCollection(null);
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Failed to fix incompatible lineups');
-    } finally {
-      setFixingIncompatible(false);
+      toast.error(data?.message || 'Failed to save');
     }
   };
 
@@ -1278,70 +1239,6 @@ export default function MapDetailPage() {
         )}
       </AnimatePresence>
 
-      {/* Incompatible Lineups Dialog */}
-      <AnimatePresence>
-        {incompatibleLineups.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
-            onClick={() => { setIncompatibleLineups([]); setIncompatibleCollection(null); }}
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-md rounded-xl border border-[#f0a500]/20 bg-[#12121a] shadow-2xl overflow-hidden"
-            >
-              <div className="h-[3px] bg-gradient-to-r from-[#f0a500] via-[#f0a500]/40 to-transparent" />
-              <div className="p-5 space-y-4">
-                <div className="flex items-center gap-2">
-                  <Target className="h-5 w-5 text-[#f0a500]" />
-                  <h3 className="text-base font-semibold text-[#e8e8e8]">Can&apos;t Enable Training</h3>
-                </div>
-
-                <p className="text-sm text-[#8888aa]">
-                  {incompatibleLineups.length} pro lineup{incompatibleLineups.length !== 1 ? 's use' : ' uses'} movement throws (walkthrow, runthrow, etc.) that can&apos;t be scored automatically in training mode.
-                </p>
-
-                <div className="rounded-lg border border-[#2a2a3e]/50 bg-[#0a0a12] max-h-48 overflow-y-auto">
-                  {incompatibleLineups.map((l) => (
-                    <div key={l.id} className="flex items-center justify-between px-3 py-2 border-b border-[#2a2a3e]/30 last:border-b-0">
-                      <span className="text-sm text-[#e8e8e8] truncate">{l.name}</span>
-                      <span className="shrink-0 text-[10px] font-medium text-[#f97316] bg-[#f97316]/10 rounded px-1.5 py-0.5">{l.throwType}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="rounded-lg border border-[#2a2a3e]/30 bg-[#1a1a2e]/50 p-3">
-                  <p className="text-xs text-[#6b6b8a]">
-                    <span className="text-[#f0a500] font-medium">Tip:</span> You can also start a practice server, delete these lineups, and re-throw them with a supported throw type (standing throw, jump throw, etc.) to keep them in the collection.
-                  </p>
-                </div>
-
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => { setIncompatibleLineups([]); setIncompatibleCollection(null); }}
-                    className="flex-1 rounded-lg border border-[#2a2a3e] px-3 py-2 text-sm text-[#b8b8cc] hover:bg-[#1a1a2e] transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleFixIncompatible}
-                    disabled={fixingIncompatible}
-                    className="flex-1 rounded-lg bg-[#f0a500] px-3 py-2 text-sm font-semibold text-[#0a0a0f] hover:bg-[#ffd700] transition-colors disabled:opacity-50"
-                  >
-                    {fixingIncompatible ? 'Removing...' : `Remove ${incompatibleLineups.length} & Enable`}
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Delete Collection Modal */}
       <AnimatePresence>
         {deletingCollection && (
@@ -1529,30 +1426,43 @@ export default function MapDetailPage() {
               </div>
               {/* Training toggle (Premium only) */}
               {user?.isPremium && editingCollection && (
-                <div className="mb-4 flex items-center justify-between rounded-lg border border-[#2a2a3e] bg-[#0a0a0f] px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <Target className="h-4 w-4 text-[#f0a500] shrink-0" />
-                    <div>
-                      <p className="text-sm text-[#e8e8e8]">Training Set</p>
-                      <p className="text-xs text-[#6b6b8a]">
-                        {editTrainingState
-                          ? 'Track scores, accuracy & leaderboards'
-                          : 'Enable in-game training mode'}
+                <div className={`mb-4 rounded-lg border bg-[#0a0a0f] px-4 py-3 ${!canEnableTraining && !editTrainingState ? 'border-[#2a2a3e]/50' : 'border-[#2a2a3e]'}`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Target className={`h-4 w-4 shrink-0 ${!canEnableTraining && !editTrainingState ? 'text-[#f0a500]/40' : 'text-[#f0a500]'}`} />
+                      <div>
+                        <p className={`text-sm ${!canEnableTraining && !editTrainingState ? 'text-[#e8e8e8]/50' : 'text-[#e8e8e8]'}`}>Training Set</p>
+                        <p className="text-xs text-[#6b6b8a]">
+                          {editTrainingState
+                            ? 'Track scores, accuracy & leaderboards'
+                            : 'Enable in-game training mode'}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      disabled={!canEnableTraining && !editTrainingState}
+                      onClick={() => setEditTrainingState(!editTrainingState)}
+                      className={`relative h-6 w-11 rounded-full transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
+                        editTrainingState ? 'bg-[#f0a500]' : 'bg-[#2a2a3e]'
+                      }`}
+                    >
+                      <span
+                        className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
+                          editTrainingState ? 'translate-x-5' : ''
+                        }`}
+                      />
+                    </button>
+                  </div>
+                  {!canEnableTraining && !editTrainingState && (
+                    <div className="mt-2.5 rounded-md border border-[#f97316]/15 bg-[#f97316]/5 px-3 py-2">
+                      <p className="text-[11px] text-[#f97316]/90 leading-relaxed">
+                        {editIncompatibleLineups.length} pro lineup{editIncompatibleLineups.length !== 1 ? 's use' : ' uses'} movement throws ({editIncompatibleLineups.map((l) => l.throwType).filter((v, i, a) => a.indexOf(v) === i).join(', ')}) that can&apos;t be scored in training.
+                      </p>
+                      <p className="mt-1 text-[11px] text-[#6b6b8a] leading-relaxed">
+                        Remove them or re-throw on a practice server with a supported throw type.
                       </p>
                     </div>
-                  </div>
-                  <button
-                    onClick={() => setEditTrainingState(!editTrainingState)}
-                    className={`relative h-6 w-11 rounded-full transition-colors ${
-                      editTrainingState ? 'bg-[#f0a500]' : 'bg-[#2a2a3e]'
-                    }`}
-                  >
-                    <span
-                      className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
-                        editTrainingState ? 'translate-x-5' : ''
-                      }`}
-                    />
-                  </button>
+                  )}
                 </div>
               )}
               {/* Publish to Community toggle */}
