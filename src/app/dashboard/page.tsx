@@ -17,6 +17,7 @@ import { userCollectionsApi, sessionsApi, collectionsApi } from '@/lib/api';
 import type { PracticeStats, LineupCollection, UserSubscription } from '@/lib/types';
 import PracticeSessionCard from '@/components/practice/PracticeSessionCard';
 import StatsGrid from '@/components/dashboard/StatsGrid';
+import AchievementsCard from '@/components/dashboard/AchievementsCard';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -94,6 +95,13 @@ export default function DashboardPage() {
           loading={statsLoading}
         />
       </motion.div>
+
+      {/* Achievements */}
+      {user?.isPremium && (
+        <motion.div variants={fadeUp} custom={3} className="mb-10">
+          <AchievementsCard />
+        </motion.div>
+      )}
 
       {/* Getting Started (new users only) */}
       {collectionCount === 0 && (

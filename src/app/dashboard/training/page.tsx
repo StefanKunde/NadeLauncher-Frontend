@@ -4,11 +4,11 @@ import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { Target, Trophy, ChevronRight, Loader2, Crosshair, Users, Clock, Crown } from 'lucide-react';
-import { trainingApi, collectionsApi } from '@/lib/api';
+import { Target, Trophy, ChevronRight, Loader2, Crosshair, Users, Clock, Crown, BookOpen } from 'lucide-react';
+import { trainingApi, collectionsApi, coursesApi } from '@/lib/api';
 import { useAuthStore } from '@/store/auth-store';
 import { MAPS, MAP_COLORS } from '@/lib/constants';
-import type { TrainingCollection, UserSubscription } from '@/lib/types';
+import type { TrainingCollection, UserSubscription, CourseWithProgress, CourseDifficulty } from '@/lib/types';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -21,6 +21,13 @@ const fadeUp = {
 
 const stagger = {
   visible: { transition: { staggerChildren: 0.06 } },
+};
+
+const DIFFICULTY_COLORS: Record<CourseDifficulty, string> = {
+  beginner: '#22c55e',
+  intermediate: '#06b6d4',
+  advanced: '#f59e0b',
+  expert: '#ef4444',
 };
 
 function ScoreBadge({ score }: { score: number | null }) {
@@ -53,6 +60,7 @@ export default function TrainingPage() {
   const [loading, setLoading] = useState(true);
   const [collections, setCollections] = useState<TrainingCollection[]>([]);
   const [subscriptions, setSubscriptions] = useState<UserSubscription[]>([]);
+  const [courses, setCourses] = useState<CourseWithProgress[]>([]);
 
   useEffect(() => {
     if (!isPremium) {
@@ -62,10 +70,12 @@ export default function TrainingPage() {
     Promise.all([
       trainingApi.getCollections(),
       collectionsApi.getSubscriptions().catch(() => [] as UserSubscription[]),
+      coursesApi.getPublished().catch(() => [] as CourseWithProgress[]),
     ])
-      .then(([cols, subs]) => {
+      .then(([cols, subs, crs]) => {
         setCollections(cols);
         setSubscriptions(subs);
+        setCourses(crs);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -81,6 +91,17 @@ export default function TrainingPage() {
     }
     return map;
   }, [collections]);
+
+  // Group courses by map
+  const coursesByMap = useMemo(() => {
+    const map = new Map<string, CourseWithProgress[]>();
+    for (const c of courses) {
+      const arr = map.get(c.mapName) || [];
+      arr.push(c);
+      map.set(c.mapName, arr);
+    }
+    return map;
+  }, [courses]);
 
   if (loading) {
     return (
@@ -161,6 +182,98 @@ export default function TrainingPage() {
               </div>
             </div>
           </div>
+        </motion.div>
+      )}
+
+      {/* Courses section */}
+      {isPremium && courses.length > 0 && (
+        <motion.div variants={fadeUp} custom={1} className="mb-10">
+          <div className="flex items-center gap-2 mb-5">
+            <BookOpen className="h-4 w-4 text-[#f0a500]" />
+            <h2 className="text-lg font-semibold text-[#e8e8e8]">Courses</h2>
+            <span className="text-[11px] text-[#6b6b8a]">Structured learning paths</span>
+          </div>
+
+          {MAPS.map((map) => {
+            const mapCourses = coursesByMap.get(map.name);
+            if (!mapCourses || mapCourses.length === 0) return null;
+            const color = MAP_COLORS[map.name] || '#f0a500';
+
+            return (
+              <div key={map.name} className="mb-6">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="relative h-8 w-12 rounded-lg overflow-hidden shrink-0">
+                    <Image
+                      src={map.screenshot}
+                      alt={map.displayName}
+                      fill
+                      className="object-cover"
+                      sizes="48px"
+                    />
+                  </div>
+                  <span className="text-sm font-medium text-[#e8e8e8]">{map.displayName}</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {mapCourses.map((course) => {
+                    const diffColor = DIFFICULTY_COLORS[course.difficulty];
+                    return (
+                      <Link
+                        key={course.id}
+                        href={`/dashboard/training/course/${course.id}`}
+                        className="group block rounded-xl border border-[#2a2a3e]/50 bg-[#12121a] p-4 transition-all duration-200 hover:border-[#2a2a3e] hover:-translate-y-0.5"
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div
+                              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+                              style={{ backgroundColor: `${color}15` }}
+                            >
+                              <BookOpen className="h-4 w-4" style={{ color }} />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium text-[#e8e8e8] truncate group-hover:text-[#f0a500] transition-colors">
+                                {course.name}
+                              </p>
+                              <p className="text-[10px] text-[#6b6b8a]">
+                                {course.collectionCount} set{course.collectionCount !== 1 ? 's' : ''}
+                              </p>
+                            </div>
+                          </div>
+                          <span
+                            className="text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase shrink-0"
+                            style={{ backgroundColor: `${diffColor}15`, color: diffColor }}
+                          >
+                            {course.difficulty}
+                          </span>
+                        </div>
+
+                        {/* Progress bar */}
+                        <div className="mt-3">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[10px] text-[#6b6b8a]">
+                              {course.completedCount}/{course.collectionCount} completed
+                            </span>
+                            <span className="text-[10px] font-medium" style={{ color }}>
+                              {course.progressPercent}%
+                            </span>
+                          </div>
+                          <div className="h-1.5 rounded-full bg-[#1a1a2e] overflow-hidden">
+                            <div
+                              className="h-full rounded-full transition-all duration-500"
+                              style={{
+                                width: `${course.progressPercent}%`,
+                                background: `linear-gradient(to right, ${color}, ${color}80)`,
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
         </motion.div>
       )}
 

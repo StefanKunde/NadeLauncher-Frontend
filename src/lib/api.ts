@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { useAuthStore } from '@/store/auth-store';
-import type { AuthResponse, Lineup, MapInfo, Session, UsageStats, PracticeStats, LineupCollection, UserSubscription, CollectionWithLineups, ProCollection, ProTeam, ProPlayer, ProMatch, Notification, ReferralStats, ReferralEntry, CommunityCollection, TrainingCollection, TrainingStats, LeaderboardResponse, MyRankEntry } from './types';
+import type { AuthResponse, Lineup, MapInfo, Session, UsageStats, PracticeStats, LineupCollection, UserSubscription, CollectionWithLineups, ProCollection, ProTeam, ProPlayer, ProMatch, Notification, ReferralStats, ReferralEntry, CommunityCollection, TrainingCollection, TrainingStats, LeaderboardResponse, MyRankEntry, CourseWithProgress, AchievementWithStatus } from './types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://nadelauncher-backend-a99d397c.apps.deploypilot.stefankunde.dev';
 
@@ -211,6 +211,22 @@ export const stripeApi = {
     api.post<{ data: { url: string } }>('/api/stripe/checkout').then((r) => r.data.data),
   createPortal: () =>
     api.post<{ data: { url: string } }>('/api/stripe/portal').then((r) => r.data.data),
+};
+
+// Courses
+export const coursesApi = {
+  getPublished: (map?: string) =>
+    api.get<{ data: CourseWithProgress[] }>('/api/courses', { params: { map } }).then((r) => r.data.data),
+  getById: (id: string) =>
+    api.get<{ data: CourseWithProgress }>(`/api/courses/${id}`).then((r) => r.data.data),
+};
+
+// Achievements
+export const achievementsApi = {
+  getAll: () =>
+    api.get<{ data: AchievementWithStatus[] }>('/api/achievements').then((r) => r.data.data),
+  getMine: () =>
+    api.get<{ data: AchievementWithStatus[] }>('/api/achievements/mine').then((r) => r.data.data),
 };
 
 export default api;

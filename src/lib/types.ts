@@ -325,3 +325,51 @@ export interface MyRankEntry {
   totalDurationMs?: number | null;
   completedAt?: string;
 }
+
+// Course types
+export type CourseDifficulty = 'beginner' | 'intermediate' | 'advanced' | 'expert';
+
+export interface CourseCollectionProgress {
+  collectionId: string;
+  collectionName: string;
+  lineupCount: number;
+  sortOrder: number;
+  bestScore: number | null;
+  bestAccuracy: number | null;
+  bestDurationMs: number | null;
+  completedAt: string | null;
+  isCompleted: boolean;
+}
+
+export interface CourseWithProgress {
+  id: string;
+  mapName: string;
+  name: string;
+  description?: string;
+  difficulty: CourseDifficulty;
+  coverImage?: string;
+  sortOrder: number;
+  isPublished: boolean;
+  collectionCount: number;
+  completedCount: number;
+  progressPercent: number;
+  collections: CourseCollectionProgress[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Achievement types
+export type AchievementTier = 'bronze' | 'silver' | 'gold' | 'diamond';
+
+export interface AchievementWithStatus {
+  id: string;
+  key: string;
+  name: string;
+  description: string;
+  icon: string;
+  tier: AchievementTier;
+  mapName: string | null;
+  sortOrder: number;
+  isUnlocked: boolean;
+  unlockedAt: string | null;
+}
