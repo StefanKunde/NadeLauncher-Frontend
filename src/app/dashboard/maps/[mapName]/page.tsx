@@ -284,7 +284,6 @@ export default function MapDetailPage() {
       (l) => (l.isPreset || l.isPublic) && BLOCKED_THROW_TYPES.includes(l.throwType),
     );
   }, [editingCollection, lineupsByCollection]);
-  const canEnableTraining = editIncompatibleLineups.length === 0;
 
   // ── Filtered Lineups ──────────────────────────────────────────
   const proCollections = useMemo(
@@ -407,6 +406,30 @@ export default function MapDetailPage() {
     setEditTrainingState(c.isTraining ?? false);
   };
 
+  const handleRemoveIncompatibleLineup = async (lineupId: string) => {
+    if (!editingCollection) return;
+    try {
+      await userCollectionsApi.removeLineup(editingCollection.id, lineupId);
+      setLineupsByCollection((prev) => {
+        const next = new Map(prev);
+        const existing = next.get(editingCollection.id);
+        if (existing) next.set(editingCollection.id, existing.filter((l) => l.id !== lineupId));
+        return next;
+      });
+      setUserCollectionLineupIds((prev) => {
+        const next = new Map(prev);
+        const ids = new Set(next.get(editingCollection.id) ?? []);
+        ids.delete(lineupId);
+        next.set(editingCollection.id, ids);
+        return next;
+      });
+      setEditingCollection((prev) => prev ? { ...prev, lineupCount: Math.max(0, prev.lineupCount - 1) } : prev);
+      toast.success('Lineup removed');
+    } catch {
+      toast.error('Failed to remove lineup');
+    }
+  };
+
   const handleEditCollectionSubmit = async () => {
     if (!editingCollection) {
       setEditingCollection(null);
@@ -435,23 +458,45 @@ export default function MapDetailPage() {
       }
 
       if (trainingChanged) {
-        const toggled = await userCollectionsApi.toggleTraining(editingCollection.id, editTrainingState);
-        updated = { ...updated, isTraining: toggled.isTraining };
+        if (editTrainingState && editIncompatibleLineups.length > 0) {
+          // Enable training by removing incompatible lineups first
+          await userCollectionsApi.fixIncompatibleAndEnableTraining(editingCollection.id);
+          updated = { ...updated, isTraining: true };
+          // Remove incompatible lineups from local state
+          const removedIds = new Set(editIncompatibleLineups.map((l) => l.id));
+          setLineupsByCollection((prev) => {
+            const next = new Map(prev);
+            const existing = next.get(editingCollection.id);
+            if (existing) next.set(editingCollection.id, existing.filter((l) => !removedIds.has(l.id)));
+            return next;
+          });
+          setUserCollectionLineupIds((prev) => {
+            const next = new Map(prev);
+            const ids = new Set(next.get(editingCollection.id) ?? []);
+            for (const id of removedIds) ids.delete(id);
+            next.set(editingCollection.id, ids);
+            return next;
+          });
+        } else {
+          const toggled = await userCollectionsApi.toggleTraining(editingCollection.id, editTrainingState);
+          updated = { ...updated, isTraining: toggled.isTraining };
+        }
         if (editTrainingState) {
-          // Add to training collections list
           setTrainingCollections((prev) => {
             if (prev.some((c) => c.id === editingCollection.id)) return prev;
             return [...prev, updated];
           });
         } else {
-          // Remove from training collections list
           setTrainingCollections((prev) => prev.filter((c) => c.id !== editingCollection.id));
         }
       }
 
       setUserCollections((prev) => prev.map((x) => (x.id === editingCollection.id ? updated : x)));
+      const removedCount = trainingChanged && editTrainingState && editIncompatibleLineups.length > 0 ? editIncompatibleLineups.length : 0;
       const msg = trainingChanged
-        ? (editTrainingState ? 'Enabled as training set!' : 'Training mode disabled')
+        ? (editTrainingState
+          ? (removedCount > 0 ? `Removed ${removedCount} lineup${removedCount !== 1 ? 's' : ''} & enabled training!` : 'Enabled as training set!')
+          : 'Training mode disabled')
         : publishChanged
           ? (editPublishState ? 'Published to Community!' : 'Unpublished')
           : 'Updated';
@@ -1426,12 +1471,12 @@ export default function MapDetailPage() {
               </div>
               {/* Training toggle (Premium only) */}
               {user?.isPremium && editingCollection && (
-                <div className={`mb-4 rounded-lg border bg-[#0a0a0f] px-4 py-3 ${!canEnableTraining && !editTrainingState ? 'border-[#2a2a3e]/50' : 'border-[#2a2a3e]'}`}>
+                <div className="mb-4 rounded-lg border border-[#2a2a3e] bg-[#0a0a0f] px-4 py-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Target className={`h-4 w-4 shrink-0 ${!canEnableTraining && !editTrainingState ? 'text-[#f0a500]/40' : 'text-[#f0a500]'}`} />
+                      <Target className="h-4 w-4 shrink-0 text-[#f0a500]" />
                       <div>
-                        <p className={`text-sm ${!canEnableTraining && !editTrainingState ? 'text-[#e8e8e8]/50' : 'text-[#e8e8e8]'}`}>Training Set</p>
+                        <p className="text-sm text-[#e8e8e8]">Training Set</p>
                         <p className="text-xs text-[#6b6b8a]">
                           {editTrainingState
                             ? 'Track scores, accuracy & leaderboards'
@@ -1440,9 +1485,8 @@ export default function MapDetailPage() {
                       </div>
                     </div>
                     <button
-                      disabled={!canEnableTraining && !editTrainingState}
                       onClick={() => setEditTrainingState(!editTrainingState)}
-                      className={`relative h-6 w-11 rounded-full transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
+                      className={`relative h-6 w-11 rounded-full transition-colors ${
                         editTrainingState ? 'bg-[#f0a500]' : 'bg-[#2a2a3e]'
                       }`}
                     >
@@ -1453,14 +1497,33 @@ export default function MapDetailPage() {
                       />
                     </button>
                   </div>
-                  {!canEnableTraining && !editTrainingState && (
-                    <div className="mt-2.5 rounded-md border border-[#f97316]/15 bg-[#f97316]/5 px-3 py-2">
-                      <p className="text-[11px] text-[#f97316]/90 leading-relaxed">
-                        {editIncompatibleLineups.length} pro lineup{editIncompatibleLineups.length !== 1 ? 's use' : ' uses'} movement throws ({editIncompatibleLineups.map((l) => l.throwType).filter((v, i, a) => a.indexOf(v) === i).join(', ')}) that can&apos;t be scored in training.
-                      </p>
-                      <p className="mt-1 text-[11px] text-[#6b6b8a] leading-relaxed">
-                        Remove them or re-throw on a practice server with a supported throw type.
-                      </p>
+                  {editTrainingState && editIncompatibleLineups.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      <div className="rounded-md border border-[#f97316]/15 bg-[#f97316]/5 px-3 py-2">
+                        <p className="text-[11px] text-[#f97316]/90 leading-relaxed">
+                          {editIncompatibleLineups.length} pro lineup{editIncompatibleLineups.length !== 1 ? 's require' : ' requires'} movement before throwing (walking, running) which can&apos;t be scored automatically.
+                        </p>
+                        <p className="mt-1 text-[11px] text-[#6b6b8a] leading-relaxed">
+                          Remove them below, or re-throw them on a practice server using a standing or jump throw. Saving will remove any remaining ones.
+                        </p>
+                      </div>
+                      <div className="rounded-lg border border-[#2a2a3e]/50 bg-[#0a0a12] max-h-36 overflow-y-auto">
+                        {editIncompatibleLineups.map((l) => (
+                          <div key={l.id} className="flex items-center gap-2 px-3 py-1.5 border-b border-[#2a2a3e]/30 last:border-b-0">
+                            <span className="text-xs text-[#e8e8e8] truncate flex-1">{l.name}</span>
+                            <span className="shrink-0 text-[9px] text-[#6b6b8a]">
+                              {l.throwType.replace('throw', '').replace('jump', ' jump')}
+                            </span>
+                            <button
+                              onClick={() => handleRemoveIncompatibleLineup(l.id)}
+                              className="shrink-0 p-1 rounded text-[#6b6b8a] hover:text-[#ff4444] hover:bg-[#ff4444]/10 transition-colors"
+                              title="Remove from collection"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1505,10 +1568,12 @@ export default function MapDetailPage() {
                 </button>
                 <button
                   onClick={handleEditCollectionSubmit}
-                  disabled={!editCollectionName.trim() || (editCollectionName.trim() === editingCollection.name && editPublishState === editingCollection.isPublished && editTrainingState === (editingCollection.isTraining ?? false))}
+                  disabled={!editCollectionName.trim() || (editCollectionName.trim() === editingCollection.name && editPublishState === (editingCollection.isPublished ?? false) && editTrainingState === (editingCollection.isTraining ?? false))}
                   className="flex-1 rounded-lg bg-[#f0a500] px-3 py-2 text-sm font-semibold text-[#0a0a0f] hover:bg-[#ffd700] transition-colors disabled:opacity-50"
                 >
-                  Save
+                  {editTrainingState && !(editingCollection.isTraining ?? false) && editIncompatibleLineups.length > 0
+                    ? `Remove ${editIncompatibleLineups.length} & Save`
+                    : 'Save'}
                 </button>
               </div>
             </motion.div>
