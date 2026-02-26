@@ -541,15 +541,13 @@ export default function MapDetailPage() {
   const handleAddToCollection = async (lineupId: string, collectionId: string) => {
     setAddingToCollection(lineupId);
     try {
-      await userCollectionsApi.addLineup(collectionId, lineupId);
-
-      // Find the lineup object to add to lineupsByCollection
-      const lineup = filteredLineups.find((l) => l.id === lineupId) ?? allLineups.find((l) => l.id === lineupId);
+      // Backend returns the actual stored lineup (may be a clone for pro nades)
+      const storedLineup = await userCollectionsApi.addLineup(collectionId, lineupId);
 
       setUserCollectionLineupIds((prev) => {
         const next = new Map(prev);
         const ids = new Set(next.get(collectionId) ?? []);
-        ids.add(lineupId);
+        ids.add(storedLineup.id);
         next.set(collectionId, ids);
         return next;
       });
@@ -557,15 +555,13 @@ export default function MapDetailPage() {
         prev.map((c) => (c.id === collectionId ? { ...c, lineupCount: c.lineupCount + 1 } : c)),
       );
 
-      // Instantly update lineupsByCollection so the nade appears in the collection view
-      if (lineup) {
-        setLineupsByCollection((prev) => {
-          const next = new Map(prev);
-          const existing = next.get(collectionId) ?? [];
-          next.set(collectionId, [...existing, lineup]);
-          return next;
-        });
-      }
+      // Instantly update lineupsByCollection with the actual stored lineup
+      setLineupsByCollection((prev) => {
+        const next = new Map(prev);
+        const existing = next.get(collectionId) ?? [];
+        next.set(collectionId, [...existing, storedLineup]);
+        return next;
+      });
 
       // Also update training collections count if applicable
       setTrainingCollections((prev) =>

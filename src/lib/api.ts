@@ -137,7 +137,7 @@ export const userCollectionsApi = {
   delete: (id: string) =>
     api.delete(`/api/collections/my/${id}`),
   addLineup: (collectionId: string, lineupId: string) =>
-    api.post(`/api/collections/my/${collectionId}/lineups/${lineupId}`),
+    api.post<{ data: Lineup }>(`/api/collections/my/${collectionId}/lineups/${lineupId}`).then((r) => r.data.data),
   removeLineup: (collectionId: string, lineupId: string) =>
     api.delete(`/api/collections/my/${collectionId}/lineups/${lineupId}`),
   toggleTraining: (id: string, isTraining: boolean) =>
