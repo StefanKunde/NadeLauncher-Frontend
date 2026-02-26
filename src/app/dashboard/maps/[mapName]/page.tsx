@@ -83,6 +83,7 @@ export default function MapDetailPage() {
 
   // Incompatible lineups dialog
   const [incompatibleLineups, setIncompatibleLineups] = useState<{ id: string; name: string; throwType: string }[]>([]);
+  const [incompatibleCollection, setIncompatibleCollection] = useState<LineupCollection | null>(null);
   const [fixingIncompatible, setFixingIncompatible] = useState(false);
 
   // Pro nade detail slider (occurrence filtering)
@@ -452,7 +453,9 @@ export default function MapDetailPage() {
     } catch (err: any) {
       const data = err?.response?.data;
       if (data?.error === 'INCOMPATIBLE_LINEUPS' && data?.incompatibleLineups?.length > 0) {
+        setIncompatibleCollection(editingCollection);
         setIncompatibleLineups(data.incompatibleLineups);
+        setEditingCollection(null);
       } else {
         toast.error(data?.message || 'Failed to save');
       }
@@ -460,14 +463,14 @@ export default function MapDetailPage() {
   };
 
   const handleFixIncompatible = async () => {
-    if (!editingCollection) return;
+    if (!incompatibleCollection) return;
     setFixingIncompatible(true);
     try {
-      const toggled = await userCollectionsApi.fixIncompatibleAndEnableTraining(editingCollection.id);
-      const updated = { ...editingCollection, isTraining: true };
-      setUserCollections((prev) => prev.map((x) => (x.id === editingCollection.id ? updated : x)));
+      const toggled = await userCollectionsApi.fixIncompatibleAndEnableTraining(incompatibleCollection.id);
+      const updated = { ...incompatibleCollection, isTraining: true };
+      setUserCollections((prev) => prev.map((x) => (x.id === incompatibleCollection.id ? updated : x)));
       setTrainingCollections((prev) => {
-        if (prev.some((c) => c.id === editingCollection.id)) return prev;
+        if (prev.some((c) => c.id === incompatibleCollection.id)) return prev;
         return [...prev, updated];
       });
 
@@ -475,23 +478,23 @@ export default function MapDetailPage() {
       const removedIds = new Set(incompatibleLineups.map((l) => l.id));
       setLineupsByCollection((prev) => {
         const next = new Map(prev);
-        const existing = next.get(editingCollection.id);
+        const existing = next.get(incompatibleCollection.id);
         if (existing) {
-          next.set(editingCollection.id, existing.filter((l) => !removedIds.has(l.id)));
+          next.set(incompatibleCollection.id, existing.filter((l) => !removedIds.has(l.id)));
         }
         return next;
       });
       setUserCollectionLineupIds((prev) => {
         const next = new Map(prev);
-        const ids = new Set(next.get(editingCollection.id) ?? []);
+        const ids = new Set(next.get(incompatibleCollection.id) ?? []);
         for (const id of removedIds) ids.delete(id);
-        next.set(editingCollection.id, ids);
+        next.set(incompatibleCollection.id, ids);
         return next;
       });
 
       toast.success(`Removed ${incompatibleLineups.length} incompatible lineup(s) and enabled training!`);
       setIncompatibleLineups([]);
-      setEditingCollection(null);
+      setIncompatibleCollection(null);
     } catch (err: any) {
       toast.error(err?.response?.data?.message || 'Failed to fix incompatible lineups');
     } finally {
@@ -1283,7 +1286,7 @@ export default function MapDetailPage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
-            onClick={() => setIncompatibleLineups([])}
+            onClick={() => { setIncompatibleLineups([]); setIncompatibleCollection(null); }}
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
@@ -1320,7 +1323,7 @@ export default function MapDetailPage() {
 
                 <div className="flex gap-2">
                   <button
-                    onClick={() => setIncompatibleLineups([])}
+                    onClick={() => { setIncompatibleLineups([]); setIncompatibleCollection(null); }}
                     className="flex-1 rounded-lg border border-[#2a2a3e] px-3 py-2 text-sm text-[#b8b8cc] hover:bg-[#1a1a2e] transition-colors"
                   >
                     Cancel
