@@ -245,7 +245,7 @@ export default function CommunityDetailPage() {
     if (!collection) return;
     setStartingServer(true);
     try {
-      const created = await sessionsApi.create(collection.mapName, collectionId);
+      const created = await sessionsApi.create(collection.mapName, collection.id);
       setActiveSession(created);
       toast.success('Server starting...');
       router.push('/dashboard');
